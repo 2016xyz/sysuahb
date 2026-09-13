@@ -21,78 +21,48 @@
 </head>
 
 <body class="login-page">
-    <div class="login-bg" aria-hidden="true">
-        <span class="blob blob-a"></span>
-        <span class="blob blob-b"></span>
-        <span class="grid-overlay"></span>
-    </div>
-
-    <nav class="navbar navbar-static-top navbar-right navbar-login">
-        <div class="ml-auto d-flex align-items-center" style="gap: 0.5rem;">
-            <button id="theme-toggle" class="btn btn-outline-secondary" onclick="toggleTheme()">
-                <i class="fa fa-moon"></i>
-            </button>
-            <span class="btn-group dropdown">
-                <button id="languagemenu" class="btn btn-outline-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-globe-asia fa-lg"></i>
-                    <span></span>
-                </button>
-                <ul class="dropdown-menu"></ul>
-            </span>
-        </div>
-    </nav>
-
-    <div class="login-card">
-        <div class="login-header">
-            <div class="login-brand">
-                <span class="brand-badge"><img src="{{.web_base_url}}/static/img/nps.svg?v={{.version}}" alt="Logo"></span>
-                <div class="navbar-brand" style="font-weight: lighter; font-size: 2.0rem !important"><h1 langtag="title-login"></h1></div>
-            </div>
-            <p class="login-subtitle" langtag="application"></p>
-        </div>
-        <div class="login-body">
-            <form class="m-t" onsubmit="return false;">
-                <div class="form-group position-relative">
-                    <i class="fas fa-user-circle input-icon"></i>
-                    <input class="form-control" langtag="word-username" name="username" placeholder="username" autocomplete="username" required="" type="text">
+    <main class="wow-login-page">
+        <div class="wow-login-background" aria-hidden="true"></div>
+        <div class="wow-login-content">
+            <header class="wow-login-header">
+                <img class="wow-login-logo" src="{{.web_base_url}}/static/img/nps.svg?v={{.version}}" alt="NPS">
+                <div class="wow-login-title">NPS 管理平台</div>
+            </header>
+            <section class="wow-login-card">
+                <div class="wow-language-switch i18n">
+                    <button id="languagemenu" type="button" aria-label="Language">中文</button>
+                    <ul class="language-list"></ul>
                 </div>
-                <div class="form-group position-relative has-feedback">
-                    <i class="fas fa-key input-icon"></i>
-                    <input class="form-control login-pwd" langtag="word-password" name="password" placeholder="password" autocomplete="current-password" required="" type="password">
-                    <button type="button" class="pwd-toggle" aria-label="toggle password" onclick="togglePwd(this)">
-                        <i class="fas fa-eye"></i>
+                <form class="wow-login-form" onsubmit="return false;">
+                    <div class="wow-input-group form-group">
+                        <span class="wow-input-icon user-icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+                        <input class="form-control" name="username" placeholder="请输入账号" autocomplete="username" required="" type="text">
+                    </div>
+                    <div class="wow-input-group form-group">
+                        <span class="wow-input-icon password-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+                        <input class="form-control login-pwd" name="password" placeholder="请输入密码" autocomplete="current-password" required="" type="password">
+                        <button type="button" class="pwd-toggle" aria-label="toggle password" onclick="togglePwd(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                    <div class="wow-verification form-group">
+                        {{if eq true .captcha_open}}
+                        <input class="wow-captcha-input" langtag="word-captcha" name="captcha" placeholder="点击按钮进行验证" required="">
+                        <div class="captcha-container" title="click to refresh">{{create_captcha}}</div>
+                        {{else}}
+                        <span class="wow-verification-label">点击按钮进行验证</span>
+                        {{end}}
+                    </div>
+                    <button id="loginBtn" class="btn btn-primary btn-login block full-width" langtag="word-login" onclick="if (this.form.reportValidity()) login()" type="submit">
+                        <span class="btn-label" langtag="word-login"></span>
+                        <span class="btn-spinner" aria-hidden="true"><i class="fas fa-circle-notch fa-spin"></i></span>
                     </button>
-                </div>
-                {{if eq true .captcha_open}}
-                <div class="form-group captcha-group position-relative">
-                    <div class="flex-fill">
-                    <i class="fas fa-shield-alt input-icon"></i>
-                    <input class="form-control" langtag="word-captcha" name="captcha" placeholder="captcha" required="">
-                    </div>
-                    <div class="captcha-container" title="click to refresh">
-                    {{create_captcha}}
-                    </div>
-                </div>
-                {{end}}
-                <button id="loginBtn" class="btn btn-primary btn-login block full-width m-b" langtag="word-login" onclick="if (this.form.reportValidity()) login()" type="submit">
-                    <span class="btn-label" langtag="word-login"></span>
-                    <span class="btn-spinner" aria-hidden="true"><i class="fas fa-circle-notch fa-spin"></i></span>
-                </button>
-                {{if eq true .register_allow}}
-                <p class="text-muted text-center login-alt">
-                    <small langtag="info-noaccount"></small>
-                    <small><a href="{{.web_base_url}}/login/register" langtag="word-register"></a></small>
-                </p>
-                {{end}}
-            </form>
-    </div>
-    <div class="footer login-footer">
-        <div class="float-right">
-            <span langtag="word-readmore"></span>
-            <strong><a href="https://github.com/djylb/nps" langtag="word-go"></a></strong>
+                    <label class="wow-remember"><input type="checkbox" name="remember"> <span>记住账号</span></label>
+                    {{if eq true .register_allow}}
+                    <p class="text-muted text-center login-alt"><small langtag="info-noaccount"></small> <a href="{{.web_base_url}}/login/register" langtag="word-register"></a></p>
+                    {{end}}
+                </form>
+            </section>
         </div>
-        <div><strong langtag="word-copyright"></strong> <span langtag="application"></span> &copy; 2018-{{.year}}</div>
-    </div>
+    </main>
 
     <script type="text/javascript">
         window.nps = {

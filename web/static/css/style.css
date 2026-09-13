@@ -12880,3 +12880,704 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
         transition: none;
     }
 }
+
+.login-page {
+    min-width: 0;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background: #5476c9;
+    font-family: "Helvetica Neue", Helvetica, "Microsoft YaHei", "Hiragino Sans GB", SimSun, sans-serif;
+}
+
+.wow-login-page {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+    color: #191e2d;
+}
+
+.wow-login-background {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(135deg, #274d91 0%, #4e78c6 48%, #9dc4e8 100%);
+    background-position: center;
+    background-size: cover;
+    transform: scale(1.01);
+}
+
+.wow-login-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 42px 20px 88px;
+    box-sizing: border-box;
+}
+
+.wow-login-header {
+    color: #fff;
+    text-align: center;
+    text-shadow: rgba(0, 0, 0, 0.2) 0 0 6px;
+}
+
+.wow-login-logo {
+    display: inline-block;
+    width: 260px;
+    height: 40px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
+.wow-login-title {
+    margin: 15px 0 30px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: 10px;
+    text-indent: 10px;
+}
+
+.wow-login-card {
+    position: relative;
+    width: 400px;
+    box-sizing: border-box;
+    padding: 40px 35px 20px;
+    border-radius: 5px;
+    background: #fff;
+    box-shadow: 0 14px 35px rgba(24, 49, 104, 0.24);
+}
+
+.wow-language-switch {
+    height: 20px;
+    margin-bottom: 30px;
+    text-align: right;
+}
+
+.wow-language-switch > button {
+    padding: 0 0 5px;
+    border: 0;
+    border-bottom: 2px solid #3d53f5;
+    outline: 0;
+    color: #191e2d;
+    background: transparent;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.wow-language-switch .language-list {
+    display: inline-block;
+    padding: 0;
+    margin: 0 0 0 20px;
+    list-style: none;
+    vertical-align: top;
+}
+
+.wow-language-switch .language-list li {
+    display: inline-block;
+    padding-bottom: 5px;
+    color: #74777a;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.wow-language-switch .language-list li a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.wow-language-switch .language-list li img {
+    display: none;
+}
+
+.wow-login-form .form-group {
+    margin-bottom: 20px;
+}
+
+.wow-input-group {
+    position: relative;
+    display: flex;
+    height: 50px;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    background: #fff;
+    transition: border-color 0.2s ease;
+}
+
+.wow-input-group:focus-within {
+    border-color: #3d53f5;
+}
+
+.wow-input-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    flex: 0 0 48px;
+    color: #b8bec5;
+    font-size: 16px;
+}
+
+.wow-input-icon:after {
+    position: absolute;
+    top: 4px;
+    right: 0;
+    width: 1px;
+    height: 40px;
+    background: #dcdfe6;
+    content: "";
+    transform: scaleX(0.7);
+}
+
+.wow-input-group .form-control {
+    min-width: 0;
+    height: 48px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 0 4px 4px 0;
+    outline: 0;
+    box-shadow: none;
+    color: #191e2d;
+    font-size: 16px;
+}
+
+.wow-input-group .form-control:focus {
+    border: 0;
+    box-shadow: none;
+}
+
+.wow-input-group .form-control::placeholder {
+    color: #b8bec5;
+}
+
+.wow-input-group .pwd-toggle {
+    position: absolute;
+    top: 0;
+    right: 8px;
+    width: 34px;
+    height: 48px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    color: #b8bec5;
+    background: transparent;
+    cursor: pointer;
+}
+
+.wow-input-group .pwd-toggle:hover,
+.wow-input-group .pwd-toggle:focus {
+    color: #3d53f5;
+}
+
+.wow-input-group .login-pwd {
+    padding-right: 40px;
+}
+
+.wow-verification {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 42px;
+    margin-top: 30px;
+    margin-bottom: 24px !important;
+    border: 1px solid #dcdfe6;
+    border-radius: 4px;
+    color: #74777a;
+    background: #f8f9fb;
+    font-size: 13px;
+}
+
+.wow-verification-label {
+    pointer-events: none;
+}
+
+.wow-verification .captcha-container {
+    display: flex;
+    align-items: center;
+    height: 40px;
+    margin-left: 10px;
+}
+
+.wow-verification .captcha-img {
+    display: block;
+    height: 36px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.wow-captcha-input {
+    min-width: 0;
+    flex: 1;
+    height: 40px;
+    padding: 0 12px;
+    border: 0;
+    outline: 0;
+    color: #191e2d;
+    background: transparent;
+    font-size: 13px;
+}
+
+.wow-captcha-input::placeholder {
+    color: #74777a;
+}
+
+.wow-login-card .btn-login {
+    position: relative;
+    top: -10px;
+    height: auto;
+    min-height: 48px;
+    padding: 13px 0;
+    border: 1px solid #3d53f5;
+    border-radius: 4px;
+    color: #fff;
+    background: #3d53f5;
+    box-shadow: none;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.wow-login-card .btn-login:hover,
+.wow-login-card .btn-login:focus {
+    color: #fff;
+    background: #5064f6;
+    border-color: #5064f6;
+    transform: none;
+    box-shadow: none;
+}
+
+.wow-remember {
+    display: block;
+    position: relative;
+    top: -25px;
+    margin: 0;
+    color: #515560;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.wow-remember input {
+    width: 14px;
+    height: 14px;
+    margin: 0 5px 0 0;
+    accent-color: #3d53f5;
+    vertical-align: -2px;
+}
+
+.wow-login-card .login-alt {
+    margin: 0;
+    color: #74777a;
+}
+
+.wow-login-card .login-alt a {
+    color: #3d53f5;
+}
+
+.login-page .navbar-login,
+.login-page .login-bg {
+    display: none;
+}
+
+html[theme="dark-mode"] .login-page {
+    background: #5476c9;
+}
+
+@media (max-width: 600px) {
+    .wow-login-content {
+        padding: 28px 16px 76px;
+    }
+
+    .wow-login-logo {
+        width: min(260px, 72vw);
+    }
+
+    .wow-login-title {
+        margin-bottom: 24px;
+        font-size: 16px;
+        letter-spacing: 7px;
+        text-indent: 7px;
+    }
+
+    .wow-login-card {
+        width: min(400px, 100%);
+        padding: 30px 24px 16px;
+    }
+
+}
+
+@media (max-height: 700px) and (min-width: 601px) {
+    .wow-login-content {
+        padding-top: 20px;
+        padding-bottom: 72px;
+    }
+
+    .wow-login-title {
+        margin-bottom: 18px;
+    }
+
+    .wow-login-card {
+        padding-top: 26px;
+    }
+}
+
+body:not(.login-page) {
+    --admin-primary: #4f6df5;
+    --admin-primary-dark: #3854d9;
+    --admin-accent: #18b7a0;
+    --admin-surface: rgba(255, 255, 255, 0.94);
+    --admin-shadow: 0 12px 32px rgba(47, 71, 125, 0.1);
+    background: #eef3fb;
+    color: var(--text);
+    font-family: "Helvetica Neue", Helvetica, "Microsoft YaHei", "Hiragino Sans GB", SimSun, sans-serif;
+}
+
+body:not(.login-page) #wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #edf3fc 0%, #f8faff 48%, #eef8f7 100%);
+}
+
+body:not(.login-page) .navbar-static-side {
+    background: linear-gradient(180deg, #172b59 0%, #213e7a 52%, #274b8e 100%);
+    box-shadow: 8px 0 28px rgba(29, 55, 111, 0.13);
+}
+
+body:not(.login-page) .nav-header {
+    min-height: 122px;
+    padding: 28px 20px 20px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+body:not(.login-page) .nav-header .profile-element > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    margin-right: 10px;
+    border-radius: 15px;
+    color: #fff;
+    background: linear-gradient(145deg, #6c82ff, #40c6b0);
+    box-shadow: 0 8px 18px rgba(22, 35, 95, 0.3);
+}
+
+body:not(.login-page) .nav-header .font-bold,
+body:not(.login-page) .nav-header .text-muted {
+    color: rgba(255, 255, 255, 0.92) !important;
+}
+
+body:not(.login-page) .nav-header .text-muted {
+    opacity: 0.7;
+}
+
+body:not(.login-page) .navbar-default .nav > li > a {
+    margin: 4px 12px;
+    padding: 13px 16px;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.78);
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+body:not(.login-page) .navbar-default .nav > li > a:hover,
+body:not(.login-page) .navbar-default .nav > li > a:focus,
+body:not(.login-page) .navbar-default .nav > li.active > a {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(108, 130, 255, 0.82), rgba(64, 198, 176, 0.42));
+    box-shadow: 0 8px 18px rgba(16, 32, 85, 0.18);
+    transform: translateX(2px);
+}
+
+body:not(.login-page) .navbar-default .nav > li > a i {
+    width: 25px;
+    margin-right: 8px;
+    color: #aebcff;
+    transition: color 0.2s ease;
+}
+
+body:not(.login-page) .navbar-default .nav > li.active > a i,
+body:not(.login-page) .navbar-default .nav > li > a:hover i {
+    color: #fff;
+}
+
+body:not(.login-page) #page-wrapper {
+    min-height: 100vh;
+    background: transparent;
+}
+
+body:not(.login-page) .navbar-fixed-top {
+    min-height: 60px;
+    border: 0 !important;
+    background: rgba(255, 255, 255, 0.86) !important;
+    box-shadow: 0 4px 18px rgba(47, 71, 125, 0.08);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+}
+
+body:not(.login-page) .welcome-message {
+    color: #6e7a99 !important;
+}
+
+body:not(.login-page) .navbar-top-links > li > a {
+    color: #52617f;
+}
+
+body:not(.login-page) .navbar-top-links > li > a:hover {
+    color: var(--admin-primary);
+    background: rgba(79, 109, 245, 0.08);
+}
+
+body:not(.login-page) .minimalize-styl-2 {
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--admin-primary), #7389ff);
+    box-shadow: 0 8px 16px rgba(79, 109, 245, 0.25);
+}
+
+body:not(.login-page) .page-content {
+    min-height: calc(100vh - 60px);
+    padding-top: 60px;
+}
+
+body:not(.login-page) .wrapper-content {
+    position: relative;
+    min-height: calc(100vh - 120px);
+    padding: 28px clamp(16px, 3vw, 38px) 90px;
+    overflow: visible;
+}
+
+body:not(.login-page) .ibox {
+    margin-bottom: 24px;
+    border: 1px solid rgba(221, 228, 243, 0.86);
+    border-radius: 18px;
+    background: var(--admin-surface);
+    box-shadow: var(--admin-shadow);
+    overflow: hidden;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+body:not(.login-page) .ibox-title {
+    min-height: 58px;
+    padding: 19px 22px;
+    border-color: rgba(221, 228, 243, 0.85);
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 255, 0.92));
+}
+
+body:not(.login-page) .ibox-title h5 {
+    color: #2c3b61;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+body:not(.login-page) .ibox-content,
+body:not(.login-page) .ibox .content {
+    padding: 22px;
+    background: transparent;
+}
+
+body:not(.login-page) .ibox-content.no-padding {
+    padding: 0;
+}
+
+body:not(.login-page) .ibox-content h1 {
+    color: #2b3d69;
+    font-size: clamp(24px, 2.2vw, 34px);
+    font-weight: 700;
+}
+
+body:not(.login-page) .ibox-content .list-group-item {
+    padding: 15px 22px;
+    border-color: rgba(221, 228, 243, 0.7);
+    background: transparent;
+}
+
+body:not(.login-page) .ibox-content .list-group-item strong {
+    color: #52617f;
+}
+
+body:not(.login-page) .btn {
+    border-radius: 10px;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+body:not(.login-page) .btn:hover,
+body:not(.login-page) .btn:focus {
+    transform: translateY(-1px);
+}
+
+body:not(.login-page) .btn-primary {
+    border-color: var(--admin-primary);
+    background: linear-gradient(135deg, var(--admin-primary), #7085ff);
+    box-shadow: 0 8px 16px rgba(79, 109, 245, 0.2);
+}
+
+body:not(.login-page) .btn-primary:hover,
+body:not(.login-page) .btn-primary:focus {
+    border-color: var(--admin-primary-dark);
+    background: linear-gradient(135deg, var(--admin-primary-dark), #6177ee);
+    box-shadow: 0 10px 20px rgba(79, 109, 245, 0.3);
+}
+
+body:not(.login-page) .form-control,
+body:not(.login-page) .bootstrap-select > .dropdown-toggle {
+    min-height: 40px;
+    border: 1px solid #dfe6f3;
+    border-radius: 10px;
+    color: var(--color);
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: none;
+}
+
+body:not(.login-page) .form-control:focus,
+body:not(.login-page) .bootstrap-select > .dropdown-toggle:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(79, 109, 245, 0.13);
+}
+
+body:not(.login-page) .fixed-table-toolbar {
+    padding: 0 0 18px;
+}
+
+body:not(.login-page) .fixed-table-toolbar .btn-group > .btn,
+body:not(.login-page) .fixed-table-pagination .btn {
+    border-color: #dfe6f3;
+    color: #52617f;
+    background: #fff;
+}
+
+body:not(.login-page) .fixed-table-container {
+    border: 1px solid #e2e8f3;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+body:not(.login-page) .fixed-table-container thead th {
+    border-color: #e2e8f3;
+    color: #506080;
+    background: #f5f8fd;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+body:not(.login-page) .fixed-table-container tbody td {
+    border-color: #edf1f7;
+    color: #52617f;
+    vertical-align: middle;
+}
+
+body:not(.login-page) .table-hover > tbody > tr:hover,
+body:not(.login-page) .bootstrap-table .table-hover > tbody > tr:hover {
+    background: #f1f5ff;
+}
+
+body:not(.login-page) .footer {
+    min-height: 48px;
+    padding: 15px 24px;
+    border-color: rgba(221, 228, 243, 0.8);
+    color: #7b88a5;
+    background: rgba(255, 255, 255, 0.74);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+html[theme="dark-mode"] body:not(.login-page) {
+    --admin-surface: rgba(39, 47, 68, 0.94);
+    --admin-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    background: #1d2435;
+}
+
+html[theme="dark-mode"] body:not(.login-page) #wrapper {
+    background: linear-gradient(135deg, #1c263c, #222b40);
+}
+
+html[theme="dark-mode"] body:not(.login-page) .navbar-fixed-top,
+html[theme="dark-mode"] body:not(.login-page) .ibox-title,
+html[theme="dark-mode"] body:not(.login-page) .footer {
+    background: rgba(35, 43, 62, 0.9) !important;
+}
+
+html[theme="dark-mode"] body:not(.login-page) .ibox-title h5,
+html[theme="dark-mode"] body:not(.login-page) .ibox-content h1,
+html[theme="dark-mode"] body:not(.login-page) .ibox-content .list-group-item strong {
+    color: #e3e9f8;
+}
+
+html[theme="dark-mode"] body:not(.login-page) .fixed-table-container,
+html[theme="dark-mode"] body:not(.login-page) .form-control,
+html[theme="dark-mode"] body:not(.login-page) .bootstrap-select > .dropdown-toggle {
+    border-color: #46516c;
+    background: #2b344a;
+}
+
+html[theme="dark-mode"] body:not(.login-page) .fixed-table-container thead th {
+    border-color: #46516c;
+    color: #d9e1f5;
+    background: #313b53;
+}
+
+html[theme="dark-mode"] body:not(.login-page) .fixed-table-container tbody td {
+    border-color: #3c4862;
+    color: #cad4eb;
+}
+
+@media (max-width: 767px) {
+    body:not(.login-page) #wrapper {
+        display: block;
+    }
+
+    body:not(.login-page) #page-wrapper {
+        width: 100%;
+    }
+
+    body:not(.login-page) .page-content {
+        padding-top: 54px;
+    }
+
+    body:not(.login-page) .wrapper-content {
+        padding: 18px 12px 82px;
+    }
+
+    body:not(.login-page) .ibox {
+        margin-bottom: 16px;
+        border-radius: 14px;
+    }
+
+    body:not(.login-page) .ibox-title {
+        min-height: 52px;
+        padding: 16px;
+    }
+
+    body:not(.login-page) .ibox-content,
+    body:not(.login-page) .ibox .content {
+        padding: 16px;
+    }
+
+    body:not(.login-page) .footer {
+        position: relative;
+        padding: 12px 16px;
+        text-align: center;
+    }
+
+    body:not(.login-page) .footer .float-right {
+        float: none !important;
+        margin-bottom: 4px;
+    }
+
+    body:not(.login-page) .fixed-table-toolbar .columns,
+    body:not(.login-page) .fixed-table-toolbar .search {
+        float: none;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+
+    body:not(.login-page) .fixed-table-toolbar .search input {
+        width: 100%;
+    }
+}
