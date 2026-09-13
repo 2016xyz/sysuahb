@@ -12901,10 +12901,38 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
 .wow-login-background {
     position: absolute;
     inset: 0;
-    background-image: linear-gradient(135deg, #274d91 0%, #4e78c6 48%, #9dc4e8 100%);
+    background: radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.28), transparent 28%), radial-gradient(circle at 86% 86%, rgba(52, 197, 180, 0.2), transparent 30%), linear-gradient(135deg, #203d79 0%, #466ab2 46%, #87b7dc 100%);
     background-position: center;
     background-size: cover;
     transform: scale(1.01);
+}
+
+.wow-login-background:before,
+.wow-login-background:after {
+    position: absolute;
+    border-radius: 50%;
+    content: "";
+    filter: blur(2px);
+}
+
+.wow-login-background:before {
+    top: 12%;
+    left: 8%;
+    width: 22vw;
+    height: 22vw;
+    min-width: 180px;
+    min-height: 180px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.wow-login-background:after {
+    right: 8%;
+    bottom: 10%;
+    width: 28vw;
+    height: 28vw;
+    min-width: 220px;
+    min-height: 220px;
+    background: rgba(30, 201, 178, 0.11);
 }
 
 .wow-login-content {
@@ -12920,27 +12948,21 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
 }
 
 .wow-login-header {
+    position: relative;
+    margin-bottom: 2px;
     color: #fff;
     text-align: center;
     text-shadow: rgba(0, 0, 0, 0.2) 0 0 6px;
 }
 
-.wow-login-logo {
-    display: inline-block;
-    width: 260px;
-    height: 40px;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
-}
-
 .wow-login-title {
-    margin: 15px 0 30px;
+    margin: 0 0 30px;
     color: #fff;
-    font-size: 18px;
-    font-weight: 400;
+    font-size: clamp(25px, 3vw, 36px);
+    font-weight: 500;
     line-height: 1;
-    letter-spacing: 10px;
-    text-indent: 10px;
+    letter-spacing: 12px;
+    text-indent: 12px;
 }
 
 .wow-login-card {
@@ -12948,9 +12970,10 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
     width: 400px;
     box-sizing: border-box;
     padding: 40px 35px 20px;
-    border-radius: 5px;
-    background: #fff;
-    box-shadow: 0 14px 35px rgba(24, 49, 104, 0.24);
+    border: 1px solid rgba(255, 255, 255, 0.52);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 24px 60px rgba(19, 43, 96, 0.28), 0 4px 12px rgba(19, 43, 96, 0.12);
 }
 
 .wow-language-switch {
@@ -13151,6 +13174,10 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
     box-shadow: none;
 }
 
+.wow-login-card .btn-login:active {
+    transform: translateY(0);
+}
+
 .wow-remember {
     display: block;
     position: relative;
@@ -13198,7 +13225,7 @@ html[theme="dark-mode"] .login-page {
 
     .wow-login-title {
         margin-bottom: 24px;
-        font-size: 16px;
+        font-size: 24px;
         letter-spacing: 7px;
         text-indent: 7px;
     }
@@ -13206,6 +13233,7 @@ html[theme="dark-mode"] .login-page {
     .wow-login-card {
         width: min(400px, 100%);
         padding: 30px 24px 16px;
+        border-radius: 12px;
     }
 
 }
