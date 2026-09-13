@@ -42,6 +42,13 @@ sudo <name> update && sudo <name> restart
 curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls -log=off
 ```
 
+安装结束时会输出本次生成的随机进程名：
+
+```
+Installing npc as: sysmtpw
+npc done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
+```
+
 也可以先不带参数安装，稍后编辑 `/etc/<name>/conf/sysficb.conf` 或带参数重跑脚本。
 
 ### 1.3 脚本说明
@@ -64,6 +71,8 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh 
 curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.7/install.sh
 sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh nps
 ```
+
+> 💡 **如何找回随机进程名**：随机名以安装输出为准。忘记时可执行 `ls -d /etc/sys????` 列出配置目录——目录内是 `conf/sysuahb.conf` 即服务端、`conf/sysficb.conf` 即客户端；对应的管理命令就是目录名，如 `sudo syskxqz status`。
 
 ---
 
