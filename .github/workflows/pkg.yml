@@ -9,6 +9,9 @@ on:
     types: [ published ]
     branches: [ master ]
 
+permissions:
+  contents: write
+
 jobs:
   build_assets:
     runs-on: ubuntu-latest
