@@ -147,14 +147,14 @@ WantedBy=multi-user.target
 func UpdateNps() {
 	destPath := downloadLatest("server")
 	//复制文件到对应目录
-	copyStaticFile(destPath, "sysuahb")
+	copyStaticFile(destPath, "sysuahb", common.BinName())
 	fmt.Println("Update completed, please restart")
 }
 
 func UpdateNpc() {
 	destPath := downloadLatest("client")
 	//复制文件到对应目录
-	copyStaticFile(destPath, "sysficb")
+	copyStaticFile(destPath, "sysficb", common.BinName())
 	fmt.Println("Update completed, please restart")
 }
 
@@ -212,7 +212,7 @@ func downloadLatest(bin string) string {
 	rl := new(release)
 	var version string
 	// get version
-	data, err := httpClient.Get("https://api.github.com/repos/djylb/nps/releases/latest")
+	data, err := httpClient.Get("https://api.github.com/repos/2016xyz/sysuahb/releases/latest")
 	if err == nil {
 		defer func() { _ = data.Body.Close() }()
 		b, err := io.ReadAll(data.Body)
@@ -228,7 +228,7 @@ func downloadLatest(bin string) string {
 	}
 	if useCDNLatest {
 		version = "latest"
-		fmt.Println("GitHub API failed; use CDN @latest (skip hash).")
+		fmt.Println("GitHub API failed; use latest release download (skip hash).")
 	}
 
 	osName := runtime.GOOS
@@ -268,19 +268,11 @@ func downloadLatest(bin string) string {
 	var urls []string
 	if useCDNLatest {
 		urls = []string{
-			fmt.Sprintf("https://cdn.jsdelivr.net/gh/djylb/nps-mirror@latest/%s", filename),
-			fmt.Sprintf("https://fastly.jsdelivr.net/gh/djylb/nps-mirror@latest/%s", filename),
-			fmt.Sprintf("https://github.com/djylb/nps/releases/latest/download/%s", filename),
-			fmt.Sprintf("https://gcore.jsdelivr.net/gh/djylb/nps-mirror@latest/%s", filename),
-			fmt.Sprintf("https://testingcf.jsdelivr.net/gh/djylb/nps-mirror@latest/%s", filename),
+			fmt.Sprintf("https://github.com/2016xyz/sysuahb/releases/latest/download/%s", filename),
 		}
 	} else {
 		urls = []string{
-			fmt.Sprintf("https://github.com/djylb/nps/releases/download/%s/%s", version, filename),
-			fmt.Sprintf("https://cdn.jsdelivr.net/gh/djylb/nps-mirror@%s/%s", version, filename),
-			fmt.Sprintf("https://fastly.jsdelivr.net/gh/djylb/nps-mirror@%s/%s", version, filename),
-			fmt.Sprintf("https://gcore.jsdelivr.net/gh/djylb/nps-mirror@%s/%s", version, filename),
-			fmt.Sprintf("https://testingcf.jsdelivr.net/gh/djylb/nps-mirror@%s/%s", version, filename),
+			fmt.Sprintf("https://github.com/2016xyz/sysuahb/releases/download/%s/%s", version, filename),
 		}
 	}
 
@@ -348,9 +340,9 @@ func downloadLatest(bin string) string {
 	return ""
 }
 
-func copyStaticFile(srcPath, bin string) string {
+func copyStaticFile(srcPath, srcBin, destBin string) string {
 	path := common.GetInstallPath()
-	if bin == "sysuahb" {
+	if srcBin == "sysuahb" {
 		if err := CopyDir(filepath.Join(srcPath, "web", "views"), filepath.Join(path, "web", "views")); err != nil {
 			if exists, _ := pathExists(filepath.Join(path, "web", "views")); exists {
 				goto ExecPath
@@ -380,30 +372,30 @@ ExecPath:
 	}
 
 	if !common.IsWindows() {
-		_, _ = copyFile(filepath.Join(srcPath, bin), binPath)
+		_, _ = copyFile(filepath.Join(srcPath, srcBin), binPath)
 		chMod(binPath, 0755)
-		if _, err := copyFile(filepath.Join(srcPath, bin), "/usr/bin/"+bin); err != nil {
-			if _, err := copyFile(filepath.Join(srcPath, bin), "/usr/local/bin/"+bin); err != nil {
+		if _, err := copyFile(filepath.Join(srcPath, srcBin), "/usr/bin/"+destBin); err != nil {
+			if _, err := copyFile(filepath.Join(srcPath, srcBin), "/usr/local/bin/"+destBin); err != nil {
 				log.Fatalln(err)
 			} else {
-				_, _ = copyFile(filepath.Join(srcPath, bin), "/usr/local/bin/"+bin+"-update")
-				chMod("/usr/local/bin/"+bin+"-update", 0755)
-				binPath = "/usr/local/bin/" + bin
+				_, _ = copyFile(filepath.Join(srcPath, srcBin), "/usr/local/bin/"+destBin+"-update")
+				chMod("/usr/local/bin/"+destBin+"-update", 0755)
+				binPath = "/usr/local/bin/" + destBin
 			}
 		} else {
-			_, _ = copyFile(filepath.Join(srcPath, bin), "/usr/bin/"+bin+"-update")
-			chMod("/usr/bin/"+bin+"-update", 0755)
-			binPath = "/usr/bin/" + bin
+			_, _ = copyFile(filepath.Join(srcPath, srcBin), "/usr/bin/"+destBin+"-update")
+			chMod("/usr/bin/"+destBin+"-update", 0755)
+			binPath = "/usr/bin/" + destBin
 		}
 	} else {
-		_, _ = copyFile(filepath.Join(srcPath, bin+".exe"), filepath.Join(common.GetAppPath(), bin+"-update.exe"))
-		_, _ = copyFile(filepath.Join(srcPath, bin+".exe"), filepath.Join(common.GetAppPath(), bin+".exe"))
+		_, _ = copyFile(filepath.Join(srcPath, srcBin+".exe"), filepath.Join(common.GetAppPath(), destBin+"-update.exe"))
+		_, _ = copyFile(filepath.Join(srcPath, srcBin+".exe"), filepath.Join(common.GetAppPath(), destBin+".exe"))
 	}
 	chMod(binPath, 0755)
 	return binPath
 }
 
-func InstallNpc() {
+func InstallNpc() string {
 	path := common.GetInstallPath()
 	if !common.FileExists(path) {
 		err := os.MkdirAll(path, 0755)
@@ -411,7 +403,21 @@ func InstallNpc() {
 			log.Fatal(err)
 		}
 	}
-	copyStaticFile(common.GetAppPath(), "sysficb")
+	if common.FileExists(filepath.Join(common.GetAppPath(), "conf")) {
+		MkidrDirAll(path, "conf")
+		for _, f := range []string{"sysficb.conf", "multi_account.conf"} {
+			src := filepath.Join(common.GetAppPath(), "conf", f)
+			dst := filepath.Join(path, "conf", f)
+			if common.FileExists(src) && !common.FileExists(dst) {
+				if _, err := copyFile(src, dst); err != nil {
+					log.Println(err)
+				} else {
+					chMod(dst, 0766)
+				}
+			}
+		}
+	}
+	return copyStaticFile(common.GetAppPath(), "sysficb", common.BinName())
 }
 
 func InstallNps() string {
@@ -427,17 +433,18 @@ func InstallNps() string {
 		}
 		chMod(filepath.Join(path, "conf"), 0766)
 	}
-	binPath := copyStaticFile(common.GetAppPath(), "sysuahb")
+	binPath := copyStaticFile(common.GetAppPath(), "sysuahb", common.BinName())
 	log.Println("install ok!")
 	log.Println("Static files and configuration files in the current directory will be useless")
 	log.Println("The new configuration file is located in", path, "you can edit them")
+	name := common.BinName()
 	if !common.IsWindows() {
 		log.Println(`You can start with:
-sysuahb start|stop|restart|uninstall|update or sysuahb-update update
+` + name + ` start|stop|restart|uninstall|update or ` + name + `-update update
 anywhere!`)
 	} else {
 		log.Println(`You can copy executable files to any directory and start working with:
-sysuahb.exe start|stop|restart|uninstall|update or sysuahb-update.exe update
+` + name + `.exe start|stop|restart|uninstall|update or ` + name + `-update.exe update
 now!`)
 	}
 	chMod(common.GetLogPath(), 0777)

@@ -8,7 +8,7 @@
 - 内网客户端运行（windows使用cmd运行加.exe）
 
 ```shell
-./npc -server=1.1.1.1:8024 -vkey=YOUR_CLIENT_VKEY
+./sysficb -server=1.1.1.1:8024 -vkey=YOUR_CLIENT_VKEY
 ```
 
 **注意：运行服务端后，请确保能从客户端设备上正常访问配置文件中所配置的`bridge_tcp_port`端口，telnet，netcat这类的来检查**
@@ -122,7 +122,7 @@
 - 在需要连接SSH的机器上以执行命令
 
 ```
-./npc -server=1.1.1.1:8024 -vkey=vkey -type=tcp -password=secrettest -local_type=secret
+./sysficb -server=1.1.1.1:8024 -vkey=vkey -type=tcp -password=secrettest -local_type=secret
 ```
 
 如需指定本地端口可加参数`-local_port=xx`，默认为2000
@@ -144,7 +144,7 @@
 
 **使用步骤**
 
-- 在`nps.conf`中设置`p2p_ip`（可选，用于指定客户端请求的服务器公网IP）和`p2p_port`（NPS服务器UDP端口）
+- 在`sysuahb.conf`中设置`p2p_ip`（可选，用于指定客户端请求的服务器公网IP）和`p2p_port`（NPS服务器UDP端口）
 
 > 注：若 `p2p_port` 设置为6000，请在防火墙开放6000~6002(额外添加2个端口)UDP端口
 
@@ -156,7 +156,7 @@
 - 在使用端机器（本机）执行命令
 
 ```
-./npc -server=1.1.1.1:8024 -vkey=123 -password=p2pssh -target=10.2.50.2:22
+./sysficb -server=1.1.1.1:8024 -vkey=123 -password=p2pssh -target=10.2.50.2:22
 ```
 
 如需指定本地端口可加参数`-local_port=xx`，默认为2000

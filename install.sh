@@ -1,9 +1,36 @@
 #!/bin/sh
-# install.sh — Simple installer for nps and npc
+# install.sh — one-click installer for the nps server and npc client
+#
+# Every installation generates a RANDOM process/service name: "sys" + 4 random
+# lowercase letters (e.g. syskxqz). The service name, binary (/usr/bin/<name>),
+# config directory (/etc/<name>/) and log (/var/log/<name>.log) all follow that
+# name, so every machine gets a different process name.
+#
+# The config file names inside stay fixed (sysuahb.conf for the server,
+# sysficb.conf for the client), so your data is always easy to find.
+#
+# Re-running this script automatically removes previous random-named installs
+# (detected via their config marker) and installs fresh ones with new names.
+#
 # Usage:
-#   ./install.sh [mode] [version]
-# mode: npc | nps | all (default all)
-# version: release tag (default latest)
+#   ./install.sh [mode] [version] [npc args...]
+#     mode:    npc | nps | all (default: all)
+#     version: release tag, e.g. v0.34.7 (default: latest)
+#     npc args: extra arguments forwarded to the client service, e.g.
+#       ./install.sh npc v0.34.7 -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+#
+# Environment variables:
+#   NPS_INSTALL_MODE=npc|nps|all   same as the positional mode argument
+#   NPS_INSTALL_VERSION=vX.Y.Z     same as the positional version argument
+#   NPS_INSTALL_DIR=/path          portable install: extract only, no service
+#   NPC_BIN_NAME=...               force client binary name (default: random)
+#   NPS_BIN_NAME=...               force server binary name (default: random)
+#   NPS_START=0                    do not auto-start the service after install
+#   NPS_GH_PROXY=                  prefix for GitHub downloads,
+#                                  e.g. https://mirror.ghproxy.com/
+#   NPS_CONNECT_TIMEOUT=10         downloader connect timeout in seconds
+#   NPS_INSECURE=1                 skip TLS certificate verification
+#   NPS_IPV4=1                     force IPv4 for downloads
 
 # Must run as root
 if command -v id >/dev/null 2>&1; then
@@ -29,6 +56,10 @@ if ! has curl && ! has wget && ! has uclient-fetch; then
   exit 1
 fi
 
+REPO="2016xyz/sysuahb"
+GH_BASE="https://github.com/${REPO}"
+GH_API="https://api.github.com/repos/${REPO}"
+
 # Tunables for downloaders (optional)
 CONNECT_TIMEOUT="${NPS_CONNECT_TIMEOUT:-10}"
 if [ "${NPS_INSECURE:-0}" = "1" ]; then
@@ -47,6 +78,7 @@ else
   CURL_IP=""
   WGET_IP=""
 fi
+GH_PROXY="${NPS_GH_PROXY:-}"
 
 # Fix one fetch tool
 if has curl; then
@@ -70,55 +102,71 @@ cleanup() {
 }
 trap cleanup 0 INT TERM
 
-INSTALL_MODE="${1:-${NPS_INSTALL_MODE:-all}}"
-INSTALL_VERSION="${2:-${NPS_INSTALL_VERSION:-latest}}"
-INSTALL_DIR="${3:-${NPS_INSTALL_DIR:-}}"
+# ---- arguments ---------------------------------------------------------
 
-# Validate mode
-case "$INSTALL_MODE" in
+MODE=""
+if [ $# -gt 0 ]; then
+  case "$1" in
+    npc|nps|all) MODE="$1"; shift ;;
+  esac
+fi
+[ -n "$MODE" ] || MODE="${NPS_INSTALL_MODE:-all}"
+case "$MODE" in
   npc|nps|all) ;;
   *)
-    echo "Error: unsupported mode: $INSTALL_MODE" >&2
+    echo "Error: unsupported mode: $MODE" >&2
     exit 1
     ;;
 esac
 
-echo "Mode: $INSTALL_MODE"
+INSTALL_VERSION="${NPS_INSTALL_VERSION:-latest}"
+EXTRA_ARGS=""
+if [ $# -gt 0 ]; then
+  case "$1" in
+    -*) EXTRA_ARGS="$*" ;;
+    *)
+      INSTALL_VERSION="$1"
+      shift
+      [ $# -gt 0 ] && EXTRA_ARGS="$*"
+      ;;
+  esac
+fi
 
-USE_CF_LATEST=0
+INSTALL_DIR="${NPS_INSTALL_DIR:-}"
+
+echo "Mode: $MODE"
+
+USE_LATEST=0
 
 # Fetch latest version if unspecified
 if [ "$INSTALL_VERSION" = "latest" ]; then
   echo "Get latest version..."
   if has grep && has sed; then
-    API_URL="https://api.github.com/repos/djylb/nps/releases/latest"
     if has curl; then
-      RAW_JSON=$(curl -sSLf "$API_URL" || true)
+      RAW_JSON=$(curl -sSLf $CURL_IP $CURL_INSECURE --connect-timeout "$CONNECT_TIMEOUT" "$GH_API/releases/latest" || true)
     else
-      RAW_JSON=$(wget -qO- "$API_URL" || true)
+      RAW_JSON=$(wget -q $WGET_INSECURE -T "$CONNECT_TIMEOUT" -O- "$GH_API/releases/latest" || true)
     fi
 
     INSTALL_VERSION=$(printf '%s' "$RAW_JSON" \
       | grep -m1 '"tag_name"' \
       | sed 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/')
+  fi
 
-    if [ -z "$INSTALL_VERSION" ]; then
-      echo "Warn: failed to detect version from GitHub API, will use CDN @latest." >&2
-      USE_CF_LATEST=1
-      INSTALL_VERSION=latest
-    fi
-  else
-    echo "No grep/sed; use CDN @latest." >&2
-    USE_CF_LATEST=1
+  if [ -z "$INSTALL_VERSION" ]; then
+    echo "Warn: failed to detect version from GitHub API, will try releases/latest/download." >&2
     INSTALL_VERSION=latest
+    USE_LATEST=1
   fi
 fi
 
-if [ "$USE_CF_LATEST" -eq 1 ]; then
-  echo "Version: latest (CDN @latest fallback)"
+if [ "$USE_LATEST" -eq 1 ]; then
+  echo "Version: latest (releases/latest/download)"
 else
   echo "Version: $INSTALL_VERSION"
 fi
+
+# ---- platform detection ------------------------------------------------
 
 # Determine OS
 OS="$(uname -s)"
@@ -175,6 +223,8 @@ if [ "$ARCH" = "mips" ] || [ "$ARCH" = "mipsle" ]; then
   fi
 fi
 
+# ---- helpers -----------------------------------------------------------
+
 # Extraction
 tar_extract() {
   f="$1"
@@ -207,17 +257,14 @@ download() {
   NAME=$1
   FILE="${OS}_${ARCH}_${NAME}.tar.gz"
 
-  if [ "$USE_CF_LATEST" -eq 1 ]; then
+  if [ "$USE_LATEST" -eq 1 ]; then
     URLS="
-      https://cdn.jsdelivr.net/gh/djylb/nps-mirror@latest/${FILE}
-      https://fastly.jsdelivr.net/gh/djylb/nps-mirror@latest/${FILE}
-      https://github.com/djylb/nps/releases/latest/download/${FILE}
+      ${GH_BASE}/releases/latest/download/${FILE}
     "
   else
     URLS="
-      https://github.com/djylb/nps/releases/download/${INSTALL_VERSION}/${FILE}
-      https://cdn.jsdelivr.net/gh/djylb/nps-mirror@${INSTALL_VERSION}/${FILE}
-      https://fastly.jsdelivr.net/gh/djylb/nps-mirror@${INSTALL_VERSION}/${FILE}
+      ${GH_BASE}/releases/download/${INSTALL_VERSION}/${FILE}
+      ${GH_BASE}/releases/latest/download/${FILE}
     "
   fi
 
@@ -227,10 +274,10 @@ download() {
     WORKDIR="$INSTALL_DIR"
   else
     if has mktemp; then
-      TMPD=$(mktemp -d 2>/dev/null || mktemp -d -t nps-install.XXXXXX)
+      TMPD=$(mktemp -d 2>/dev/null || mktemp -d -t sys-install.XXXXXX)
     else
       TS="$(date +%s 2>/dev/null || echo 0)"
-      TMPD="/tmp/nps-$$.$TS"
+      TMPD="/tmp/sys-install-$$.$TS"
       mkdir -p "$TMPD"
     fi
     TMP_DIRS="$TMP_DIRS $TMPD"
@@ -241,6 +288,7 @@ download() {
 
   success=0
   for u in $URLS; do
+    [ -n "$GH_PROXY" ] && u="${GH_PROXY}${u}"
     echo "Trying $u" >&2
 
     rm -f -- "./$FILE"
@@ -271,6 +319,7 @@ download() {
   if [ "$success" -ne 1 ] || [ ! -f "$FILE" ]; then
     echo "Error: Download failed for all URLs:" >&2
     for u in $URLS; do
+      [ -n "$GH_PROXY" ] && u="${GH_PROXY}${u}"
       echo "  - $u" >&2
     done
     exit 1
@@ -281,88 +330,130 @@ download() {
     exit 1
   fi
 
-  if [ -n "$INSTALL_DIR" ]; then
-    rm -f -- "./$FILE"
-    printf '%s\n' "$INSTALL_DIR"
-  else
-    printf '%s\n' "$WORKDIR"
-  fi
+  printf '%s\n' "$WORKDIR"
 }
+
+# Validate a forced binary name
+valid_name() {
+  case "$1" in
+    ""|*[!A-Za-z0-9_-]*) return 1 ;;
+  esac
+  return 0
+}
+
+# Generate a random binary name: "sys" + 4 random lowercase letters
+gen_name() {
+  tries=0
+  while [ "$tries" -lt 100 ]; do
+    s="$(dd if=/dev/urandom bs=256 count=4 2>/dev/null | LC_ALL=C tr -dc 'a-z' | head -c 4)"
+    if [ "${#s}" -eq 4 ]; then
+      n="sys$s"
+      if [ ! -e "/usr/bin/$n" ] && [ ! -e "/usr/local/bin/$n" ] && [ ! -d "/etc/$n" ]; then
+        printf '%s\n' "$n"
+        return 0
+      fi
+    fi
+    tries=$((tries + 1))
+  done
+  echo "Error: cannot generate a unique random name; set NPC_BIN_NAME / NPS_BIN_NAME manually." >&2
+  return 1
+}
+
+# Remove previous random-named installs, identified by their fixed config marker
+clean_old() {
+  marker="$1"
+  for f in /usr/bin/sys[a-z][a-z][a-z][a-z] /usr/local/bin/sys[a-z][a-z][a-z][a-z]; do
+    [ -x "$f" ] || continue
+    n="$(basename "$f")"
+    case "$n" in
+      sys[a-z][a-z][a-z][a-z]) ;;
+      *) continue ;;
+    esac
+    [ -f "/etc/$n/conf/$marker" ] || continue
+    echo "Removing old install: $n"
+    "$f" stop >/dev/null 2>&1 || true
+    "$f" uninstall >/dev/null 2>&1 || true
+    rm -f "$f" "/usr/bin/$n-update" "/usr/local/bin/$n-update" "/var/log/$n.log" 2>/dev/null || true
+    rm -rf "/etc/$n" 2>/dev/null || true
+  done
+}
+
+# ---- installation ------------------------------------------------------
 
 # Install NPC (client)
 install_npc() {
   SRC=$(download client)
-  echo "Install npc..."
 
   if [ -n "$INSTALL_DIR" ]; then
-    echo "npc installed in $INSTALL_DIR"
+    echo "npc extracted to $INSTALL_DIR (portable mode, no service)"
     return
   fi
 
-  if [ -x "$SRC/npc" ]; then
-    if cp -f "$SRC/npc" /usr/bin/npc 2>/dev/null; then
-      chmod 755 /usr/bin/npc
-    else
-      mkdir -p /usr/local/bin
-      cp -f "$SRC/npc" /usr/local/bin/npc
-      chmod 755 /usr/local/bin/npc
-    fi
+  clean_old "sysficb.conf"
+
+  if [ -n "$NPC_BIN_NAME" ]; then
+    valid_name "$NPC_BIN_NAME" || { echo "Error: invalid NPC_BIN_NAME: $NPC_BIN_NAME" >&2; exit 1; }
+    NEW_NAME="$NPC_BIN_NAME"
   else
-    echo "Error: 'npc' binary not found in $SRC" >&2
-    exit 1
+    NEW_NAME="$(gen_name)" || exit 1
   fi
 
-  mkdir -p /etc/nps/conf
-  if [ ! -f /etc/nps/conf/npc.conf ]; then
-    cp "$SRC/conf/npc.conf" /etc/nps/conf/npc.conf 2>/dev/null || true
+  [ -x "$SRC/sysficb" ] || { echo "Error: 'sysficb' binary not found in $SRC" >&2; exit 1; }
+  cp -f "$SRC/sysficb" "$SRC/$NEW_NAME"
+  chmod 755 "$SRC/$NEW_NAME"
+
+  echo "Installing npc as: $NEW_NAME"
+  if [ -n "$EXTRA_ARGS" ]; then
+    "$SRC/$NEW_NAME" install $EXTRA_ARGS
   else
-    cp -f "$SRC/conf/npc.conf" /etc/nps/conf/npc.conf.default 2>/dev/null || true
+    "$SRC/$NEW_NAME" install
   fi
-  if [ ! -f /etc/nps/conf/multi_account.conf ]; then
-    cp "$SRC/conf/multi_account.conf" /etc/nps/conf/multi_account.conf 2>/dev/null || true
+
+  if [ "${NPS_START:-1}" = "1" ]; then
+    "$SRC/$NEW_NAME" start || echo "Warn: failed to start $NEW_NAME; try manually: $NEW_NAME start" >&2
   fi
-  echo "npc done"
+
+  echo "npc done. name=$NEW_NAME config=/etc/$NEW_NAME/conf/sysficb.conf"
 }
 
 # Install NPS (server)
 install_nps() {
   SRC=$(download server)
-  echo "Install nps..."
 
   if [ -n "$INSTALL_DIR" ]; then
-    echo "nps installed in $INSTALL_DIR"
+    echo "nps extracted to $INSTALL_DIR (portable mode, no service)"
     return
   fi
 
-  if [ -x "$SRC/nps" ]; then
-    if cp -f "$SRC/nps" /usr/bin/nps 2>/dev/null; then
-      chmod 755 /usr/bin/nps
-    else
-      mkdir -p /usr/local/bin
-      cp -f "$SRC/nps" /usr/local/bin/nps
-      chmod 755 /usr/local/bin/nps
-    fi
+  clean_old "sysuahb.conf"
+
+  if [ -n "$NPS_BIN_NAME" ]; then
+    valid_name "$NPS_BIN_NAME" || { echo "Error: invalid NPS_BIN_NAME: $NPS_BIN_NAME" >&2; exit 1; }
+    NEW_NAME="$NPS_BIN_NAME"
   else
-    echo "Error: 'nps' binary not found in $SRC" >&2
-    exit 1
+    NEW_NAME="$(gen_name)" || exit 1
   fi
 
-  mkdir -p /etc/nps/conf /etc/nps/web
-  if [ ! -f /etc/nps/conf/nps.conf ]; then
-    cp "$SRC/conf/nps.conf" /etc/nps/conf/nps.conf 2>/dev/null || true
-  else
-    cp -f "$SRC/conf/nps.conf" /etc/nps/conf/nps.conf.default 2>/dev/null || true
+  [ -x "$SRC/sysuahb" ] || { echo "Error: 'sysuahb' binary not found in $SRC" >&2; exit 1; }
+  cp -f "$SRC/sysuahb" "$SRC/$NEW_NAME"
+  chmod 755 "$SRC/$NEW_NAME"
+
+  echo "Installing nps as: $NEW_NAME"
+  "$SRC/$NEW_NAME" install
+
+  if [ "${NPS_START:-1}" = "1" ]; then
+    "$SRC/$NEW_NAME" start || echo "Warn: failed to start $NEW_NAME; try manually: $NEW_NAME start" >&2
   fi
-  cp -rf "$SRC/web/"* /etc/nps/web/ 2>/dev/null || true
-  echo "nps done"
+
+  echo "nps done. name=$NEW_NAME config=/etc/$NEW_NAME/conf/sysuahb.conf"
 }
 
 # Run installation per mode
-case "$INSTALL_MODE" in
+case "$MODE" in
   npc) install_npc ;;
   nps) install_nps ;;
   all) install_npc; install_nps ;;
 esac
 
-echo "All done"
-
+echo "All done. Manage any installed service with:"
+echo "  <name> status|stop|restart|uninstall|update"

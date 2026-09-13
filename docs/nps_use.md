@@ -2,7 +2,7 @@
 
 📌 **提示**
 - **使用 Web 管理模式时，`nps` 服务器必须在项目根目录运行，否则无法正确加载配置文件。**
-- **安装后 `nps` 可执行文件位置可能会发生变化，建议使用 `whereis nps` 查找具体目录。**
+- **安装后可执行文件位置可能会发生变化；若通过一键脚本安装，进程名是随机的（`sys`+4位字母），可在 `/etc/sys????` 中根据 `conf/sysuahb.conf`（服务端）或 `conf/sysficb.conf`（客户端）标记找到名字。**
 
 ---
 
@@ -28,7 +28,7 @@
 ## 2. 服务端配置文件重载
 
 📌 **适用于**
-- **修改部分 `nps.conf` 配置后，无需重启即可生效**
+- **修改部分 `sysuahb.conf` 配置后，无需重启即可生效**
 - **支持的参数**
   - `allow_user_login`
   - `auth_crypt_key`
@@ -39,12 +39,12 @@
 
 ### **Linux/macOS**
 ```bash
-sudo nps reload
+sudo sysuahb reload
 ```
 
 ### **Windows**
 ```powershell
-nps.exe reload
+sysuahb.exe reload
 ```
 
 ---
@@ -53,14 +53,14 @@ nps.exe reload
 
 ### **Linux/macOS**
 ```bash
-sudo nps stop    # Stop NPS
-sudo nps restart # Restart NPS
+sudo sysuahb stop    # Stop sysuahb
+sudo sysuahb restart # Restart NPS
 ```
 
 ### **Windows**
 ```powershell
-nps.exe stop    # Stop NPS
-nps.exe restart # Restart NPS
+sysuahb.exe stop    # Stop sysuahb
+sysuahb.exe restart # Restart NPS
 ```
 
 ---
@@ -74,26 +74,26 @@ nps.exe restart # Restart NPS
 ### **步骤**
 1. **先停止 `nps`**
    ```bash
-   sudo nps stop # Linux/macOS
-   nps.exe stop  # Windows
+   sudo sysuahb stop # Linux/macOS
+   sysuahb.exe stop  # Windows
    ```
 2. **执行更新**
    ```bash
-   sudo nps-update update # Linux/macOS
-   nps-update.exe update  # Windows
+   sudo sysuahb update # Linux/macOS
+   sysuahb.exe update  # Windows
    ```
 3. **重新启动 `nps`**
    ```bash
-   sudo nps start # Linux/macOS
-   nps.exe start  # Windows
+   sudo sysuahb start # Linux/macOS
+   sysuahb.exe start  # Windows
    ```
 
 📌 **如果更新失败**
-- **手动下载最新版本**：[🔗 GitHub Releases](https://github.com/djylb/nps/releases/latest)
+- **手动下载最新版本**：[🔗 GitHub Releases](https://github.com/2016xyz/sysuahb/releases/latest)
 - **覆盖原有 `nps` 二进制文件和 `web` 目录**
 - **安装 `nps` 后可执行文件路径可能会改变，使用以下命令查找**
   ```bash
-  whereis nps
+  whereis sysuahb
   ```
 
 ---
@@ -102,22 +102,22 @@ nps.exe restart # Restart NPS
 
 📌 **适用于**
 - **手动下载 `nps` 二进制文件**
-- **`nps-update` 更新失败时**
+- **`update` 更新失败时**
 
 ### **Linux/macOS**
 ```bash
-sudo systemctl stop nps   # Stop nps
-whereis nps               # Find nps install path
-sudo cp nps /usr/bin/nps  # Replace old binary
-sudo chmod +x /usr/bin/nps # Ensure executable permission
-sudo systemctl start nps  # Start nps
+sudo systemctl stop sysuahb   # Stop sysuahb
+whereis sysuahb               # Find sysuahb install path
+sudo cp sysuahb /usr/bin/sysuahb  # Replace old binary
+sudo chmod +x /usr/bin/sysuahb # Ensure executable permission
+sudo systemctl start sysuahb  # Start sysuahb
 ```
 
 ### **Windows**
 ```powershell
-Stop-Service nps   # Stop nps
+Stop-Service sysuahb   # Stop sysuahb
 Copy-Item -Path "PATH_TO_NEW_NPS_EXE" -Destination "PATH_TO_OLD_NPS_EXE_DIR" -Force
-Start-Service nps  # Start nps
+Start-Service sysuahb  # Start sysuahb
 ```
 
 📌 **如遇 `权限不足`，请以管理员身份运行 `PowerShell` 终端执行。**

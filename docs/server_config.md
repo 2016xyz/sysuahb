@@ -1,16 +1,16 @@
 # NPS 服务端配置文件
 
 📌 **默认配置文件路径**
-- **Linux/macOS**：`/etc/nps/conf/nps.conf`
-- **Windows**：`C:\Program Files\nps\conf\nps.conf`
+- **Linux/macOS**：`/etc/sysuahb/conf/sysuahb.conf`
+- **Windows**：`C:\Program Files\sysuahb\conf\sysuahb.conf`
 
 📌 **指定自定义配置路径**
 ```bash
 # Linux 启动
-./nps -conf_path=/app/nps
+./sysuahb -conf_path=/app/nps
 
 # Windows 启动
-nps.exe -conf_path=D:\test\nps
+sysuahb.exe -conf_path=D:\test\nps
 ```
 
 📌 **注意**

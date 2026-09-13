@@ -1,5 +1,7 @@
 # **启动指南**
 
+> 💡 **关于进程名**：发布包默认二进制名为 `sysuahb`（服务端）/ `sysficb`（客户端），重命名后安装即可（服务名、安装路径、日志文件均跟随新名字）。若通过一键脚本安装，进程名为随机生成的 `sys????`，下文示例中的 `sysuahb`/`sysficb` 请替换为你实际的名字。
+
 ## 1. NPS 服务器
 
 下载并解压 **NPS 服务器端** 压缩包，进入解压后的文件夹。
@@ -7,20 +9,20 @@
 ### **1.1 执行安装**
 #### **Linux / macOS**
 ```bash
-sudo ./nps install
+sudo ./sysuahb install
 
 # Support custom config path
-./nps -conf_path="/app/nps"
-./nps install -conf_path="/app/nps"
+./sysuahb -conf_path="/app/nps"
+./sysuahb install -conf_path="/app/nps"
 ```
 #### **Windows**
 以 **管理员身份** 运行 `cmd` 或 `PowerShell`，进入安装目录：
 ```powershell
-nps.exe install
+sysuahb.exe install
 
 # Support custom config path
-.\nps.exe -conf_path="D:\test\nps"
-.\nps.exe install -conf_path="D:\test\nps"
+.\sysuahb.exe -conf_path="D:\test\nps"
+.\sysuahb.exe install -conf_path="D:\test\nps"
 ```
 
 ---
@@ -28,33 +30,33 @@ nps.exe install
 ### **1.2 启动服务**
 #### **Linux / macOS**
 ```bash
-sudo nps start
+sudo sysuahb start
 ```
 #### **Windows**
 ```powershell
-nps.exe start
+sysuahb.exe start
 ```
 
 📌 **安装后的二进制文件及配置目录**：
 - **Windows**
-  - 配置文件目录：`C:\Program Files\nps`
+  - 配置文件目录：`C:\Program Files\sysuahb`
   - 二进制路径：安装目录（当前文件夹）
 - **Linux / macOS**
-  - 配置文件目录：`/etc/nps`
-  - 二进制路径：`/usr/bin/nps`
+  - 配置文件目录：`/etc/sysuahb`
+  - 二进制路径：`/usr/bin/sysuahb`
 
 📌 **停止/重启服务**
 ```bash
-nps stop      # Stop service
-nps restart   # Restart service
+sysuahb stop      # Stop service
+sysuahb restart   # Restart service
 ```
 
 📌 **卸载 NPS**
 ```bash
-nps uninstall
+sysuahb uninstall
 ```
 
-> **⚠️ Windows 用户请勿删除当前目录下的二进制文件！** `nps.exe` 必须保持在 **原始解压目录** 内，否则无法运行。
+> **⚠️ Windows 用户请勿删除当前目录下的二进制文件！** `sysuahb.exe` 必须保持在 **原始解压目录** 内，否则无法运行。
 
 ---
 
@@ -62,14 +64,14 @@ nps uninstall
 📌 **如果发现未启动成功**
 - **停止服务后手动运行调试**
   ```bash
-  nps stop
-  ./nps   # Linux/macOS 运行
-  nps.exe  # Windows 运行
+  sysuahb stop
+  ./sysuahb   # Linux/macOS 运行
+  sysuahb.exe  # Windows 运行
   ```
 - **查看日志**  
-  📌 **日志具体位置在 `nps.conf` 里配置**
-  - **Windows**: 运行目录下的 `nps.log`
-  - **Linux/macOS**: `/var/log/nps.log`
+  📌 **日志具体位置在 `sysuahb.conf` 里配置**
+  - **Windows**: 运行目录下的 `sysuahb.log`
+  - **Linux/macOS**: `/var/log/sysuahb.log`
 
 ---
 
@@ -94,12 +96,12 @@ nps uninstall
 📌 **直接执行 `install` 命令即可** **自动注册 NPS 为系统服务**。只有需要运行多个实例才需要参考以下内容。
 
 #### **Linux（Systemd）**
-📌 **自动安装的服务文件为 `Nps.service`**
-创建 `systemd` 配置文件（路径：`/etc/systemd/system/nps.service`）：
+📌 **自动安装的服务文件为 `sysuahb.service`**
+创建 `systemd` 配置文件（路径：`/etc/systemd/system/sysuahb.service`）：
 ```ini
 [Unit]
 Description=NPS Intranet Penetration Server
-ConditionFileIsExecutable=/usr/bin/nps
+ConditionFileIsExecutable=/usr/bin/sysuahb
 Requires=network.target
 After=network-online.target syslog.target
 
@@ -107,7 +109,7 @@ After=network-online.target syslog.target
 LimitNOFILE=65536
 StartLimitInterval=5
 StartLimitBurst=10
-ExecStart=/usr/bin/nps "service"
+ExecStart=/usr/bin/sysuahb "service"
 Restart=always
 RestartSec=120
 
@@ -116,14 +118,14 @@ WantedBy=multi-user.target
 ```
 **启用并启动服务**
 ```bash
-systemctl enable nps
-systemctl start nps
+systemctl enable sysuahb
+systemctl start sysuahb
 ```
 📌 **卸载 NPS 服务**
 ```bash
-systemctl stop nps
-systemctl disable nps
-rm /etc/systemd/system/nps.service
+systemctl stop sysuahb
+systemctl disable sysuahb
+rm /etc/systemd/system/sysuahb.service
 systemctl daemon-reload
 ```
 > **不会使用 `systemctl`？** 请参考 [Systemd 官方文档](https://docs.redhat.com/zh-cn/documentation/red_hat_enterprise_linux/9/html/configuring_basic_system_settings/managing-system-services-with-systemctl_managing-systemd#starting-a-system-service_managing-system-services-with-systemctl)。
@@ -134,7 +136,7 @@ systemctl daemon-reload
 📌 **Windows 手动注册服务**
 以 **管理员身份** 运行 `PowerShell`：
 ```powershell
-cmd /c 'sc create Nps1 binPath= "D:\NPS\nps.exe -conf_path=D:\NPS\" DisplayName= "NPS Server 1" start= auto'
+cmd /c 'sc create Nps1 binPath= "D:\NPS\sysuahb.exe -conf_path=D:\NPS\" DisplayName= "NPS Server 1" start= auto'
 ```
 **启动服务**
 ```powershell
@@ -167,11 +169,11 @@ sc delete Nps1
 ### **2.2 直接运行（测试用）**
 #### **Linux**
 ```bash
-./npc -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off
+./sysficb -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off
 ```
 #### **Windows**
 ```powershell
-npc.exe -server="xxx:123,yyy:456" -vkey="xxx,yyy" -type="tcp,tls" -log="off"
+sysficb.exe -server="xxx:123,yyy:456" -vkey="xxx,yyy" -type="tcp,tls" -log="off"
 ```
 > **⚠️ PowerShell 运行时，请用双引号括起命令参数！**
 
@@ -180,29 +182,29 @@ npc.exe -server="xxx:123,yyy:456" -vkey="xxx,yyy" -type="tcp,tls" -log="off"
 ### **2.3 安装服务并启动 (支持连接多个服务端)**
 #### **Linux**
 ```bash
-./npc install -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off
-./npc start
+./sysficb install -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off
+./sysficb start
 ```
 #### **Windows**
 ```powershell
-npc.exe install -server="xxx:123,yyy:456" -vkey="xxx,yyy" -type="tcp,tls" -log="off"
-npc.exe start
+sysficb.exe install -server="xxx:123,yyy:456" -vkey="xxx,yyy" -type="tcp,tls" -log="off"
+sysficb.exe start
 ```
 > **⚠️ PowerShell 运行时，请用双引号括起命令参数！**
 
 📌 **安装后的二进制文件及配置目录**：
 - **Windows**
-  - 配置文件目录：`C:\Program Files\npc`
+  - 配置文件目录：`C:\Program Files\sysficb`
   - 二进制路径：安装目录（当前文件夹）
 - **Linux**
-  - 配置文件目录：`/etc/npc`
-  - 二进制路径：`/usr/bin/npc`
+  - 配置文件目录：`/etc/sysficb`
+  - 二进制路径：`/usr/bin/sysficb`
 
-> **⚠️ Windows 用户请勿删除当前目录下的二进制文件！** `npc.exe` 必须保持在 **原始解压目录** 内，否则无法运行。
+> **⚠️ Windows 用户请勿删除当前目录下的二进制文件！** `sysficb.exe` 必须保持在 **原始解压目录** 内，否则无法运行。
 
 📌 **卸载 NPC**
 ```bash
-npc uninstall
+sysficb uninstall
 ```
 
 ---
@@ -211,12 +213,12 @@ npc uninstall
 📌 **直接执行 `install` 命令即可** **自动注册 NPC 为系统服务**。现在支持单实例命令行配置 **多开** 不需要下面手动管理多个实例了。
 
 #### **Linux（Systemd）**
-📌 **自动安装的服务文件为 `Npc.service`**
-创建 `systemd` 配置文件（路径：`/etc/systemd/system/npc.service`）：
+📌 **自动安装的服务文件为 `sysficb.service`**
+创建 `systemd` 配置文件（路径：`/etc/systemd/system/sysficb.service`）：
 ```ini
 [Unit]
 Description=NPS Intranet Penetration Client
-ConditionFileIsExecutable=/usr/bin/npc
+ConditionFileIsExecutable=/usr/bin/sysficb
 Requires=network.target
 After=network-online.target syslog.target
 
@@ -224,7 +226,7 @@ After=network-online.target syslog.target
 LimitNOFILE=65536
 StartLimitInterval=5
 StartLimitBurst=10
-ExecStart=/usr/bin/npc "-server=xxx:123,yyy:456" "-vkey=xxx,yyy" "-type=tcp,tls" "-debug=false" "-log=off"
+ExecStart=/usr/bin/sysficb "-server=xxx:123,yyy:456" "-vkey=xxx,yyy" "-type=tcp,tls" "-debug=false" "-log=off"
 Restart=always
 RestartSec=120
 
@@ -233,14 +235,14 @@ WantedBy=multi-user.target
 ```
 **启用并启动服务**
 ```bash
-systemctl enable npc
-systemctl start npc
+systemctl enable sysficb
+systemctl start sysficb
 ```
 📌 **卸载 NPC 服务**
 ```bash
-systemctl stop npc
-systemctl disable npc
-rm /etc/systemd/system/npc.service
+systemctl stop sysficb
+systemctl disable sysficb
+rm /etc/systemd/system/sysficb.service
 systemctl daemon-reload
 ```
 > **不会使用 `systemctl`？** 请参考 [Systemd 官方文档](https://docs.redhat.com/zh-cn/documentation/red_hat_enterprise_linux/9/html/configuring_basic_system_settings/managing-system-services-with-systemctl_managing-systemd#starting-a-system-service_managing-system-services-with-systemctl)。
@@ -251,7 +253,7 @@ systemctl daemon-reload
 📌 **Windows 手动注册服务**
 以 **管理员身份** 运行 `PowerShell`：
 ```powershell
-cmd /c 'sc create Npc1 binPath= "D:\tools\npc.exe -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off -debug=false" DisplayName= "NPS Client 1" start= auto'
+cmd /c 'sc create Npc1 binPath= "D:\tools\sysficb.exe -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off -debug=false" DisplayName= "NPS Client 1" start= auto'
 ```
 **启动服务**
 ```powershell

@@ -8,13 +8,13 @@
 NPS 可直接为域名提供 HTTPS 代理服务，类似于 Nginx 处理 HTTPS 证书。  
 
 📌 **配置步骤：**
-1. **修改 `nps.conf`**
+1. **修改 `sysuahb.conf`**
    ```ini
    https_proxy_port=443  # 或者其他端口
    ```
 2. **重启 `nps`**
    ```bash
-   sudo nps restart
+   sudo sysuahb restart
    ```
 3. **在 Web 管理界面**
    - **添加或修改域名**
@@ -42,7 +42,7 @@ NPS 可直接为域名提供 HTTPS 代理服务，类似于 Nginx 处理 HTTPS �
 NPS 可与 **Nginx 配合**，用于**负载均衡、缓存优化、SSL 证书管理**。
 
 📌 **步骤**
-1. **修改 `nps.conf`**
+1. **修改 `sysuahb.conf`**
    ```ini
    http_proxy_port=8010  # 避免与 Nginx 监听的 80 端口冲突
    ```
@@ -135,7 +135,7 @@ web_base_url=/nps
 ## 4. Web 管理面板使用 HTTPS
 
 📌 **启用 HTTPS 访问 Web 管理界面**
-- **在 `nps.conf` 配置**
+- **在 `sysuahb.conf` 配置**
    ```ini
    web_open_ssl=true
    web_cert_file=conf/server.pem
@@ -148,7 +148,7 @@ web_base_url=/nps
 ## 5. 关闭代理功能
 
 📌 **完全关闭 HTTP / HTTPS 代理**
-- 在 `nps.conf` 中：
+- 在 `sysuahb.conf` 中：
    ```ini
    http_proxy_port=  # 关闭 HTTP 代理
    https_proxy_port= # 关闭 HTTPS 代理
@@ -223,7 +223,7 @@ allow_user_register=true
 ```ini
 allow_multi_ip=true
 ```
-- **可在 `npc.conf` 里指定 `server_ip`**
+- **可在 `sysficb.conf` 里指定 `server_ip`**
 
 ---
 

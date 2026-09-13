@@ -1,15 +1,11 @@
-# NPS 内网穿透 (全修)
+# NPS 内网穿透 (改名版)
 
-[![GitHub Stars](https://img.shields.io/github/stars/djylb/nps.svg)](https://github.com/djylb/nps)
-[![GitHub Forks](https://img.shields.io/github/forks/djylb/nps.svg)](https://github.com/djylb/nps)
-[![Release](https://github.com/djylb/nps/workflows/Release/badge.svg)](https://github.com/djylb/nps/actions)
-[![GitHub All Releases](https://img.shields.io/github/downloads/djylb/nps/total)](https://github.com/djylb/nps/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/2016xyz/sysuahb)](https://github.com/2016xyz/sysuahb/releases)
+[![GitHub All Releases](https://img.shields.io/github/downloads/2016xyz/sysuahb/total)](https://github.com/2016xyz/sysuahb/releases)
 
-> 在 [GitHub](https://github.com/djylb/nps) 点击右上角 ⭐ Star 以支持我在空闲时间继续开发
+> 本仓库基于 [djylb/nps](https://github.com/djylb/nps) v0.34.7 重新打包，采用**随机进程名**：服务端二进制为 `sysuahb`，客户端为 `sysficb`，一键安装脚本会在**每次安装时生成一个全新的随机进程名**。
 
-> 由于 GitHub 限制浏览器语言为中文（Accept-Language=zh-CN) 访问 *.githubusercontent.com ，图标可能无法正常显示。
-
-- [English](https://github.com/djylb/nps/blob/master/README.md)
+- [English](https://github.com/2016xyz/sysuahb/blob/v0.34.7/README.md)
 
 ---
 
@@ -17,14 +13,18 @@
 
 NPS 是一款轻量高效的内网穿透代理服务器，支持多种协议（TCP、UDP、HTTP、HTTPS、SOCKS5 等）转发。它提供直观的 Web 管理界面，使得内网资源能安全、便捷地在外网访问，同时满足多种复杂场景的需求。
 
-由于[NPS](https://github.com/ehang-io/nps)停更已久，本仓库整合社区更新二次开发而来。
+由于[NPS](https://github.com/ehang-io/nps)停更已久，[djylb/nps](https://github.com/djylb/nps) 整合社区更新二次开发而来，本仓库是其改名重打包版本。
 
-- **提问前请先查阅：**  [文档](https://d-jy.net/docs/nps/) 与 [Issues](https://github.com/djylb/nps/issues)
-- **欢迎参与：**  提交 PR、反馈问题或建议，共同推动项目发展。
-- **讨论交流：**  加入 [Telegram 交流群](https://t.me/npsdev) 与其他用户交流经验。
-- **Android：**  [djylb/npsclient](https://github.com/djylb/npsclient)
-- **OpenWrt：**  [djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
-- **Mirror：**  [djylb/nps-mirror](https://github.com/djylb/nps-mirror)
+**本版本的不同之处：**
+
+- 服务端二进制：`sysuahb` · 客户端二进制：`sysficb`
+- Linux 一键安装脚本在**每次安装时**生成**随机进程名**（`sys` + 4 位随机小写字母，如 `syskxqz`）——每台机器的进程名都不一样
+- 服务名、二进制路径（`/usr/bin/<name>`）、配置目录（`/etc/<name>/`）、日志文件（`/var/log/<name>.log`）都跟随随机名；目录内的配置文件名保持固定（`sysuahb.conf` / `sysficb.conf`），数据永远好找
+- 重复运行安装脚本会自动清理旧的随机名安装（通过配置标记识别），并以新名字重新安装
+
+- **文档（上游）：** https://d-jy.net/docs/nps/
+- **讨论交流：**  [Telegram 交流群](https://t.me/npsdev)
+- **Android：**  [djylb/npsclient](https://github.com/djylb/npsclient) | **OpenWrt：**  [djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
 
 ![NPS Web UI](https://cdn.jsdelivr.net/gh/djylb/nps/image/web.png)
 
@@ -37,6 +37,9 @@ NPS 是一款轻量高效的内网穿透代理服务器，支持多种协议（T
 
 - **跨平台部署**  
   支持 Linux、Windows 等主流平台，可轻松安装为系统服务。
+
+- **随机进程名**  
+  每次安装生成不同的进程名/服务名（`sys` + 4 位随机字母）；也可通过环境变量强制指定固定名字。
 
 - **Web 管理界面**  
   实时监控流量、连接情况以及客户端状态，操作简单直观。
@@ -53,89 +56,151 @@ NPS 是一款轻量高效的内网穿透代理服务器，支持多种协议（T
 
 更多详细配置请参考 [文档](https://d-jy.net/docs/nps/)（部分内容可能未更新）。
 
-### [Android](https://github.com/djylb/npsclient) | [OpenWrt](https://github.com/djylb/nps-openwrt)
+### 一键部署（Linux）
 
-### Docker 部署
+安装脚本自动检测系统/架构，从 [Releases](https://github.com/2016xyz/sysuahb/releases) 下载对应压缩包，生成随机名（`sys` + 4 位字母）、注册系统服务并启动。需要 root 权限。
 
-***DockerHub***： [NPS](https://hub.docker.com/r/duan2001/nps) [NPC](https://hub.docker.com/r/duan2001/npc)
+#### 服务端（nps）
 
-***GHCR***： [NPS](https://github.com/djylb/nps/pkgs/container/nps) [NPC](https://github.com/djylb/nps/pkgs/container/npc)
-
-> 有真实IP获取需求可配合 [mmproxy](https://github.com/djylb/mmproxy-docker) 使用。例如：SSH
-
-#### NPS 服务端
 ```bash
-docker pull duan2001/nps
-docker run -d --restart=always --name nps --net=host -v $(pwd)/conf:/conf -v /etc/localtime:/etc/localtime:ro duan2001/nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps
 ```
 
-> **提示：** NPS 安装完成后，请先修改 `nps.conf`（如监听端口、Web 管理账号等）再启动服务。
+安装结束时输出的最后几行会显示生成的进程名和配置路径：
 
-#### NPC 客户端
-```bash
-docker pull duan2001/npc
-docker run -d --restart=always --name npc --net=host duan2001/npc -server=xxx:123,yyy:456 -vkey=key1,key2 -type=tls,tcp -log=off
+```
+Installing nps as: syskxqz
+nps done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
 ```
 
-> **提示：** `-server`、`-vkey`、`-type` 等参数请从 NPS Web 管理端的客户端页面复制，避免手动填写错误。
+> **提示：** 首次安装后请先编辑 `/etc/<name>/conf/sysuahb.conf`（监听端口、Web 管理账号等），再执行 `sudo <name> restart`。
 
-### 服务端安装
+#### 客户端（npc）
+
+连接命令请从 NPS Web 管理端的客户端页面复制——`npc` 之后的参数会原样透传给客户端服务：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+```
+
+也可以先不带参数安装，稍后再配置（编辑 `/etc/<name>/conf/sysficb.conf`，或带参数重跑安装脚本重新注册）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc
+```
+
+> **提示：** 客户端支持同时连接多个服务器，示例：
+> `-server=xxx:123,yyy:456,zzz:789 -vkey=key1,key2,key3 -type=tcp,tls`
+> 这里 `xxx:123` 使用 tcp，`yyy:456` 和 `zzz:789` 使用 tls。如需连接旧版本服务器请添加 `-proto_version=0`。
+
+#### 同一台机器同时装服务端和客户端
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s all
+```
+
+### 查找和管理已安装的服务
+
+安装结束时脚本会打印生成的名字。如果没注意到，可以通过固定的配置标记查找：
+
+```bash
+for d in /etc/sys????; do
+  [ -f "$d/conf/sysuahb.conf" ] && echo "服务端: ${d##*/}"
+  [ -f "$d/conf/sysficb.conf" ] && echo "客户端: ${d##*/}"
+done
+```
+
+把 `<name>` 替换成查到的名字，即可执行所有管理命令：
+
+```bash
+sudo <name> status|stop|restart|uninstall
+
+# 更新到最新版本
+sudo <name> update && sudo <name> restart
+```
+
+### 安装脚本选项
+
+环境变量（通过 `sudo env VAR=... sh -s ...` 传入）：
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `NPS_INSTALL_MODE` | `all` | `npc` / `nps` / `all` |
+| `NPS_INSTALL_VERSION` | `latest` | 固定版本号，如 `v0.34.7` |
+| `NPS_INSTALL_DIR` | *(空)* | 便携模式：只解压文件，不注册服务 |
+| `NPC_BIN_NAME` / `NPS_BIN_NAME` | 随机 | 强制指定二进制/服务名，不用随机名 |
+| `NPS_START` | `1` | 设为 `0` 安装后不自动启动 |
+| `NPS_GH_PROXY` | *(空)* | GitHub 下载加速前缀，如 `https://mirror.ghproxy.com/` |
+| `NPS_CONNECT_TIMEOUT` | `10` | 下载连接超时（秒） |
+| `NPS_INSECURE` | `0` | 设为 `1` 跳过 TLS 证书校验 |
+| `NPS_IPV4` | `0` | 设为 `1` 强制 IPv4 下载 |
+
+**示例**
+
+强制固定客户端名字（如用于配置管理）：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo env NPC_BIN_NAME=sysmycl sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+```
+
+国内加速：脚本可先经 jsdelivr 下载，Release 压缩包通过 `NPS_GH_PROXY` 加速：
+
+```bash
+curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.7/install.sh
+sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh nps
+```
+
+安装后不自动启动：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo env NPS_START=0 sh -s nps
+```
+
+### 手动安装
+
+从 [Releases](https://github.com/2016xyz/sysuahb/releases) 下载对应平台的压缩包。命名规则：`<os>_<arch>_server.tar.gz` 内含服务端 `sysuahb`，`<os>_<arch>_client.tar.gz` 内含客户端 `sysficb`，例如 `linux_amd64_server.tar.gz`、`windows_amd64_client.tar.gz`。
+
+本仓库不发布 Docker 镜像；如需容器部署可使用上游镜像（[duan2001/nps](https://hub.docker.com/r/duan2001/nps)、[duan2001/npc](https://hub.docker.com/r/duan2001/npc)）。
 
 #### Linux
+
 ```bash
-# 安装（默认配置路径：/etc/nps/；二进制文件路径：/usr/bin/）
-wget -qO- https://fastly.jsdelivr.net/gh/djylb/nps@master/install.sh | sudo sh -s nps
-nps install
-nps start|stop|restart|uninstall
-
-# 更新
-nps update && nps restart
+tar -xzf linux_amd64_server.tar.gz
+sudo mv sysuahb myname && sudo chmod 755 myname   # 可选：改名以获得自定义服务名
+sudo ./myname install
+sudo ./myname start
 ```
-
-> **提示：** 首次安装后请先编辑 `/etc/nps/nps.conf`，确认配置无误后再执行 `nps start`。
 
 #### Windows
-> Windows 7 用户请使用 old 结尾版本 [64](https://github.com/djylb/nps/releases/latest/download/windows_amd64_server_old.tar.gz) / [32](https://github.com/djylb/nps/releases/latest/download/windows_386_server_old.tar.gz)
+
+> 需要 Windows 10 或更新版本。
+
+**服务端**
+
+1. 下载并解压 `windows_amd64_server.tar.gz`。
+2. 可选：将 `sysuahb.exe` 改成任意名字（如 `syskxqz.exe`）——服务名、安装目录（`C:\Program Files\<name>`）和日志文件都跟随 exe 文件名。
+3. 安装并管理（以下命令中的名字替换成你实际使用的名字）：
+
 ```powershell
-.\nps.exe install
-.\nps.exe start|stop|restart|uninstall
+.\sysuahb.exe install
+.\sysuahb.exe start|stop|restart|uninstall
 
 # 更新
-.\nps.exe stop
-.\nps-update.exe update
-.\nps.exe start
+.\sysuahb.exe stop
+.\sysuahb.exe update
+.\sysuahb.exe start
 ```
 
-### 客户端安装
+> **提示：** 配置文件在解压目录的 `conf\sysuahb.conf`；安装后位于 `C:\Program Files\<name>\conf\sysuahb.conf`。
 
-#### Linux
-```bash
-wget -qO- https://fastly.jsdelivr.net/gh/djylb/nps@master/install.sh | sudo sh -s npc
-/usr/bin/npc install -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls -log=off
-npc start|stop|restart|uninstall
+**客户端**
 
-# 更新
-npc update && npc restart
-```
-
-> **提示：** `npc install` 命令中的参数请以 NPS Web 管理端客户端页面生成的命令为准。
-
-#### Windows
-> Windows 7 用户请使用 old 结尾版本 [64](https://github.com/djylb/nps/releases/latest/download/windows_amd64_client_old.tar.gz) / [32](https://github.com/djylb/nps/releases/latest/download/windows_386_client_old.tar.gz)
 ```powershell
-.\npc.exe install -server="xxx:123,yyy:456" -vkey="xxx,yyy" -type="tls,tcp" -log="off"
-.\npc.exe start|stop|restart|uninstall
+.\sysficb.exe install -server="1.2.3.4:8024" -vkey="YOUR_VKEY" -type="tls,tcp" -log="off"
+.\sysficb.exe start|stop|restart|uninstall
 
 # 更新
-.\npc.exe stop
-.\npc-update.exe update
-.\npc.exe start
+.\sysficb.exe stop
+.\sysficb.exe update
+.\sysficb.exe start
 ```
-
-> **提示：** 客户端支持同时连接多个服务器，示例：  
-> `npc -server=xxx:123,yyy:456,zzz:789 -vkey=key1,key2,key3 -type=tcp,tls`  
-> 这里 `xxx:123` 使用 tcp, `yyy:456` 和 `zzz:789` 使用tls
-
-> 如需连接旧版本服务器请添加 `-proto_version=0`
-
----

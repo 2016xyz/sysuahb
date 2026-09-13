@@ -4,7 +4,7 @@
 
 使用 STUN 服务器检测 NAT 类型：
 ```bash
-./npc nat -stun_addr=stun.stunprotocol.org:3478
+./sysficb nat -stun_addr=stun.stunprotocol.org:3478
 ```
 如果 **P2P 双方都是 `Symmetric NAT`** ，则 **无法穿透**，其他 NAT 组合通常可以成功。
 
@@ -20,7 +20,7 @@
 
 检查 NPC 客户端的运行状态：
 ```bash
-./npc status -config=/path/to/npc.conf
+./sysficb status -config=/path/to/sysficb.conf
 ```
 📌 **可选参数**
 
@@ -34,7 +34,7 @@
 
 重新加载 NPC 客户端配置，而无需重启进程：
 ```bash
-./npc restart -config=/path/to/npc.conf
+./sysficb restart -config=/path/to/sysficb.conf
 ```
 📌 **可选参数**
 
@@ -49,7 +49,7 @@
 如果 NPC 运行的机器无法直接访问外网，可以通过 **Socks5 / HTTP 代理** 连接 NPS 服务器。
 
 ### **4.1 配置文件方式**
-在 `npc.conf` 文件中添加：
+在 `sysficb.conf` 文件中添加：
 ```ini
 [common]
 proxy_url=socks5://111:222@127.0.0.1:8024
@@ -57,7 +57,7 @@ proxy_url=socks5://111:222@127.0.0.1:8024
 
 ### **4.2 命令行方式**
 ```bash
-./npc -server=xxx:123 -vkey=xxx -proxy=socks5://111:222@127.0.0.1:8024
+./sysficb -server=xxx:123 -vkey=xxx -proxy=socks5://111:222@127.0.0.1:8024
 ```
 
 📌 **支持代理协议**
@@ -73,7 +73,7 @@ proxy_url=socks5://111:222@127.0.0.1:8024
 📌 **所有参数可与启动命令组合使用** ：
 
 ```bash
-./npc -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off -debug=false
+./sysficb -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls,tcp -log=off -debug=false
 ```
 
 | 参数                    | 说明                                                                    | 默认值       |
@@ -87,7 +87,7 @@ proxy_url=socks5://111:222@127.0.0.1:8024
 | `-local_ip_forward`   | 是否让 `local_ip` 同时作用于隧道转发出口（仅对公网 IP 与域名生效，私网 IP 忽略）                    | `false`   |
 | `-debug`              | 是否启用调试模式                                                              | `true`    |
 | `-log`                | 日志输出模式（`stdout` / `file` / `both` / `off`）                            | `file`    |
-| `-log_path`           | NPC 日志路径（为空使用默认路径，`off` 禁用日志）                                         | `npc.log` |
+| `-log_path`           | NPC 日志路径（为空使用默认路径，`off` 禁用日志）                                         | `sysficb.log` |
 | `-log_level`          | 日志级别（trace、debug、info、warn、error、fatal、panic、off）                     | `trace`   |
 | `-log_compress`       | 是否启用日志压缩                                                              | `false`   |
 | `-log_max_days`       | 日志最大保留天数（0 关闭）                                                        | `7`       |
@@ -117,7 +117,7 @@ proxy_url=socks5://111:222@127.0.0.1:8024
 | `-get2fa`             | 根据提供的密钥输出一次性 TOTP 验证码                                                 | 无         |
 | `-version`            | 显示当前版本                                                                | 无         |
 
-下面只补充**文档中缺失**的参数说明（基于 `./npc -h`），其余已存在的不重复列出：
+下面只补充**文档中缺失**的参数说明（基于 `./sysficb -h`），其余已存在的不重复列出：
 
 ---
 

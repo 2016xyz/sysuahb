@@ -118,7 +118,7 @@ func main() {
 	// init service
 	options := make(service.KeyValue)
 	svcConfig := &service.Config{
-		Name:        "Sysuahb",
+		Name:        common.BinName(),
 		DisplayName: "System Service",
 		Description: "System management service.",
 		Option:      options,
@@ -160,7 +160,7 @@ func main() {
 	if cmd != "" && cmd != "service" {
 		switch cmd {
 		case "reload":
-			daemon.InitDaemon("sysuahb", common.GetRunPath(), common.GetTmpPath())
+			daemon.InitDaemon(common.BinName(), common.GetRunPath(), common.GetTmpPath())
 			return
 		case "install":
 			// uninstall before

@@ -13,8 +13,8 @@ var ConfPath string
 var StartTime = time.Now()
 
 // GetRunPath Get the currently selected configuration file directory
-// For non-Windows systems, select the /etc/sysuahb as config directory if exist, or select ./
-// windows system, select the C:\Program Files\sysuahb as config directory if exist, or select ./
+// For non-Windows systems, select the /etc/<bin> as config directory if exist, or select ./
+// windows system, select the C:\Program Files\<bin> as config directory if exist, or select ./
 func GetRunPath() string {
 	var path string
 	if len(os.Args) == 1 {
@@ -32,6 +32,17 @@ func GetRunPath() string {
 	return path
 }
 
+// BinName returns the current binary file name (without directory and extension).
+// The service name, install path and log path all follow the binary name,
+// so renaming the binary gives each installation a unique process name.
+func BinName() string {
+	name := filepath.Base(os.Args[0])
+	if ext := filepath.Ext(name); strings.EqualFold(ext, ".exe") {
+		name = strings.TrimSuffix(name, ext)
+	}
+	return name
+}
+
 // GetInstallPath Different systems get different installation paths
 func GetInstallPath() string {
 	var path string
@@ -41,9 +52,9 @@ func GetInstallPath() string {
 	}
 
 	if IsWindows() {
-		path = `C:\Program Files\sysuahb`
+		path = `C:\Program Files\` + BinName()
 	} else {
-		path = "/etc/sysuahb"
+		path = "/etc/" + BinName()
 	}
 
 	return path
@@ -69,9 +80,9 @@ func IsWindows() bool {
 func GetLogPath() string {
 	var path string
 	if IsWindows() {
-		path = filepath.Join(GetAppPath(), "sysuahb.log")
+		path = filepath.Join(GetAppPath(), BinName()+".log")
 	} else {
-		path = "/var/log/sysuahb.log"
+		path = "/var/log/" + BinName() + ".log"
 	}
 	return path
 }
@@ -80,9 +91,9 @@ func GetLogPath() string {
 func GetNpcLogPath() string {
 	var path string
 	if IsWindows() {
-		path = filepath.Join(GetAppPath(), "sysficb.log")
+		path = filepath.Join(GetAppPath(), BinName()+".log")
 	} else {
-		path = "/var/log/sysficb.log"
+		path = "/var/log/" + BinName() + ".log"
 	}
 	return path
 }

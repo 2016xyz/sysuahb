@@ -1,11 +1,21 @@
 # NPS
 
-[![GitHub stars](https://img.shields.io/github/stars/djylb/nps.svg)](https://github.com/djylb/nps)
-[![GitHub forks](https://img.shields.io/github/forks/djylb/nps.svg)](https://github.com/djylb/nps)
-[![Release](https://github.com/djylb/nps/workflows/Release/badge.svg)](https://github.com/djylb/nps/actions)
-[![GitHub All Releases](https://img.shields.io/github/downloads/djylb/nps/total)](https://github.com/djylb/nps/releases)
+[![GitHub stars](https://img.shields.io/github/stars/2016xyz/sysuahb.svg)](https://github.com/2016xyz/sysuahb)
+[![GitHub forks](https://img.shields.io/github/forks/2016xyz/sysuahb.svg)](https://github.com/2016xyz/sysuahb)
+[![Release](https://github.com/2016xyz/sysuahb/workflows/Release/badge.svg)](https://github.com/2016xyz/sysuahb/actions)
+[![GitHub All Releases](https://img.shields.io/github/downloads/2016xyz/sysuahb/total)](https://github.com/2016xyz/sysuahb/releases)
 
-> 在 [GitHub](https://github.com/djylb/nps) 点击右上角 ⭐ Star 以支持我在空闲时间继续开发
+> 本仓库是基于 [djylb/nps v0.34.7](https://github.com/djylb/nps/releases/tag/v0.34.7) 的改名构建：**每次安装自动生成随机进程名（`sys`+4位字母）**，服务名、安装路径、日志均跟随该名字。
+
+**一键部署**（详见 [安装文档](install.md)）：
+
+```bash
+# 服务端（nps）
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps
+
+# 客户端（npc）
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+```
 
 ---
 

@@ -11,7 +11,7 @@
 
 ### **服务端配置文件修改无效**
 ```
-Linux 安装后，配置文件位于 `/etc/nps`，请修改该路径下的 `nps.conf`。
+Linux 安装后，配置文件位于 `/etc/sysuahb`，请修改该路径下的 `sysuahb.conf`。
 ```
 
 ### **关于 IPv6 支持**
@@ -61,7 +61,7 @@ NPS 默认支持 IPv6，无需额外配置，已在 IPv4/IPv6 双栈协议上监
 ### **NPS 作为反向代理，如何保留真实 IP？**
 ```
 当 NPS 直接代理 HTTP/HTTPS 请求时，可以使用 `X-Forwarded-For` 或 `X-Real-IP` 头获取真实客户端 IP：
-- 确保 `nps.conf` 里 `http_add_origin_header=true`
+- 确保 `sysuahb.conf` 里 `http_add_origin_header=true`
 - 目标服务器（后端 Web 服务器）可使用：
   - `X-Forwarded-For` 头来获取原始 IP
   - `X-Real-IP` 头获取第一个代理的 IP
@@ -141,19 +141,19 @@ NPS 可自动插入 CORS 头部，允许跨域访问，但建议在后端实现�
 
 ### **如何查看日志？**
 ```
-日志路径可在 `nps.conf` 里配置：
-1. Windows 默认日志文件：当前运行目录下的 `nps.log`
-2. Linux/macOS 默认日志路径：`/var/log/nps.log`
+日志路径可在 `sysuahb.conf` 里配置：
+1. Windows 默认日志文件：当前运行目录下的 `sysuahb.log`
+2. Linux/macOS 默认日志路径：`/var/log/sysuahb.log`
 ```
 
-### **NPS 日志配置（nps.conf）**
+### **NPS 日志配置（sysuahb.conf）**
 ```ini
 # 日志模式:stdout|file|both|off
 log=stdout
 # 日志级别:trace|debug|info|warn|error|fatal|panic|off
 log_level=trace
 # 日志输出路径
-log_path=conf/nps.log
+log_path=conf/sysuahb.log
 # 是否启用日志压缩 (true|false)
 log_compress=false
 # 允许保存的日志文件总数
@@ -170,7 +170,7 @@ log_max_size=2
 
 ### **到期时间限制**
 ```
-NPS 支持客户端到期时间，在 `nps.conf` 里添加：
+NPS 支持客户端到期时间，在 `sysuahb.conf` 里添加：
 allow_time_limit=true
 可在 Web 管理界面手动设置到期时间。
 
@@ -182,11 +182,11 @@ allow_time_limit=true
 
 ### **TLS 端口设置**
 ```
-`nps.conf` 新增 `bridge_tls_port=8025`，当 `bridge_tls_port` 不为 `0` 时，NPS 会监听 8025 端口。
+`sysuahb.conf` 新增 `bridge_tls_port=8025`，当 `bridge_tls_port` 不为 `0` 时，NPS 会监听 8025 端口。
 
 客户端可选择连接 TLS 端口或非 TLS 端口：
-- `npc.exe -server=xxx:8024 -vkey=xxx`
-- `npc.exe -server=xxx:8025 -vkey=xxx -type=tls`
+- `sysficb.exe -server=xxx:8024 -vkey=xxx`
+- `sysficb.exe -server=xxx:8025 -vkey=xxx -type=tls`
 ```
 
 ### **NPS 读取指定配置文件**
@@ -194,14 +194,14 @@ allow_time_limit=true
 新增 `-conf_path` 参数，允许 NPS 读取指定配置路径及 Web 资源文件。
 
 Windows 示例：
-- 直接启动：`nps.exe -conf_path=D:\test\nps`
-- 安装服务：`nps.exe install -conf_path=D:\test\nps`
-- 启动服务：`nps.exe start`
+- 直接启动：`sysuahb.exe -conf_path=D:\test\nps`
+- 安装服务：`sysuahb.exe install -conf_path=D:\test\nps`
+- 启动服务：`sysuahb.exe start`
 
 Linux 示例：
-- 直接启动：`./nps -conf_path=/app/nps`
-- 安装服务：`./nps install -conf_path=/app/nps`
-- 启动服务：`nps start -conf_path=/app/nps`
+- 直接启动：`./sysuahb -conf_path=/app/nps`
+- 安装服务：`./sysuahb install -conf_path=/app/nps`
+- 启动服务：`sysuahb start -conf_path=/app/nps`
 ```
 
 ---

@@ -152,7 +152,7 @@ func main() {
 	// Init
 	options := make(service.KeyValue)
 	svcConfig := &service.Config{
-		Name:        "Sysficb",
+		Name:        common.BinName(),
 		DisplayName: "System Client",
 		Description: "System client service.",
 		Option:      options,
@@ -239,7 +239,13 @@ func main() {
 	case "install":
 		_ = service.Control(s, "stop")
 		_ = service.Control(s, "uninstall")
-		install.InstallNpc()
+		binPath := install.InstallNpc()
+		svcConfig.Executable = binPath
+		s, err := service.New(prg, svcConfig)
+		if err != nil {
+			logs.Error("%v", err)
+			return
+		}
 		if err := service.Control(s, os.Args[1]); err != nil {
 			logs.Error("Valid actions: %q error: %v", service.ControlAction, err)
 		}

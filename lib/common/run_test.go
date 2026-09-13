@@ -106,14 +106,37 @@ func TestRunTimeZeroValueShowsSeconds(t *testing.T) {
 	}
 }
 
+func TestBinName(t *testing.T) {
+	oldArgs := append([]string(nil), os.Args...)
+	defer func() { os.Args = oldArgs }()
+
+	cases := []struct{ arg0, want string }{
+		{"sysuahb", "sysuahb"},
+		{filepath.Join("usr", "bin", "sysuahb"), "sysuahb"},
+		{filepath.Join("usr", "local", "bin", "sysficb.exe"), "sysficb"},
+		{"sysabcd.EXE", "sysabcd"},
+		{"npc", "npc"},
+	}
+	for _, c := range cases {
+		os.Args = []string{c.arg0}
+		if got := BinName(); got != c.want {
+			t.Fatalf("BinName(%q) = %q, want %q", c.arg0, got, c.want)
+		}
+	}
+}
+
 func TestLogAndTmpPaths(t *testing.T) {
+	oldArgs := append([]string(nil), os.Args...)
+	defer func() { os.Args = oldArgs }()
+	os.Args = []string{"sysuahb", "-c", "conf/sysuahb.conf"}
+
 	if IsWindows() {
 		appPath := GetAppPath()
 		if got := GetLogPath(); got != filepath.Join(appPath, "sysuahb.log") {
 			t.Fatalf("GetLogPath() = %q, want %q", got, filepath.Join(appPath, "sysuahb.log"))
 		}
-		if got := GetNpcLogPath(); got != filepath.Join(appPath, "sysficb.log") {
-			t.Fatalf("GetNpcLogPath() = %q, want %q", got, filepath.Join(appPath, "sysficb.log"))
+		if got := GetNpcLogPath(); got != filepath.Join(appPath, "sysuahb.log") {
+			t.Fatalf("GetNpcLogPath() = %q, want %q", got, filepath.Join(appPath, "sysuahb.log"))
 		}
 		if got := GetTmpPath(); got != appPath {
 			t.Fatalf("GetTmpPath() = %q, want %q", got, appPath)
@@ -127,8 +150,8 @@ func TestLogAndTmpPaths(t *testing.T) {
 	if got := GetLogPath(); got != "/var/log/sysuahb.log" {
 		t.Fatalf("GetLogPath() = %q, want %q", got, "/var/log/sysuahb.log")
 	}
-	if got := GetNpcLogPath(); got != "/var/log/sysficb.log" {
-		t.Fatalf("GetNpcLogPath() = %q, want %q", got, "/var/log/sysficb.log")
+	if got := GetNpcLogPath(); got != "/var/log/sysuahb.log" {
+		t.Fatalf("GetNpcLogPath() = %q, want %q", got, "/var/log/sysuahb.log")
 	}
 	if got := GetTmpPath(); got != "/tmp" {
 		t.Fatalf("GetTmpPath() = %q, want %q", got, "/tmp")

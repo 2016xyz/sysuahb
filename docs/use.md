@@ -15,19 +15,19 @@
 📌 **普通连接（TCP 模式）**
 
 ```bash
-./npc -server=ip:8024 -vkey=YOUR_CLIENT_VKEY -type=tcp
+./sysficb -server=ip:8024 -vkey=YOUR_CLIENT_VKEY -type=tcp
 ```
 
 📌 **TLS 加密连接（安全模式）**
 
 ```bash
-./npc -server=ip:8025 -vkey=YOUR_CLIENT_VKEY -type=tls
+./sysficb -server=ip:8025 -vkey=YOUR_CLIENT_VKEY -type=tls
 ```
 
 📌 **连接多个服务端**
 
 ```bash
-./npc install -server=xx:12,yy:34 -vkey=xx,yy -type=tcp,tls
+./sysficb install -server=xx:12,yy:34 -vkey=xx,yy -type=tcp,tls
 ```
 
 > **📌 说明**：
@@ -47,38 +47,38 @@
 
 ```bash
 # Standard connection (TCP)
-sudo ./npc install -server=ip:8024 -vkey=xxx -type=tcp -log=off
+sudo ./sysficb install -server=ip:8024 -vkey=xxx -type=tcp -log=off
 # TLS connection (secure mode)
-sudo ./npc install -server=ip:8025 -vkey=xxx -type=tls -log=off
+sudo ./sysficb install -server=ip:8025 -vkey=xxx -type=tls -log=off
 # Connect to multiple servers
-sudo ./npc install -server=xx:12,yy:34 -vkey=xx,yy -type=tcp,tls -log=off
+sudo ./sysficb install -server=xx:12,yy:34 -vkey=xx,yy -type=tcp,tls -log=off
 
 # Start service
-sudo npc start
+sudo sysficb start
 # Stop service
-sudo npc stop
+sudo sysficb stop
 # Uninstall (reinstall after changing parameters)
-sudo npc uninstall
+sudo sysficb uninstall
 ```
 
 ### **Windows**
 
 ```powershell
 # Standard connection (TCP)
-npc.exe install -server=ip:8024 -vkey=xxx -type=tcp -log=off
+sysficb.exe install -server=ip:8024 -vkey=xxx -type=tcp -log=off
 # TLS connection (secure mode)
-npc.exe install -server=ip:8025 -vkey=xxx -type=tls -log=off
+sysficb.exe install -server=ip:8025 -vkey=xxx -type=tls -log=off
 # Connect to multiple servers
-npc.exe install -server=xx:12,yy:34 -vkey=xx,yy -type=tcp,tls -log=off
+sysficb.exe install -server=xx:12,yy:34 -vkey=xx,yy -type=tcp,tls -log=off
 
 # Start service
-npc.exe start
+sysficb.exe start
 # Stop service
-npc.exe stop
+sysficb.exe stop
 # Install with custom args
-npc.exe install -server=xx,yy -vkey=xx,yy -type=tcp,tls -config=xxx,yyy -log=off
+sysficb.exe install -server=xx,yy -vkey=xx,yy -type=tcp,tls -config=xxx,yyy -log=off
 # Uninstall (reinstall after changing parameters)
-npc.exe uninstall
+sysficb.exe uninstall
 ```
 
 📌 **Windows 客户端退出后自动重启**：
@@ -88,7 +88,7 @@ npc.exe uninstall
 📌 **日志文件位置**：[可通过参数配置](/npc_extend?id=_5-其他命令行参数)
 
 - **Windows**：当前运行目录下
-- **Linux/macOS**：`/var/log/npc.log`
+- **Linux/macOS**：`/var/log/sysficb.log`
 
 ---
 
@@ -100,21 +100,21 @@ npc.exe uninstall
 
 1. **先停止 NPC**
    ```bash
-   sudo npc stop  # Linux/macOS
-   npc.exe stop  # Windows
+   sudo sysficb stop  # Linux/macOS
+   sysficb.exe stop  # Windows
    ```
 2. **执行更新**
    ```bash
-   sudo npc-update update  # Linux/macOS
-   npc-update.exe update  # Windows
+   sudo sysficb update  # Linux/macOS
+   sysficb.exe update  # Windows
    ```
 3. **重新启动 NPC**
    ```bash
-   sudo npc start  # Linux/macOS
-   npc.exe start  # Windows
+   sudo sysficb start  # Linux/macOS
+   sysficb.exe start  # Windows
    ```
 
-📌 **如果更新失败**，请 **手动下载** [最新版本](https://github.com/djylb/nps/releases/latest)，然后覆盖原有的 `npc` 文件。
+📌 **如果更新失败**，请 **手动下载** [最新版本](https://github.com/2016xyz/sysuahb/releases/latest)，然后覆盖原有的 `sysficb` 文件。
 
 ---
 
@@ -124,18 +124,18 @@ npc.exe uninstall
 
 - **不使用 Web 配置**
 - **使用 `nps` 的公钥或客户端私钥进行验证**
-- **可在 `npc.conf` 文件中完成所有设置**
+- **可在 `sysficb.conf` 文件中完成所有设置**
 
 📌 **启动 NPC**
 
 ```bash
-./npc -config=/path/to/npc.conf
+./sysficb -config=/path/to/sysficb.conf
 # Support multiple config files for multi-instance
-./npc -config=/path/to/npc1.conf,/path/to/npc2.conf
+./sysficb -config=/path/to/sysficb1.conf,/path/to/sysficb2.conf
 ```
 
 📌 **示例配置文件**：
-[📌 示例 `npc.conf`](https://github.com/djylb/nps/tree/master/conf/npc.conf)
+[📌 示例 `sysficb.conf`](https://github.com/2016xyz/sysuahb/tree/master/conf/sysficb.conf)
 
 #### 全局配置
 
@@ -264,7 +264,7 @@ multi_account=multi_account.conf
 |---------------|--------------------------------------------------------------------------------------------------------------------------------------------|
 | mode          | socks5                                                                                                                                     |
 | server_port   | 在服务端的代理端口                                                                                                                                  |
-| multi_account | socks5多账号配置文件（可选),配置后使用basic_username和basic_password无法通过认证 <br> multi_account.conf要与可执行文件npc同一目录，或者npc.conf里面写相对路径,conf/multi_account.conf |
+| multi_account | socks5多账号配置文件（可选),配置后使用basic_username和basic_password无法通过认证 <br> multi_account.conf要与可执行文件npc同一目录，或者sysficb.conf里面写相对路径,conf/multi_account.conf |
 
 #### 私密代理模式
 

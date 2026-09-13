@@ -1,7 +1,7 @@
 # NPS Web API 文档
 
 **注意：**  
-在使用 Web API 前，请确保在 `nps.conf` 中配置了有效的 `auth_key`，并取消其注释。
+在使用 Web API 前，请确保在 `sysuahb.conf` 中配置了有效的 `auth_key`，并取消其注释。
 
 ## Web API 验证机制
 

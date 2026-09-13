@@ -5,7 +5,7 @@
 ~~对于Web站点来说，一些静态文件往往消耗更大的流量，且在内网穿透中，静态文件还需到客户端获取一次，这将导致更大的流量消耗。nps在域名解析代理中支持对静态文件进行缓存。~~
 
 ~~即假设一个站点有a.css，nps将只需从npc客户端读取一次该文件，然后把该文件的内容放在内存中，下一次将不再对npc客户端进行请求而直接返回内存中的对应内容。该功能默认是关闭的，如需开启请在
-`nps.conf`中设置`http_cache=true`，并设置`http_cache_length`（缓存文件的个数，消耗内存，不宜过大，0表示不限制个数）~~
+`sysuahb.conf`中设置`http_cache=true`，并设置`http_cache_length`（缓存文件的个数，消耗内存，不宜过大，0表示不限制个数）~~
 
 该功能将请求内容全部缓存在内存导致消耗过大，同时性能提升不明显，实际使用时缓存命中率不高，同时后端有文件修改也返回不及时，如有需要可使用前置Nginx来实现缓存，故废弃该功能。
 
@@ -193,15 +193,15 @@ Access-Control-Allow-Credentials: true
 ## 流量限制
 
 支持客户端级流量限制，当该客户端入口流量与出口流量达到设定的总量后会拒绝服务
-，域名代理会返回 404 页面，其他代理会拒绝连接,使用该功能需要在`nps.conf`中设置`allow_flow_limit`，默认是关闭的。
+，域名代理会返回 404 页面，其他代理会拒绝连接,使用该功能需要在`sysuahb.conf`中设置`allow_flow_limit`，默认是关闭的。
 
 ## 带宽限制
 
-支持客户端级带宽限制，带宽计算方式为入口和出口总和，权重均衡,使用该功能需要在`nps.conf`中设置`allow_rate_limit`，默认是关闭的。
+支持客户端级带宽限制，带宽计算方式为入口和出口总和，权重均衡,使用该功能需要在`sysuahb.conf`中设置`allow_rate_limit`，默认是关闭的。
 
 ## 时间限制
 
-支持客户端级到期日期限制，到期后会拒绝连接，使用该功能需要在`nps.conf`中设置`allow_time_limit`，默认是关闭的。
+支持客户端级到期日期限制，到期后会拒绝连接，使用该功能需要在`sysuahb.conf`中设置`allow_time_limit`，默认是关闭的。
 支持随便填写日期格式自动识别（支持时间戳、注意系统时区），留空关闭。示例：2025-01-01（指定东八时区：2025-01-01 00:00:00 +0800 CST）
 
 ## 负载均衡
@@ -214,7 +214,7 @@ Access-Control-Allow-Credentials: true
 
 ## 端口白名单
 
-为了防止服务端上的端口被滥用，可在nps.conf中配置allow_ports限制可开启的端口，忽略或者不填表示端口不受限制，格式：
+为了防止服务端上的端口被滥用，可在sysuahb.conf中配置allow_ports限制可开启的端口，忽略或者不填表示端口不受限制，格式：
 
 ```ini
 allow_ports=9001-9009,10001,11000-12000
@@ -247,7 +247,7 @@ target_ip=10.1.50.2
 
 ## KCP协议支持
 
-在网络质量非常好的情况下，例如专线，内网，可以开启略微降低延迟。如需使用可在nps.conf中修改`bridge_type`为kcp
+在网络质量非常好的情况下，例如专线，内网，可以开启略微降低延迟。如需使用可在sysuahb.conf中修改`bridge_type`为kcp
 ，设置后本代理将开启udp端口（`bridge_port`）
 
 注意：当服务端为kcp时，客户端连接时也需要使用相同配置，无配置文件模式加上参数type=kcp,配置文件模式在配置文件中设置tp=kcp
@@ -287,7 +287,7 @@ NPS 会自动添加 `X-Original-Path` 请求头用于识别浏览器请求的实
 
 如果将一些危险性高的端口例如ssh端口暴露在公网上，可能会带来一些风险，本代理支持限制ip访问。
 
-**使用方法:** 在配置文件nps.conf中设置`ip_limit`=true，设置后仅通过注册的ip方可访问。
+**使用方法:** 在配置文件sysuahb.conf中设置`ip_limit`=true，设置后仅通过注册的ip方可访问。
 
 **ip注册**：
 
@@ -295,7 +295,7 @@ NPS 会自动添加 `X-Original-Path` 请求头用于识别浏览器请求的实
 在需要访问的机器上，运行客户端
 
 ```
-./npc register -server=ip:port -vkey=PUBLIC_KEY_OR_CLIENT_VKEY -time=2
+./sysficb register -server=ip:port -vkey=PUBLIC_KEY_OR_CLIENT_VKEY -time=2
 ```
 
 time为有效小时数，例如time=2，在当前时间后的两小时内，本机公网ip都可以访问nps代理.
@@ -308,12 +308,12 @@ time为有效小时数，例如time=2，在当前时间后的两小时内，本�
 ## 客户端最大连接数
 
 为防止恶意大量长连接，影响服务端程序的稳定性，可以在web或客户端配置文件中为每个客户端设置最大连接数。该功能针对`socks5`、
-`http正向代理`、`域名代理`、`tcp代理`、`udp代理`、`私密代理`生效,使用该功能需要在`nps.conf`中设置
+`http正向代理`、`域名代理`、`tcp代理`、`udp代理`、`私密代理`生效,使用该功能需要在`sysuahb.conf`中设置
 `allow_connection_num_limit=true`，默认是关闭的。
 
 ## 客户端最大隧道数限制
 
-nps支持对客户端的隧道数量进行限制，该功能默认是关闭的，如需开启，请在`nps.conf`中设置`allow_tunnel_num_limit=true`。
+nps支持对客户端的隧道数量进行限制，该功能默认是关闭的，如需开启，请在`sysuahb.conf`中设置`allow_tunnel_num_limit=true`。
 
 ## 端口复用
 
@@ -352,7 +352,7 @@ export NPC_SERVER_ADDR=1.1.1.1:8024
 export NPC_SERVER_VKEY=xxxxx
 ```
 
-直接执行./npc即可运行
+直接执行./sysficb即可运行
 
 **在配置文件启动模式下：**
 
@@ -417,14 +417,14 @@ health_check_target=127.0.0.1:8083,127.0.0.1:8082
 **对于npc：**
 
 ```
--log_level=info -log_path=npc.log
+-log_level=info -log_path=sysficb.log
 ```
 
 默认为全输出
 
 **对于nps：**
 
-在`nps.conf`中设置相关配置即可
+在`sysuahb.conf`中设置相关配置即可
 
 ## pprof性能分析与调试
 
@@ -439,4 +439,4 @@ health_check_target=127.0.0.1:8083,127.0.0.1:8082
 值得注意的是需要客户端的socket关闭，才会进行重连，也就是当客户端无法收到服务端的fin包时，只有客户端自行关闭socket才行。
 也就是假如服务端设置为较低值，而客户端设置较高值，而此时服务端断开连接而客户端无法收到服务端的fin包，客户端也会继续等着直到触发客户端的超时设置。
 
-在`nps.conf`或`npc.conf`中设置`disconnect_timeout`即可，客户端还可附带`-disconnect_timeout=60`参数启动
+在`sysuahb.conf`或`sysficb.conf`中设置`disconnect_timeout`即可，客户端还可附带`-disconnect_timeout=60`参数启动

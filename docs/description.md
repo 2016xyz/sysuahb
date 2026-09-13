@@ -4,13 +4,13 @@
 
 ## 旧版连接支持
 
-若需兼容旧版客户端，可在 `nps.conf` 中设置 `secure_mode=false`。
+若需兼容旧版客户端，可在 `sysuahb.conf` 中设置 `secure_mode=false`。
 
 旧版客户端连接新版服务端时，在启动参数中添加 `-proto_version=0`。
 
 ## 获取用户真实 IP
 
-在 `nps.conf` 中启用 `http_add_origin_header=true` 后，域名代理模式会在每个 HTTP/HTTPS 请求头中注入 `X-Forwarded-For` 和 `X-Real-IP`，以便后端获取访问者的真实地址。
+在 `sysuahb.conf` 中启用 `http_add_origin_header=true` 后，域名代理模式会在每个 HTTP/HTTPS 请求头中注入 `X-Forwarded-For` 和 `X-Real-IP`，以便后端获取访问者的真实地址。
 
 ## 热更新支持
 
