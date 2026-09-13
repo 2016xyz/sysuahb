@@ -21,6 +21,12 @@
 </head>
 
 <body class="login-page">
+    <div class="login-bg" aria-hidden="true">
+        <span class="blob blob-a"></span>
+        <span class="blob blob-b"></span>
+        <span class="grid-overlay"></span>
+    </div>
+
     <nav class="navbar navbar-static-top navbar-right navbar-login">
         <div class="ml-auto d-flex align-items-center" style="gap: 0.5rem;">
             <button id="theme-toggle" class="btn btn-outline-secondary" onclick="toggleTheme()">
@@ -38,18 +44,24 @@
 
     <div class="login-card">
         <div class="login-header">
-            <img src="{{.web_base_url}}/static/img/nps.svg?v={{.version}}" alt="Logo" style="width: 32px; height: 32px; margin-right: 20px !important;">
-            <div class="navbar-brand" style="font-weight: lighter; font-size: 2.0rem !important"><h1 langtag="title-login"></h1></div>
+            <div class="login-brand">
+                <span class="brand-badge"><img src="{{.web_base_url}}/static/img/nps.svg?v={{.version}}" alt="Logo"></span>
+                <div class="navbar-brand" style="font-weight: lighter; font-size: 2.0rem !important"><h1 langtag="title-login"></h1></div>
+            </div>
+            <p class="login-subtitle" langtag="application"></p>
         </div>
         <div class="login-body">
             <form class="m-t" onsubmit="return false;">
                 <div class="form-group position-relative">
                     <i class="fas fa-user-circle input-icon"></i>
-                    <input class="form-control" langtag="word-username" name="username" placeholder="username" required="" type="text">
+                    <input class="form-control" langtag="word-username" name="username" placeholder="username" autocomplete="username" required="" type="text">
                 </div>
-                <div class="form-group position-relative">
+                <div class="form-group position-relative has-feedback">
                     <i class="fas fa-key input-icon"></i>
-                    <input class="form-control" langtag="word-password" name="password" placeholder="password" required="" type="password">
+                    <input class="form-control login-pwd" langtag="word-password" name="password" placeholder="password" autocomplete="current-password" required="" type="password">
+                    <button type="button" class="pwd-toggle" aria-label="toggle password" onclick="togglePwd(this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
                 {{if eq true .captcha_open}}
                 <div class="form-group captcha-group position-relative">
@@ -57,21 +69,24 @@
                     <i class="fas fa-shield-alt input-icon"></i>
                     <input class="form-control" langtag="word-captcha" name="captcha" placeholder="captcha" required="">
                     </div>
-                    <div class="captcha-container">
+                    <div class="captcha-container" title="click to refresh">
                     {{create_captcha}}
                     </div>
                 </div>
                 {{end}}
-                <button id="loginBtn" class="btn btn-primary block full-width m-b" langtag="word-login" onclick="if (this.form.reportValidity()) login()" type="submit"></button>
+                <button id="loginBtn" class="btn btn-primary btn-login block full-width m-b" langtag="word-login" onclick="if (this.form.reportValidity()) login()" type="submit">
+                    <span class="btn-label" langtag="word-login"></span>
+                    <span class="btn-spinner" aria-hidden="true"><i class="fas fa-circle-notch fa-spin"></i></span>
+                </button>
                 {{if eq true .register_allow}}
-                <p class="text-muted text-center">
+                <p class="text-muted text-center login-alt">
                     <small langtag="info-noaccount"></small>
                     <small><a href="{{.web_base_url}}/login/register" langtag="word-register"></a></small>
                 </p>
                 {{end}}
             </form>
     </div>
-    <div class="footer">
+    <div class="footer login-footer">
         <div class="float-right">
             <span langtag="word-readmore"></span>
             <strong><a href="https://github.com/djylb/nps" langtag="word-go"></a></strong>
@@ -165,8 +180,15 @@
         $(function () {
             syncServerTime();
         });
+        function togglePwd(btn) {
+            var $input = $(btn).siblings('input.login-pwd');
+            var show = $input.attr('type') === 'password';
+            $input.attr('type', show ? 'text' : 'password');
+            $(btn).find('i').toggleClass('fa-eye fa-eye-slash');
+        }
         async function login() {
             loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
             showMsg(langreply('Processing'), 'loading', 60000);
             await new Promise(requestAnimationFrame);
             await new Promise(resolve => setTimeout(resolve, 600));
@@ -185,6 +207,8 @@
                     data.powx = await calcPowX(encPwd, window.nps.powBits);
                     data.bits = window.nps.powBits;
                 } catch (e) {
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
                     showMsg(e.toString(), 'error', 4000);
                     return false;
                 }
@@ -214,6 +238,7 @@
                         {{end}}
                         showMsg(langreply(res.msg), 'error', 3000, function() {
                             loginBtn.disabled = false;
+                            loginBtn.classList.remove('loading');
                             if (res.nonce) {
                                 window.nps.loginNonce = res.nonce;
                             }
