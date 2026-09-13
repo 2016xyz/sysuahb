@@ -41,8 +41,20 @@ TARGETS=(
   "windows arm64"
 )
 
-NPC_TAR_FILES="conf/npc.conf conf/multi_account.conf"
-NPS_TAR_FILES="conf/nps.conf web/views web/static"
+NPC_TAR_FILES="conf/sysficb.conf conf/multi_account.conf"
+NPS_TAR_FILES="conf/sysuahb.conf web/views web/static"
+
+NPS_BIN="sysuahb"
+NPC_BIN="sysficb"
+
+out_bin() {
+  local name="$1"
+  case "$name" in
+    nps) echo "$NPS_BIN" ;;
+    npc) echo "$NPC_BIN" ;;
+    *)   echo "$name" ;;
+  esac
+}
 
 SDK_TARGETS=(
   "windows 386 i686-w64-mingw32-gcc"
@@ -56,6 +68,8 @@ build_binary() {
   local extra="$4"
   local ext=""
   [ "$os" = "windows" ] && ext=".exe"
+  local out
+  out=$(out_bin "$name")
 
   local envstr=""
   case "$arch" in
@@ -90,9 +104,9 @@ build_binary() {
   fi
 
   if [[ -n "$envstr" ]]; then
-    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" $envstr go build -trimpath -ldflags \"$build_ldflags\" -o \"$name$ext\" \"./cmd/$name/$name.go\""
+    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" $envstr go build -trimpath -ldflags \"$build_ldflags\" -o \"$out$ext\" \"./cmd/$name/$name.go\""
   else
-    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" go build -trimpath -ldflags \"$build_ldflags\" -o \"$name$ext\" \"./cmd/$name/$name.go\""
+    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" go build -trimpath -ldflags \"$build_ldflags\" -o \"$out$ext\" \"./cmd/$name/$name.go\""
   fi
 }
 
@@ -105,7 +119,9 @@ package_binary() {
   local suffix="$6"
   local ext=""
   [ "$os" = "windows" ] && ext=".exe"
-  local bin="$name$ext"
+  local out
+  out=$(out_bin "$name")
+  local bin="$out$ext"
 
   local arch_tag="$arch"
   if [[ -n "$extra" ]]; then
@@ -143,10 +159,10 @@ build_sdk() {
     local ext=""
     [ "$os" = "windows" ] && ext=".dll" || ext=".so"
     CGO_ENABLED=1 GOOS=$os GOARCH=$arch CC=$cc \
-      go build -tags sdk -trimpath -buildmode=c-shared -ldflags "$COMMON_LDFLAGS" -o "$folder/npc_sdk$ext" cmd/npc/sdk.go
+      go build -tags sdk -trimpath -buildmode=c-shared -ldflags "$COMMON_LDFLAGS" -o "$folder/${NPC_BIN}_sdk$ext" cmd/npc/sdk.go
     cp npc_sdk.h "$folder"/ 2>/dev/null || true
   done
-  tar -czvf npc_sdk.tar.gz sdk_*
+  tar -czvf "${NPC_BIN}_sdk.tar.gz" sdk_*
   rm -rf sdk_*
 }
 

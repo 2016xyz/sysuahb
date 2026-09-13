@@ -19,7 +19,7 @@ func init() {
 	go func() {
 		for {
 			<-s
-			_ = beego.LoadAppConfig("ini", filepath.Join(common.GetRunPath(), "conf", "nps.conf"))
+			_ = beego.LoadAppConfig("ini", filepath.Join(common.GetRunPath(), "conf", "sysuahb.conf"))
 		}
 	}()
 }

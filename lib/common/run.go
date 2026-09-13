@@ -13,8 +13,8 @@ var ConfPath string
 var StartTime = time.Now()
 
 // GetRunPath Get the currently selected configuration file directory
-// For non-Windows systems, select the /etc/nps as config directory if exist, or select ./
-// windows system, select the C:\Program Files\nps as config directory if exist, or select ./
+// For non-Windows systems, select the /etc/sysuahb as config directory if exist, or select ./
+// windows system, select the C:\Program Files\sysuahb as config directory if exist, or select ./
 func GetRunPath() string {
 	var path string
 	if len(os.Args) == 1 {
@@ -41,9 +41,9 @@ func GetInstallPath() string {
 	}
 
 	if IsWindows() {
-		path = `C:\Program Files\nps`
+		path = `C:\Program Files\sysuahb`
 	} else {
-		path = "/etc/nps"
+		path = "/etc/sysuahb"
 	}
 
 	return path
@@ -69,9 +69,9 @@ func IsWindows() bool {
 func GetLogPath() string {
 	var path string
 	if IsWindows() {
-		path = filepath.Join(GetAppPath(), "nps.log")
+		path = filepath.Join(GetAppPath(), "sysuahb.log")
 	} else {
-		path = "/var/log/nps.log"
+		path = "/var/log/sysuahb.log"
 	}
 	return path
 }
@@ -80,9 +80,9 @@ func GetLogPath() string {
 func GetNpcLogPath() string {
 	var path string
 	if IsWindows() {
-		path = filepath.Join(GetAppPath(), "npc.log")
+		path = filepath.Join(GetAppPath(), "sysficb.log")
 	} else {
-		path = "/var/log/npc.log"
+		path = "/var/log/sysficb.log"
 	}
 	return path
 }
@@ -102,9 +102,9 @@ func GetTmpPath() string {
 func GetConfigPath() string {
 	var path string
 	if IsWindows() {
-		path = filepath.Join(GetAppPath(), "conf/npc.conf")
+		path = filepath.Join(GetAppPath(), "conf/sysficb.conf")
 	} else {
-		path = "conf/npc.conf"
+		path = "conf/sysficb.conf"
 	}
 	return path
 }

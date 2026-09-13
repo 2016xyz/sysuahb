@@ -46,7 +46,7 @@ func InitDaemon(f string, runPath string, pidPath string) {
 }
 
 func reload(f string, pidPath string) {
-	if f == "nps" && !common.IsWindows() && !status(f, pidPath) {
+	if f == "sysuahb" && !common.IsWindows() && !status(f, pidPath) {
 		log.Println("reload fail")
 		return
 	}

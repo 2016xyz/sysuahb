@@ -116,7 +116,7 @@ func PrintTOTPSecret() {
 		fmt.Printf("Failed to generate 2FA secret: %v\n", err)
 		return
 	}
-	fmt.Printf("Your new 2FA secret is: %s\nPlease add this secret to your nps.conf configuration file.\n", secret)
+	fmt.Printf("Your new 2FA secret is: %s\nPlease add this secret to your sysuahb.conf configuration file.\n", secret)
 	totpUrl := BuildTotpUri("", "NPS", secret)
 	qr, err := qrcode.New(totpUrl, qrcode.Medium)
 	if err != nil {

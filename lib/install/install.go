@@ -147,14 +147,14 @@ WantedBy=multi-user.target
 func UpdateNps() {
 	destPath := downloadLatest("server")
 	//复制文件到对应目录
-	copyStaticFile(destPath, "nps")
+	copyStaticFile(destPath, "sysuahb")
 	fmt.Println("Update completed, please restart")
 }
 
 func UpdateNpc() {
 	destPath := downloadLatest("client")
 	//复制文件到对应目录
-	copyStaticFile(destPath, "npc")
+	copyStaticFile(destPath, "sysficb")
 	fmt.Println("Update completed, please restart")
 }
 
@@ -350,7 +350,7 @@ func downloadLatest(bin string) string {
 
 func copyStaticFile(srcPath, bin string) string {
 	path := common.GetInstallPath()
-	if bin == "nps" {
+	if bin == "sysuahb" {
 		if err := CopyDir(filepath.Join(srcPath, "web", "views"), filepath.Join(path, "web", "views")); err != nil {
 			if exists, _ := pathExists(filepath.Join(path, "web", "views")); exists {
 				goto ExecPath
@@ -365,13 +365,13 @@ func copyStaticFile(srcPath, bin string) string {
 			log.Fatalln(err)
 		}
 		chMod(filepath.Join(path, "web", "static"), 0766)
-		if _, err := copyFile(filepath.Join(srcPath, "conf", "nps.conf"), filepath.Join(path, "conf", "nps.conf.default")); err != nil {
-			if exists, _ := pathExists(filepath.Join(path, "conf", "nps.conf")); exists {
+		if _, err := copyFile(filepath.Join(srcPath, "conf", "sysuahb.conf"), filepath.Join(path, "conf", "sysuahb.conf.default")); err != nil {
+			if exists, _ := pathExists(filepath.Join(path, "conf", "sysuahb.conf")); exists {
 				goto ExecPath
 			}
 			log.Fatalln(err)
 		}
-		chMod(filepath.Join(path, "conf", "nps.conf.default"), 0766)
+		chMod(filepath.Join(path, "conf", "sysuahb.conf.default"), 0766)
 	}
 ExecPath:
 	binPath, err := os.Executable()
@@ -411,7 +411,7 @@ func InstallNpc() {
 			log.Fatal(err)
 		}
 	}
-	copyStaticFile(common.GetAppPath(), "npc")
+	copyStaticFile(common.GetAppPath(), "sysficb")
 }
 
 func InstallNps() string {
@@ -427,17 +427,17 @@ func InstallNps() string {
 		}
 		chMod(filepath.Join(path, "conf"), 0766)
 	}
-	binPath := copyStaticFile(common.GetAppPath(), "nps")
+	binPath := copyStaticFile(common.GetAppPath(), "sysuahb")
 	log.Println("install ok!")
 	log.Println("Static files and configuration files in the current directory will be useless")
 	log.Println("The new configuration file is located in", path, "you can edit them")
 	if !common.IsWindows() {
 		log.Println(`You can start with:
-nps start|stop|restart|uninstall|update or nps-update update
+sysuahb start|stop|restart|uninstall|update or sysuahb-update update
 anywhere!`)
 	} else {
 		log.Println(`You can copy executable files to any directory and start working with:
-nps.exe start|stop|restart|uninstall|update or nps-update.exe update
+sysuahb.exe start|stop|restart|uninstall|update or sysuahb-update.exe update
 now!`)
 	}
 	chMod(common.GetLogPath(), 0777)

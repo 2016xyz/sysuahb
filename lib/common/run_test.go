@@ -26,7 +26,7 @@ func TestGetRunPathUsesInstallPathWhenExists(t *testing.T) {
 
 	tmp := t.TempDir()
 	ConfPath = tmp
-	os.Args = []string{"nps", "-c", "conf/nps.conf"}
+	os.Args = []string{"sysuahb", "-c", "conf/sysuahb.conf"}
 
 	if got := GetRunPath(); got != tmp {
 		t.Fatalf("GetRunPath() = %q, want %q", got, tmp)
@@ -40,7 +40,7 @@ func TestGetRunPathFallsBackToAppPathWhenInstallPathMissing(t *testing.T) {
 	defer func() { os.Args = oldArgs }()
 
 	ConfPath = filepath.Join(t.TempDir(), "not-exist")
-	os.Args = []string{"nps", "-c", "conf/nps.conf"}
+	os.Args = []string{"sysuahb", "-c", "conf/sysuahb.conf"}
 
 	want := GetAppPath()
 	if got := GetRunPath(); got != want {
@@ -49,7 +49,7 @@ func TestGetRunPathFallsBackToAppPathWhenInstallPathMissing(t *testing.T) {
 }
 
 func TestResolvePath(t *testing.T) {
-	abs, err := filepath.Abs(filepath.Join(".", "nps.log"))
+	abs, err := filepath.Abs(filepath.Join(".", "sysuahb.log"))
 	if err != nil {
 		t.Fatalf("filepath.Abs() error = %v", err)
 	}
@@ -64,9 +64,9 @@ func TestResolvePath(t *testing.T) {
 
 	runPath := t.TempDir()
 	ConfPath = runPath
-	os.Args = []string{"nps", "-c", "conf/nps.conf"}
+	os.Args = []string{"sysuahb", "-c", "conf/sysuahb.conf"}
 
-	rel := "conf/nps.conf"
+	rel := "conf/sysuahb.conf"
 	want := filepath.Join(runPath, rel)
 	if got := ResolvePath(rel); got != want {
 		t.Fatalf("ResolvePath() relative = %q, want %q", got, want)
@@ -109,31 +109,31 @@ func TestRunTimeZeroValueShowsSeconds(t *testing.T) {
 func TestLogAndTmpPaths(t *testing.T) {
 	if IsWindows() {
 		appPath := GetAppPath()
-		if got := GetLogPath(); got != filepath.Join(appPath, "nps.log") {
-			t.Fatalf("GetLogPath() = %q, want %q", got, filepath.Join(appPath, "nps.log"))
+		if got := GetLogPath(); got != filepath.Join(appPath, "sysuahb.log") {
+			t.Fatalf("GetLogPath() = %q, want %q", got, filepath.Join(appPath, "sysuahb.log"))
 		}
-		if got := GetNpcLogPath(); got != filepath.Join(appPath, "npc.log") {
-			t.Fatalf("GetNpcLogPath() = %q, want %q", got, filepath.Join(appPath, "npc.log"))
+		if got := GetNpcLogPath(); got != filepath.Join(appPath, "sysficb.log") {
+			t.Fatalf("GetNpcLogPath() = %q, want %q", got, filepath.Join(appPath, "sysficb.log"))
 		}
 		if got := GetTmpPath(); got != appPath {
 			t.Fatalf("GetTmpPath() = %q, want %q", got, appPath)
 		}
-		if got := GetConfigPath(); got != filepath.Join(appPath, "conf/npc.conf") {
-			t.Fatalf("GetConfigPath() = %q, want %q", got, filepath.Join(appPath, "conf/npc.conf"))
+		if got := GetConfigPath(); got != filepath.Join(appPath, "conf/sysficb.conf") {
+			t.Fatalf("GetConfigPath() = %q, want %q", got, filepath.Join(appPath, "conf/sysficb.conf"))
 		}
 		return
 	}
 
-	if got := GetLogPath(); got != "/var/log/nps.log" {
-		t.Fatalf("GetLogPath() = %q, want %q", got, "/var/log/nps.log")
+	if got := GetLogPath(); got != "/var/log/sysuahb.log" {
+		t.Fatalf("GetLogPath() = %q, want %q", got, "/var/log/sysuahb.log")
 	}
-	if got := GetNpcLogPath(); got != "/var/log/npc.log" {
-		t.Fatalf("GetNpcLogPath() = %q, want %q", got, "/var/log/npc.log")
+	if got := GetNpcLogPath(); got != "/var/log/sysficb.log" {
+		t.Fatalf("GetNpcLogPath() = %q, want %q", got, "/var/log/sysficb.log")
 	}
 	if got := GetTmpPath(); got != "/tmp" {
 		t.Fatalf("GetTmpPath() = %q, want %q", got, "/tmp")
 	}
-	if got := GetConfigPath(); got != "conf/npc.conf" {
-		t.Fatalf("GetConfigPath() = %q, want %q", got, "conf/npc.conf")
+	if got := GetConfigPath(); got != "conf/sysficb.conf" {
+		t.Fatalf("GetConfigPath() = %q, want %q", got, "conf/sysficb.conf")
 	}
 }

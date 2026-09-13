@@ -344,7 +344,7 @@ func TestPathAndFileHelpers(t *testing.T) {
 	oldArgs := append([]string(nil), os.Args...)
 	defer func() { ConfPath = oldConf; os.Args = oldArgs }()
 	ConfPath = tmpDir
-	os.Args = []string{"nps", "-c", "conf/nps.conf"}
+	os.Args = []string{"sysuahb", "-c", "conf/sysuahb.conf"}
 
 	if got := GetPath("conf/a.conf"); !strings.HasSuffix(got, filepath.Join("conf", "a.conf")) {
 		t.Fatalf("GetPath(relative) = %q, want suffix conf/a.conf", got)

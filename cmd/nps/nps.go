@@ -76,9 +76,9 @@ func main() {
 		common.ConfPath = cp
 	}
 
-	if err := beego.LoadAppConfig("ini", filepath.Join(common.GetRunPath(), "conf", "nps.conf")); err != nil {
+	if err := beego.LoadAppConfig("ini", filepath.Join(common.GetRunPath(), "conf", "sysuahb.conf")); err != nil {
 		log.Println("load config file error", err.Error())
-		if err := beego.LoadAppConfig("ini", filepath.Join(common.GetAppPath(), "conf", "nps.conf")); err != nil {
+		if err := beego.LoadAppConfig("ini", filepath.Join(common.GetAppPath(), "conf", "sysuahb.conf")); err != nil {
 			log.Fatalln("load config file error", err.Error())
 		}
 	}
@@ -118,9 +118,9 @@ func main() {
 	// init service
 	options := make(service.KeyValue)
 	svcConfig := &service.Config{
-		Name:        "Nps",
-		DisplayName: "nps内网穿透代理服务器",
-		Description: "一款轻量级、功能强大的内网穿透代理服务器。支持tcp、udp流量转发，支持内网http代理、内网socks5代理，同时支持snappy压缩、站点保护、加密传输、多路复用、header修改等。支持web图形化管理，集成多用户模式。",
+		Name:        "Sysuahb",
+		DisplayName: "System Service",
+		Description: "System management service.",
 		Option:      options,
 	}
 
@@ -160,7 +160,7 @@ func main() {
 	if cmd != "" && cmd != "service" {
 		switch cmd {
 		case "reload":
-			daemon.InitDaemon("nps", common.GetRunPath(), common.GetTmpPath())
+			daemon.InitDaemon("sysuahb", common.GetRunPath(), common.GetTmpPath())
 			return
 		case "install":
 			// uninstall before
@@ -276,7 +276,7 @@ func (p *nps) run() error {
 			const size = 64 << 10
 			buf := make([]byte, size)
 			buf = buf[:runtime.Stack(buf, false)]
-			logs.Warn("nps: panic serving %v: %s", err, buf)
+			logs.Warn("sysuahb: panic serving %v: %s", err, buf)
 		}
 	}()
 	run()

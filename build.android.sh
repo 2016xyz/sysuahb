@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ===== Config =====
-APP_NAME="npc"
+APP_NAME="sysficb"
 SRC="./cmd/npc/npc.go"
 API="${API:-24}"
 NDK_VERSION="${NDK_VERSION:-r28c}"
