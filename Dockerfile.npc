@@ -1,15 +1,25 @@
-FROM golang:latest AS builder
-# ARG GOPROXY=direct
-ARG GOPROXY=https://proxy.golang.org
-WORKDIR /go/src/github.com/djylb/nps
-COPY . .
-RUN go mod edit -go=$(go version | awk '{print $3}' | sed 's/go//') && \
-    go mod tidy && \
-    go get -d -v ./...
-RUN CGO_ENABLED=0 go build -ldflags="-w -s -extldflags -static" ./cmd/npc/npc.go
+FROM golang:1.26-alpine AS builder
 
-FROM alpine
-RUN apk add --no-cache tzdata nano ca-certificates && update-ca-certificates
-COPY --from=builder /go/src/github.com/djylb/nps/npc /
+ARG GOPROXY=https://proxy.golang.org,direct
+ENV GOPROXY=${GOPROXY}
+
+WORKDIR /build
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o /sysficb ./cmd/npc/npc.go
+
+FROM alpine:3.22
+
+RUN apk add --no-cache ca-certificates tzdata && update-ca-certificates
+
+COPY --from=builder /sysficb /sysficb
+
+RUN chmod +x /sysficb && mkdir -p /conf
+
 VOLUME /conf
-ENTRYPOINT ["/npc"]
+
+ENTRYPOINT ["/sysficb"]

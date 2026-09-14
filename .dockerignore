@@ -1,0 +1,10 @@
+.git
+.github
+*.md
+*.tar.gz
+*.zip
+build.assets.sh
+build.assets.old.sh
+build.android.sh
+android_libs*
+sdk*

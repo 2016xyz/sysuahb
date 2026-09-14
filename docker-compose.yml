@@ -1,0 +1,8 @@
+services:
+  sysuahb:
+    image: ghcr.io/2016xyz/sysuahb:latest
+    container_name: sysuahb
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./conf:/conf

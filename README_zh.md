@@ -184,7 +184,7 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh 
 
 从 [Releases](https://github.com/2016xyz/sysuahb/releases) 下载对应平台的压缩包。命名规则：`<os>_<arch>_server.tar.gz` 内含服务端 `sysuahb`，`<os>_<arch>_client.tar.gz` 内含客户端 `sysficb`，例如 `linux_amd64_server.tar.gz`、`windows_amd64_client.tar.gz`。
 
-本仓库不发布 Docker 镜像；如需容器部署可使用上游镜像（[duan2001/nps](https://hub.docker.com/r/duan2001/nps)、[duan2001/npc](https://hub.docker.com/r/duan2001/npc)）。
+偏好容器部署？直接跳到 [Docker 部署](#docker-部署)。
 
 #### Linux
 
@@ -227,4 +227,44 @@ sudo ./myname start
 .\sysficb.exe stop
 .\sysficb.exe update
 .\sysficb.exe start
+```
+
+### Docker 部署
+
+每次发布 tag 时会自动向 ghcr.io 推送多架构镜像（`linux/amd64`、`linux/arm64`、`linux/arm/v7`）：
+
+- 服务端：`ghcr.io/2016xyz/sysuahb`
+- 客户端：`ghcr.io/2016xyz/sysficb`
+
+**服务端** —— 推荐使用 `host` 网络，代理/桥接端口无需映射。配置持久化在 `/conf`，首次启动会自动生成默认 `sysuahb.conf`。
+
+```bash
+docker run -d --name sysuahb --restart unless-stopped \
+  --network host \
+  -v $(pwd)/conf:/conf \
+  ghcr.io/2016xyz/sysuahb:latest
+```
+
+或使用 Docker Compose——参考仓库中的 [docker-compose.yml](docker-compose.yml)：
+
+```yaml
+services:
+  sysuahb:
+    image: ghcr.io/2016xyz/sysuahb:latest
+    container_name: sysuahb
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./conf:/conf
+```
+
+管理页面：`http://<主机>:8081`（默认 `admin` / `123`，请立即修改）。
+
+**客户端** —— `docker run` 的额外参数会原样传给 `sysficb`（建议加 `-log=stdout`，以便 `docker logs` 查看日志）：
+
+```bash
+docker run -d --name sysficb --restart unless-stopped \
+  --network host \
+  ghcr.io/2016xyz/sysficb:latest \
+  -server=1.2.3.4:8024 -vkey=YOUR_VKEY -log=stdout
 ```

@@ -186,7 +186,7 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh 
 
 Download the tarball for your platform from [Releases](https://github.com/2016xyz/sysuahb/releases). Naming: `<os>_<arch>_server.tar.gz` contains `sysuahb` (server), and `<os>_<arch>_client.tar.gz` contains `sysficb` (client) — e.g. `linux_amd64_server.tar.gz`, `windows_amd64_client.tar.gz`.
 
-Docker images are not published by this repository; use the upstream images ([duan2001/nps](https://hub.docker.com/r/duan2001/nps), [duan2001/npc](https://hub.docker.com/r/duan2001/npc)) if you prefer containers.
+Prefer containers? Skip to [Docker Deployment](#docker-deployment).
 
 #### Linux
 
@@ -229,4 +229,44 @@ sudo ./myname start
 .\sysficb.exe stop
 .\sysficb.exe update
 .\sysficb.exe start
+```
+
+### Docker Deployment
+
+Docker images are published to GHCR automatically on every release tag (multi-arch: `linux/amd64`, `linux/arm64`, `linux/arm/v7`):
+
+- Server: `ghcr.io/2016xyz/sysuahb`
+- Client: `ghcr.io/2016xyz/sysficb`
+
+**Server** — `host` networking is recommended so proxy/bridge ports work without mapping. Config is persisted under `/conf`; the default `sysuahb.conf` is generated there on first start.
+
+```bash
+docker run -d --name sysuahb --restart unless-stopped \
+  --network host \
+  -v $(pwd)/conf:/conf \
+  ghcr.io/2016xyz/sysuahb:latest
+```
+
+Or use Docker Compose — see [docker-compose.yml](docker-compose.yml) in the repository:
+
+```yaml
+services:
+  sysuahb:
+    image: ghcr.io/2016xyz/sysuahb:latest
+    container_name: sysuahb
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./conf:/conf
+```
+
+Web UI: `http://<host>:8081` (default `admin` / `123` — change them immediately).
+
+**Client** — any extra `docker run` arguments are passed straight to `sysficb` (use `-log=stdout` so `docker logs` works):
+
+```bash
+docker run -d --name sysficb --restart unless-stopped \
+  --network host \
+  ghcr.io/2016xyz/sysficb:latest \
+  -server=1.2.3.4:8024 -vkey=YOUR_VKEY -log=stdout
 ```
