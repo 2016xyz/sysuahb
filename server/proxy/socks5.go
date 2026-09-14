@@ -760,6 +760,34 @@ type unifiedCacheEntry struct {
 
 var unifiedStickyCache sync.Map // key: taskId:username -> unifiedCacheEntry
 
+const unifiedCacheCleanInterval = time.Minute
+
+var unifiedCacheCleanerOnce sync.Once
+
+// startUnifiedCacheCleaner launches a one-off background goroutine that periodically purges expired sticky entries.
+func startUnifiedCacheCleaner() {
+	unifiedCacheCleanerOnce.Do(func() {
+		go func() {
+			ticker := time.NewTicker(unifiedCacheCleanInterval)
+			defer ticker.Stop()
+			for range ticker.C {
+				cleanUnifiedStickyCache()
+			}
+		}()
+	})
+}
+
+// cleanUnifiedStickyCache removes expired entries from the sticky cache.
+func cleanUnifiedStickyCache() {
+	now := time.Now()
+	unifiedStickyCache.Range(func(key, value interface{}) bool {
+		if e, ok := value.(unifiedCacheEntry); ok && !now.Before(e.expireAt) {
+			unifiedStickyCache.Delete(key)
+		}
+		return true
+	})
+}
+
 const (
 	unifiedModeRandom = "random"
 	unifiedModeFixed  = "fixed"
@@ -816,11 +844,15 @@ func parseUnifiedUsername(username string) (unifiedRoute, bool) {
 // the client is chosen once per new proxy connection and stays fixed for the
 // whole lifetime of that connection.
 func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, error) {
+	return s.pickUnifiedClientFrom(username, unifiedOnlineClients())
+}
+
+// pickUnifiedClientFrom is the testable core of pickUnifiedClient with injected online candidates.
+func (s *TunnelModeServer) pickUnifiedClientFrom(username string, candidates []*file.Client) (*file.Client, error) {
 	route, ok := parseUnifiedUsername(username)
 	if !ok {
 		return nil, fmt.Errorf("unified proxy: invalid username %q", username)
 	}
-	candidates := unifiedOnlineClients()
 	if len(candidates) == 0 {
 		return nil, errors.New("unified proxy: no online clients available")
 	}
@@ -839,6 +871,7 @@ func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, err
 	}
 
 	// sticky: cached by the full username for the TTL (custom or task default)
+	startUnifiedCacheCleaner()
 	ttlMinutes := route.ttlMinutes
 	if ttlMinutes <= 0 {
 		ttlMinutes = s.Task.CacheTime
