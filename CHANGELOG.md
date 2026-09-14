@@ -20,6 +20,7 @@
 - 登录/注册页美化：记住账号、验证码提示、布局重叠修复
 - 后台移动端响应式：侧边栏抽屉与遮罩
 - 新增 Docker 支持：服务端/客户端 Dockerfile 与 docker-compose 示例，打 tag 自动发布多架构镜像到 ghcr.io（`sysuahb` / `sysficb`）
+- CI 增强：Release 工作流中 Win7 补丁 Go 工具链下载增加自动重试，规避偶发网络抖动
 
 ### v0.34.6 (2026-03-08)
 - 优化KCP连接参数与内存占用
