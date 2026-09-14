@@ -209,6 +209,8 @@ func NewMode(Bridge *bridge.Bridge, c *file.Tunnel) proxy.Service {
 		service = proxy.NewTunnelModeServer(proxy.ProcessMix, Bridge, c, allowLocalProxy)
 		//service = proxy.NewSock5ModeServer(Bridge, c)
 		//service = proxy.NewTunnelModeServer(proxy.ProcessHttp, Bridge, c)
+	case "unifiedProxy":
+		service = proxy.NewTunnelModeServer(proxy.ProcessUnified, Bridge, c, allowLocalProxy)
 	case "tcpTrans":
 		service = proxy.NewTunnelModeServer(proxy.HandleTrans, Bridge, c, allowLocalProxy)
 	case "udp":
@@ -241,7 +243,11 @@ func StopServer(id int) error {
 		return err
 	} else {
 		t.Status = false
-		logs.Info("close port %d,remark %s,client id %d,task id %d", t.Port, t.Remark, t.Client.Id, t.Id)
+		clientId := 0
+		if t.Client != nil {
+			clientId = t.Client.Id
+		}
+		logs.Info("close port %d,remark %s,client id %d,task id %d", t.Port, t.Remark, clientId, t.Id)
 		_ = file.GetDb().UpdateTask(t)
 	}
 	//if v, ok := RunList[id]; ok {
@@ -282,7 +288,11 @@ func AddTask(t *file.Tunnel) error {
 		RunList.Store(t.Id, svr)
 		go func() {
 			if err := svr.Start(); err != nil {
-				logs.Error("clientId %d taskId %d start error %v", t.Client.Id, t.Id, err)
+				taskClientId := 0
+				if t.Client != nil {
+					taskClientId = t.Client.Id
+				}
+				logs.Error("clientId %d taskId %d start error %v", taskClientId, t.Id, err)
 				//delete(RunList, t.Id)
 				RunList.Delete(t.Id)
 				return
@@ -331,7 +341,7 @@ func DelTunnelAndHostByClientId(clientId int, justDelNoStore bool) {
 		if justDelNoStore && !v.NoStore {
 			return true
 		}
-		if v.Client.Id == clientId {
+		if v.Client != nil && v.Client.Id == clientId {
 			ids = append(ids, v.Id)
 		}
 		return true
@@ -412,6 +422,9 @@ func dealClientData() {
 	})
 	file.GetDb().JsonDb.Tasks.Range(func(key, value interface{}) bool {
 		t := value.(*file.Tunnel)
+		if t.Client == nil {
+			return true
+		}
 		c, err := file.GetDb().GetClient(t.Client.Id)
 		if err != nil {
 			return true

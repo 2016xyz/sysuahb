@@ -261,7 +261,8 @@ func (s *BaseController) CheckUserAuth() {
 				}
 			} else {
 				if v, ok := file.GetDb().JsonDb.Tasks.Load(id); ok {
-					if v.(*file.Tunnel).Client.Id == s.GetSession("clientId").(int) {
+					t := v.(*file.Tunnel)
+					if t.Client != nil && t.Client.Id == s.GetSession("clientId").(int) {
 						belong = true
 					}
 				}

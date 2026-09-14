@@ -20,7 +20,11 @@ func GetTunnel(start, length int, typeVal string, clientId int, search string, s
 	for _, key := range keys {
 		if value, ok := file.GetDb().JsonDb.Tasks.Load(key); ok {
 			v := value.(*file.Tunnel)
-			if (typeVal != "" && v.Mode != typeVal || (clientId != 0 && v.Client.Id != clientId)) || (typeVal == "" && clientId != v.Client.Id) {
+			vClientId := 0
+			if v.Client != nil {
+				vClientId = v.Client.Id
+			}
+			if (typeVal != "" && v.Mode != typeVal || (clientId != 0 && vClientId != clientId)) || (typeVal == "" && clientId != vClientId) {
 				continue
 			}
 			allList = append(allList, v)
@@ -37,10 +41,16 @@ func GetTunnel(start, length int, typeVal string, clientId int, search string, s
 		}
 
 	case "Client.Id":
+		clientKey := func(t *file.Tunnel) int {
+			if t.Client != nil {
+				return t.Client.Id
+			}
+			return 0
+		}
 		if order == "asc" {
-			sort.SliceStable(allList, func(i, j int) bool { return allList[i].Client.Id < allList[j].Client.Id })
+			sort.SliceStable(allList, func(i, j int) bool { return clientKey(allList[i]) < clientKey(allList[j]) })
 		} else {
-			sort.SliceStable(allList, func(i, j int) bool { return allList[i].Client.Id > allList[j].Client.Id })
+			sort.SliceStable(allList, func(i, j int) bool { return clientKey(allList[i]) > clientKey(allList[j]) })
 		}
 
 	case "Remark":
@@ -51,10 +61,16 @@ func GetTunnel(start, length int, typeVal string, clientId int, search string, s
 		}
 
 	case "Client.VerifyKey":
+		clientVerifyKey := func(t *file.Tunnel) string {
+			if t.Client != nil {
+				return t.Client.VerifyKey
+			}
+			return ""
+		}
 		if order == "asc" {
-			sort.SliceStable(allList, func(i, j int) bool { return allList[i].Client.VerifyKey < allList[j].Client.VerifyKey })
+			sort.SliceStable(allList, func(i, j int) bool { return clientVerifyKey(allList[i]) < clientVerifyKey(allList[j]) })
 		} else {
-			sort.SliceStable(allList, func(i, j int) bool { return allList[i].Client.VerifyKey > allList[j].Client.VerifyKey })
+			sort.SliceStable(allList, func(i, j int) bool { return clientVerifyKey(allList[i]) > clientVerifyKey(allList[j]) })
 		}
 
 	case "Target.TargetStr":
@@ -193,10 +209,16 @@ func GetTunnel(start, length int, typeVal string, clientId int, search string, s
 		}
 
 	case "Client.IsConnect":
+		clientConnect := func(t *file.Tunnel) bool {
+			if t.Client != nil {
+				return t.Client.IsConnect
+			}
+			return false
+		}
 		if order == "asc" {
-			sort.SliceStable(allList, func(i, j int) bool { return allList[i].Client.IsConnect && !allList[j].Client.IsConnect })
+			sort.SliceStable(allList, func(i, j int) bool { return clientConnect(allList[i]) && !clientConnect(allList[j]) })
 		} else {
-			sort.SliceStable(allList, func(i, j int) bool { return !allList[i].Client.IsConnect && allList[j].Client.IsConnect })
+			sort.SliceStable(allList, func(i, j int) bool { return !clientConnect(allList[i]) && clientConnect(allList[j]) })
 		}
 	}
 
@@ -215,10 +237,12 @@ func GetTunnel(start, length int, typeVal string, clientId int, search string, s
 
 		cnt++
 
-		if _, ok := Bridge.Client.Load(v.Client.Id); ok {
-			v.Client.IsConnect = true
-		} else {
-			v.Client.IsConnect = false
+		if v.Client != nil {
+			if _, ok := Bridge.Client.Load(v.Client.Id); ok {
+				v.Client.IsConnect = true
+			} else {
+				v.Client.IsConnect = false
+			}
 		}
 
 		if _, ok := RunList.Load(v.Id); ok {

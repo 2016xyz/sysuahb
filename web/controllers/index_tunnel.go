@@ -83,12 +83,21 @@ func (s *IndexController) Add() {
 	}
 
 	var err error
-	if t.Client, err = file.GetDb().GetClient(clientId); err != nil {
-		s.AjaxErr(err.Error())
-	}
-	if t.Client.MaxTunnelNum != 0 && t.Client.GetTunnelNum() >= t.Client.MaxTunnelNum {
-		s.AjaxErr("The number of tunnels exceeds the limit")
-		return
+	if t.Mode == "unifiedProxy" {
+		if !isAdmin {
+			s.AjaxErr("permission denied")
+			return
+		}
+		t.CacheTime = s.GetIntNoErr("cache_time")
+		t.Target.LocalProxy = false
+	} else {
+		if t.Client, err = file.GetDb().GetClient(clientId); err != nil {
+			s.AjaxErr(err.Error())
+		}
+		if t.Client.MaxTunnelNum != 0 && t.Client.GetTunnelNum() >= t.Client.MaxTunnelNum {
+			s.AjaxErr("The number of tunnels exceeds the limit")
+			return
+		}
 	}
 
 	if err := file.GetDb().NewTask(t); err != nil {
@@ -141,12 +150,21 @@ func (s *IndexController) Edit() {
 		return
 	}
 
+	isAdmin := s.GetSession("isAdmin").(bool)
 	clientId := s.GetIntNoErr("client_id")
-	if client, err := file.GetDb().GetClient(clientId); err != nil {
-		s.AjaxErr("modified error,the client is not exist")
-		return
+	if s.getEscapeString("type") == "unifiedProxy" {
+		if !isAdmin {
+			s.AjaxErr("permission denied")
+			return
+		}
+		t.Client = nil
 	} else {
-		t.Client = client
+		if client, err := file.GetDb().GetClient(clientId); err != nil {
+			s.AjaxErr("modified error,the client is not exist")
+			return
+		} else {
+			t.Client = client
+		}
 	}
 
 	if s.GetIntNoErr("port") != t.Port {
@@ -160,7 +178,6 @@ func (s *IndexController) Edit() {
 		}
 	}
 
-	isAdmin := s.GetSession("isAdmin").(bool)
 	allowLocal := beego.AppConfig.DefaultBool("allow_user_local", beego.AppConfig.DefaultBool("allow_local_proxy", false)) || isAdmin
 
 	targetStr := strings.ToLower(strings.TrimSpace(strings.ReplaceAll(s.getEscapeString("target"), "\r\n", "\n")))
@@ -200,6 +217,10 @@ func (s *IndexController) Edit() {
 	}
 	t.Target.ProxyProtocol = s.GetIntNoErr("proxy_protocol")
 	t.Target.LocalProxy = (clientId > 0 && s.GetBoolNoErr("local_proxy") && allowLocal) || clientId <= 0
+	if s.getEscapeString("type") == "unifiedProxy" {
+		t.CacheTime = s.GetIntNoErr("cache_time")
+		t.Target.LocalProxy = false
+	}
 	_ = file.GetDb().UpdateTask(t)
 	_ = server.StopServer(t.Id)
 	_ = server.StartTask(t.Id)

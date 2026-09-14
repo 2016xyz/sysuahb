@@ -78,6 +78,13 @@
                     <i class="fa fa-layer-group fa-lg fa-fw"></i>
                     <span class="nav-label" langtag="scheme-mixproxy"></span></a>
                 </li>
+                {{if eq true .isAdmin}}
+                <li class="{{if eq "unified" .menu}}active{{end}}">
+                    <a href="{{.web_base_url}}/index/unified" class="d-flex align-items-center">
+                    <i class="fa fa-network-wired fa-lg fa-fw"></i>
+                    <span class="nav-label" langtag="scheme-unifiedproxy"></span></a>
+                </li>
+                {{end}}
                 <li class="{{if eq "secret" .menu}}active{{end}}">
                     <a href="{{.web_base_url}}/index/secret" class="d-flex align-items-center">
                     <i class="fa fa-low-vision fa-lg fa-fw"></i>

@@ -87,16 +87,22 @@ func (s *TunnelModeServer) handleConn(c net.Conn) {
 	}()
 
 	if s.Bridge.IsServer() {
-		if err := s.CheckFlowAndConnNum(s.Task.Client); err != nil {
-			logs.Warn("client Id %d, task Id %d, error %v, when tcp connection", s.Task.Client.Id, s.Task.Id, err)
-			_ = c.Close()
-			return
+		if s.Task.Client != nil {
+			if err := s.CheckFlowAndConnNum(s.Task.Client); err != nil {
+				logs.Warn("client Id %d, task Id %d, error %v, when tcp connection", s.Task.Client.Id, s.Task.Id, err)
+				_ = c.Close()
+				return
+			}
+			defer s.Task.Client.CutConn()
 		}
-		defer s.Task.Client.CutConn()
 		s.Task.AddConn()
 		defer s.Task.CutConn()
 	}
-	logs.Trace("new tcp connection,local port %d,client %d,remote address %v", s.Task.Port, s.Task.Client.Id, c.RemoteAddr())
+	if s.Task.Client != nil {
+		logs.Trace("new tcp connection,local port %d,client %d,remote address %v", s.Task.Port, s.Task.Client.Id, c.RemoteAddr())
+	} else {
+		logs.Trace("new tcp connection,local port %d,client unified,remote address %v", s.Task.Port, c.RemoteAddr())
+	}
 
 	_ = s.process(conn.NewConn(c), s)
 }
@@ -131,19 +137,24 @@ func ProcessHttp(c *conn.Conn, s *TunnelModeServer) error {
 		_ = c.Close()
 		return err
 	}
+	return s.handleHttpProxy(c, s.Task.Client, addr, rb, r)
+}
+
+// handleHttpProxy http proxy after auth, client may be chosen dynamically (unified proxy)
+func (s *TunnelModeServer) handleHttpProxy(c *conn.Conn, client *file.Client, addr string, rb []byte, r *http.Request) error {
 	if s.Task != nil && s.Task.Mode == "mixProxy" && s.Task.DestAclMode != file.AclOff {
 		if !s.Task.AllowsDestination(addr) {
-			logs.Warn("mixProxy dest acl deny: client=%d task=%d dest=%s", s.Task.Client.Id, s.Task.Id, common.ExtractHost(addr))
+			logs.Warn("mixProxy dest acl deny: client=%d task=%d dest=%s", client.Id, s.Task.Id, common.ExtractHost(addr))
 			_, _ = c.Write([]byte("HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n"))
 			_ = c.Close()
 			return errors.New("destination denied by dest acl")
 		}
 	}
 	remoteAddr := c.Conn.RemoteAddr().String()
-	logs.Debug("http proxy request, client=%d method=%s, host=%s, url=%s, remote address=%s, target=%s", s.Task.Client.Id, r.Method, r.Host, r.URL.RequestURI(), remoteAddr, addr)
+	logs.Debug("http proxy request, client=%d method=%s, host=%s, url=%s, remote address=%s, target=%s", client.Id, r.Method, r.Host, r.URL.RequestURI(), remoteAddr, addr)
 	if r.Method == http.MethodConnect {
 		_, _ = c.Write([]byte("HTTP/1.1 200 Connection established\r\n\r\n"))
-		return s.DealClient(c, s.Task.Client, addr, nil, common.CONN_TCP, nil, []*file.Flow{s.Task.Flow, s.Task.Client.Flow}, 0, s.Task.Target.LocalProxy, s.Task)
+		return s.DealClient(c, client, addr, nil, common.CONN_TCP, nil, []*file.Flow{s.Task.Flow, client.Flow}, 0, s.Task.Target.LocalProxy, s.Task)
 	}
 	var server *http.Server
 
@@ -152,19 +163,19 @@ func ProcessHttp(c *conn.Conn, s *TunnelModeServer) error {
 		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 			if s.Task != nil && s.Task.Mode == "mixProxy" && s.Task.DestAclMode != file.AclOff {
 				if !s.Task.AllowsDestination(addr) {
-					logs.Warn("mixProxy dest acl deny: client=%d task=%d dest=%s", s.Task.Client.Id, s.Task.Id, common.ExtractHost(addr))
+					logs.Warn("mixProxy dest acl deny: client=%d task=%d dest=%s", client.Id, s.Task.Id, common.ExtractHost(addr))
 					return nil, errors.New("destination denied by dest acl")
 				}
 			}
-			isLocal := s.AllowLocalProxy && s.Task.Target.LocalProxy || s.Task.Client.Id < 0
-			link := conn.NewLink("tcp", addr, s.Task.Client.Cnf.Crypt, s.Task.Client.Cnf.Compress, remoteAddr, isLocal)
-			target, err := s.Bridge.SendLinkInfo(s.Task.Client.Id, link, nil)
+			isLocal := s.AllowLocalProxy && s.Task.Target.LocalProxy || client.Id < 0
+			link := conn.NewLink("tcp", addr, client.Cnf.Crypt, client.Cnf.Compress, remoteAddr, isLocal)
+			target, err := s.Bridge.SendLinkInfo(client.Id, link, nil)
 			if err != nil {
 				logs.Trace("DialContext: connection to host %s (target %s) failed: %v", r.Host, addr, err)
 				return nil, err
 			}
-			rawConn := conn.GetConn(target, link.Crypt, link.Compress, s.Task.Client.Rate, true, isLocal)
-			return conn.NewFlowConn(rawConn, s.Task.Flow, s.Task.Client.Flow), nil
+			rawConn := conn.GetConn(target, link.Crypt, link.Compress, client.Rate, true, isLocal)
+			return conn.NewFlowConn(rawConn, s.Task.Flow, client.Flow), nil
 		},
 	}
 	defer transport.CloseIdleConnections()

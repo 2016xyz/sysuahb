@@ -65,6 +65,17 @@ func (s *IndexController) Mix() {
 	s.display("index/list")
 }
 
+func (s *IndexController) Unified() {
+	isAdmin, ok := s.GetSession("isAdmin").(bool)
+	if !ok || !isAdmin {
+		return
+	}
+	s.Data["menu"] = "unified"
+	s.SetInfo("unified proxy")
+	s.SetType("unifiedProxy")
+	s.display("index/list")
+}
+
 func (s *IndexController) File() {
 	s.SetInfo("file server")
 	s.SetType("file")

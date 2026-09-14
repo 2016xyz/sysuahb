@@ -77,10 +77,14 @@
             if (row.Mode == "tcp" || row.Mode == "udp") {
                 proxyprotocol = '<b langtag="word-proxyprotocoltitle"></b>: <span langtag="word-proxyprotocolv' + row.Target.ProxyProtocol + '"></span>&emsp;'
             }
+            var cryptCompress = ''
+            if (row.Client) {
+                cryptCompress = '<b langtag="word-crypt"></b>: <span langtag="word-' + row.Client.Cnf.Crypt + '"></span>&emsp;'
+                    + '<b langtag="word-compress"></b>: <span langtag="word-' + row.Client.Cnf.Compress + '"></span>&emsp;'
+            }
             tmp = '<b langtag="word-exportflow"></b>: <span onclick="submitform(\'clear\', \'{{.web_base_url}}/index/clear\', {\'id\':' + row.Id + ', \'mode\': \'flow\'})">' + changeunit(row.Flow.ExportFlow) + '</span>&emsp;'
                 + '<b langtag="word-inletflow"></b>: <span onclick="submitform(\'clear\', \'{{.web_base_url}}/index/clear\', {\'id\':' + row.Id + ', \'mode\': \'flow\'})">' + changeunit(row.Flow.InletFlow) + '</span>&emsp;'
-                + '<b langtag="word-crypt"></b>: <span langtag="word-' + row.Client.Cnf.Crypt + '"></span>&emsp;'
-                + '<b langtag="word-compress"></b>: <span langtag="word-' + row.Client.Cnf.Compress + '"></span>&emsp;'
+                + cryptCompress
                 + proxyprotocol
                 + '<b langtag="word-ishttp"></b>: <span langtag="word-' + row.IsHttp + '"></span>&emsp;<br/><br>'
                 + '<b langtag="word-flowlimit"></b>: <span onclick="submitform(\'clear\', \'{{.web_base_url}}/index/clear\', {\'id\':' + row.Id + ', \'mode\': \'flow_limit\'})">' + row.Flow.FlowLimit + 'MB</span>&emsp;'
@@ -112,6 +116,13 @@
                     + '<b langtag="word-basicpassword"></b>: ' + row.Client.Cnf.P + '&emsp;<br/><br>'
                     + '<b langtag="word-auth"></b>: ' + (row.UserAuth && row.UserAuth.Content ? row.UserAuth.Content : '') + '&emsp;<br/><br>'
                     + destAclInfo + '<br/><br>'
+            }
+            if (row.Mode == "unifiedProxy") {
+                var cacheTime = row.CacheTime > 0 ? row.CacheTime : 10
+                return tmp + "<br/><br>"
+                    + '<b langtag="word-password"></b>: ' + (row.Password ? row.Password : '-') + '&emsp;'
+                    + '<b langtag="word-cachetime"></b>: ' + cacheTime + ' min&emsp;<br/><br>'
+                    + '<span langtag="info-caseunifiedproxy"></span>'
             }
             if (row.Mode == "file") {
                 return tmp + "<br/><br>"
@@ -146,6 +157,7 @@
                     return '<span onclick="oCopy(this)">' + value + '</span>'
                 }
             },
+            {{ if or (not .type) (ne .type "unifiedProxy") }}
             {
                 field: 'Client.Id', //域值
                 title: '<span langtag="word-clientid"></span>', //标题
@@ -153,10 +165,14 @@
                 visible: true, //false表示不显示
                 sortable: true, //启用排序
                 formatter: function (value, row, index) {
+                    if (!row.Client) {
+                        return '-'
+                    }
                     var text = row.Client.Remark ? (row.Client.Id + ' · ' + row.Client.Remark) : row.Client.Id
                     return '<span onclick="copyText(\'' + row.Client.VerifyKey + '\')">' + text + '</span>'
                 }
             },
+            {{ end }}
             {
                 field: 'Remark', //域值
                 title: '<span langtag="word-remark"></span>', //标题
@@ -167,6 +183,7 @@
                     return '<span onclick="oCopy(this)">' + value + '</span>'
                 }
             },
+            {{ if or (not .type) (ne .type "unifiedProxy") }}
             {
                 field: 'Client.VerifyKey', //域值
                 title: '<span langtag="word-verifykey"></span>', //标题
@@ -174,9 +191,13 @@
                 visible: false, //false表示不显示
                 sortable: true, //启用排序
                 formatter: function (value, row, index) {
+                    if (!row.Client) {
+                        return '-'
+                    }
                     return '<span onclick="oCopy(this)">' + value + '</span>'
                 }
             },
+            {{ end }}
             {{ if not .type }}
             {
                 field: 'Mode', //域值
@@ -283,6 +304,29 @@
                     }
                     btn_group += '</div>'
                     return btn_group
+                }
+            },
+            {{ end }}
+            {{ if and .type (eq .type "unifiedProxy") }}
+            {
+                field: 'Password', //域值
+                title: '<span langtag="word-password"></span>', //标题
+                halign: 'center',
+                visible: true, //false表示不显示
+                sortable: false, //启用排序
+                formatter: function (value, row, index) {
+                    return '<span onclick="oCopy(this)">' + (value ? value : '-') + '</span>'
+                }
+            },
+            {
+                field: 'CacheTime', //域值
+                title: '<span langtag="word-cachetime"></span>', //标题
+                align: 'center',
+                halign: 'center',
+                visible: true, //false表示不显示
+                sortable: true, //启用排序
+                formatter: function (value, row, index) {
+                    return '<span>' + (value > 0 ? value : 10) + ' min</span>'
                 }
             },
             {{ end }}
@@ -417,6 +461,7 @@
                     }
                 }
             },
+            {{ if or (not .type) (ne .type "unifiedProxy") }}
             {
                 field: 'Client.IsConnect', //域值
                 title: '<span langtag="word-clientstatus"></span>', //内容
@@ -425,6 +470,9 @@
                 visible: true, //false表示不显示
                 sortable: true, //启用排序
                 formatter: function (value, row, index) {
+                    if (!row.Client) {
+                        return '-'
+                    }
                     if (value) {
                         if (row.Mode && row.Mode == "tcp") {
                             return '<a href="' + (row.IsHttp ? 'http://' : 'https://') + '{{.ip}}:' + row.Port + '" target="_blank"><span class="badge badge-primary" langtag="word-online"></span></a>'
@@ -436,6 +484,7 @@
                     }
                 }
             },
+            {{ end }}
             {
                 field: 'option', //域值
                 title: '<span langtag="word-option"></span>', //内容

@@ -1,11 +1,19 @@
 package proxy
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
+	"math/rand"
 	"net"
+	"net/http"
+	"sort"
 	"strconv"
+	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -69,7 +77,7 @@ const (
 // +----+-----+-------+------+----------+----------+
 // |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
 // +----+-----+-------+------+----------+----------+
-func (s *TunnelModeServer) handleSocks5Request(c net.Conn) {
+func (s *TunnelModeServer) handleSocks5Request(c net.Conn, client *file.Client) {
 	var header [3]byte
 	if _, err := io.ReadFull(c, header[:]); err != nil {
 		logs.Warn("illegal request (head) %v", err)
@@ -86,10 +94,16 @@ func (s *TunnelModeServer) handleSocks5Request(c net.Conn) {
 
 	switch header[1] {
 	case connectMethod:
-		s.handleConnect(c)
+		s.handleConnect(c, client)
 	case bindMethod:
 		s.handleBind(c)
 	case associateMethod:
+		if client == nil {
+			// unified proxy: UDP ASSOCIATE is not supported yet
+			s.sendReply(c, commandNotSupported)
+			_ = c.Close()
+			return
+		}
 		s.handleUDP(c)
 	default:
 		s.sendReply(c, commandNotSupported)
@@ -127,7 +141,7 @@ func (s *TunnelModeServer) sendReply(c net.Conn, rep uint8) {
 }
 
 // CONNECT command handler: parse target and bridge TCP through DealClient.
-func (s *TunnelModeServer) handleConnect(c net.Conn) {
+func (s *TunnelModeServer) handleConnect(c net.Conn, client *file.Client) {
 	var addrType [1]byte
 	if _, err := io.ReadFull(c, addrType[:]); err != nil {
 		s.sendReply(c, addrTypeNotSupported)
@@ -177,9 +191,9 @@ func (s *TunnelModeServer) handleConnect(c net.Conn) {
 		}
 	}
 
-	_ = s.DealClient(conn.NewConn(c), s.Task.Client, addr, nil, common.CONN_TCP, func() {
+	_ = s.DealClient(conn.NewConn(c), client, addr, nil, common.CONN_TCP, func() {
 		s.sendReply(c, succeeded)
-	}, []*file.Flow{s.Task.Flow, s.Task.Client.Flow}, 0, s.Task.Target.LocalProxy, s.Task)
+	}, []*file.Flow{s.Task.Flow, client.Flow}, 0, s.Task.Target.LocalProxy, s.Task)
 }
 
 // BIND is not supported.
@@ -477,8 +491,7 @@ func ProcessMix(c *conn.Conn, s *TunnelModeServer) error {
 
 	if version := buf[0]; version != 5 {
 		method := string(buf[:])
-		switch method {
-		case "GE", "PO", "HE", "PU ", "DE", "OP", "CO", "TR", "PA", "PR", "MK", "MO", "LO", "UN", "RE", "AC", "SE", "LI":
+		if isHttpMethodPrefix(method) {
 			if !s.Task.HttpProxy {
 				logs.Warn("http proxy is disable, client %d request from: %v", s.Task.Client.Id, c.RemoteAddr())
 				_ = c.Close()
@@ -543,6 +556,254 @@ func ProcessMix(c *conn.Conn, s *TunnelModeServer) error {
 		}
 		_, _ = c.Write([]byte{5, 0x00})
 	}
-	s.handleSocks5Request(c)
+	s.handleSocks5Request(c, s.Task.Client)
 	return nil
+}
+
+func isHttpMethodPrefix(prefix string) bool {
+	switch prefix {
+	case "GE", "PO", "HE", "PU ", "DE", "OP", "CO", "TR", "PA", "PR", "MK", "MO", "LO", "UN", "RE", "AC", "SE", "LI":
+		return true
+	}
+	return false
+}
+
+// ProcessUnified unified proxy: exit traffic is routed to online clients dynamically.
+// The proxy username controls client selection:
+//   - "auto"          : fully random online client per connection
+//   - pure digits     : fixed client by Id (must be online)
+//   - anything else   : sticky random client cached for Task.CacheTime minutes (default 10)
+func ProcessUnified(c *conn.Conn, s *TunnelModeServer) error {
+	var buf [2]byte
+	if _, err := io.ReadFull(c, buf[:]); err != nil {
+		logs.Warn("negotiation err %v", err)
+		_ = c.Close()
+		return err
+	}
+
+	if version := buf[0]; version != 5 {
+		if isHttpMethodPrefix(string(buf[:])) {
+			if err := ProcessUnifiedHttp(c.SetRb(buf[:]), s); err != nil {
+				logs.Warn("unified http proxy error: %v", err)
+				_ = c.Close()
+				return err
+			}
+			_ = c.Close()
+			return nil
+		}
+		logs.Warn("only support socks5 and http, request from: %v", c.RemoteAddr())
+		_ = c.Close()
+		return errors.New("unknown protocol")
+	}
+
+	// socks5: username is the routing key, so username/password auth is always required
+	nMethods := int(buf[1])
+	methods := make([]byte, nMethods)
+	if _, err := io.ReadFull(c, methods); err != nil {
+		logs.Warn("wrong method")
+		_ = c.Close()
+		return errors.New("wrong method")
+	}
+	supports := func(m byte) bool {
+		for _, x := range methods {
+			if x == m {
+				return true
+			}
+		}
+		return false
+	}
+	if !supports(UserPassAuth) {
+		_, _ = c.Write([]byte{5, 0xFF})
+		_ = c.Close()
+		return errors.New("no acceptable authentication method")
+	}
+	_, _ = c.Write([]byte{5, UserPassAuth})
+	username, err := s.unifiedSocksAuth(c)
+	if err != nil {
+		_ = c.Close()
+		logs.Warn("unified proxy validation failed: %v", err)
+		return err
+	}
+	client, err := s.pickUnifiedClient(username)
+	if err != nil {
+		logs.Warn("unified proxy pick client failed: %v", err)
+		_ = c.Close()
+		return err
+	}
+	if s.Bridge.IsServer() {
+		if err := s.CheckFlowAndConnNum(client); err != nil {
+			logs.Warn("unified proxy client Id %d, task Id %d, error %v", client.Id, s.Task.Id, err)
+			_ = c.Close()
+			return err
+		}
+		defer client.CutConn()
+	}
+	s.handleSocks5Request(c, client)
+	return nil
+}
+
+// ProcessUnifiedHttp http branch of unified proxy
+func ProcessUnifiedHttp(c *conn.Conn, s *TunnelModeServer) error {
+	_, addr, rb, r, err := c.GetHost()
+	if err != nil {
+		_ = c.Close()
+		logs.Info("%v", err)
+		return err
+	}
+	user, pass, _ := parseProxyBasicAuth(r)
+	if s.Task.Password != "" && pass != s.Task.Password {
+		_, _ = c.Write([]byte(common.ProxyAuthRequiredBytes))
+		_ = c.Close()
+		return errors.New("401 Unauthorized")
+	}
+	if user == "" {
+		user = "auto"
+	}
+	client, err := s.pickUnifiedClient(user)
+	if err != nil {
+		logs.Warn("unified proxy pick client failed: %v", err)
+		_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
+		_ = c.Close()
+		return err
+	}
+	if s.Bridge.IsServer() {
+		if err := s.CheckFlowAndConnNum(client); err != nil {
+			logs.Warn("unified proxy client Id %d, task Id %d, error %v", client.Id, s.Task.Id, err)
+			_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
+			_ = c.Close()
+			return err
+		}
+		defer client.CutConn()
+	}
+	return s.handleHttpProxy(c, client, addr, rb, r)
+}
+
+// parseProxyBasicAuth extract credentials from Proxy-Authorization header.
+// r.BasicAuth() reads the Authorization header, which proxies must not use.
+func parseProxyBasicAuth(r *http.Request) (user, pass string, ok bool) {
+	h := r.Header.Get("Proxy-Authorization")
+	if h == "" {
+		return "", "", false
+	}
+	const prefix = "Basic "
+	if !strings.HasPrefix(h, prefix) && !strings.HasPrefix(strings.ToLower(h), strings.ToLower(prefix)) {
+		return "", "", false
+	}
+	decoded, err := base64.StdEncoding.DecodeString(strings.TrimSpace(h[len(prefix):]))
+	if err != nil {
+		return "", "", false
+	}
+	if i := bytes.IndexByte(decoded, ':'); i >= 0 {
+		return string(decoded[:i]), string(decoded[i+1:]), true
+	}
+	return string(decoded), "", true
+}
+
+// unifiedCheckAuth unified proxy auth: empty password accepts anyone
+func unifiedCheckAuth(task *file.Tunnel, user, pass string) bool {
+	if task.Password == "" || pass == task.Password {
+		return true
+	}
+	return false
+}
+
+// unifiedSocksAuth socks5 username/password auth for unified proxy, returns the username
+func (s *TunnelModeServer) unifiedSocksAuth(c net.Conn) (string, error) {
+	var header [2]byte
+	if _, err := io.ReadFull(c, header[:]); err != nil {
+		return "", err
+	}
+	if header[0] != userAuthVersion {
+		return "", errors.New("auth method not supported")
+	}
+	userLen := int(header[1])
+	user := make([]byte, userLen)
+	if _, err := io.ReadFull(c, user); err != nil {
+		return "", err
+	}
+	if _, err := io.ReadFull(c, header[:1]); err != nil {
+		return "", errors.New("failed to read password length")
+	}
+	passLen := int(header[0])
+	pass := make([]byte, passLen)
+	if _, err := io.ReadFull(c, pass); err != nil {
+		return "", err
+	}
+	if !unifiedCheckAuth(s.Task, string(user), string(pass)) {
+		if _, err := c.Write([]byte{userAuthVersion, authFailure}); err != nil {
+			return "", err
+		}
+		return "", errors.New("auth failed")
+	}
+	if _, err := c.Write([]byte{userAuthVersion, authSuccess}); err != nil {
+		return "", err
+	}
+	return string(user), nil
+}
+
+// unifiedOnlineClients returns all online clients available for unified proxy egress
+func unifiedOnlineClients() []*file.Client {
+	list := make([]*file.Client, 0)
+	file.GetDb().JsonDb.Clients.Range(func(key, value interface{}) bool {
+		c := value.(*file.Client)
+		if c.Id > 0 && c.Status && c.IsConnect {
+			list = append(list, c)
+		}
+		return true
+	})
+	sort.Slice(list, func(i, j int) bool { return list[i].Id < list[j].Id })
+	return list
+}
+
+type unifiedCacheEntry struct {
+	clientId int
+	expireAt time.Time
+}
+
+var unifiedStickyCache sync.Map // key: taskId:username -> unifiedCacheEntry
+
+// pickUnifiedClient choose the exit client according to the username routing rules
+func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, error) {
+	candidates := unifiedOnlineClients()
+	if len(candidates) == 0 {
+		return nil, errors.New("unified proxy: no online clients available")
+	}
+
+	if username == "auto" {
+		return candidates[rand.Intn(len(candidates))], nil
+	}
+	if id, err := strconv.Atoi(username); err == nil {
+		// pure digits: fixed client by Id
+		for _, c := range candidates {
+			if c.Id == id {
+				return c, nil
+			}
+		}
+		return nil, fmt.Errorf("unified proxy: client %d is not online", id)
+	}
+
+	// sticky: random client cached for CacheTime minutes
+	cacheTime := s.Task.CacheTime
+	if cacheTime <= 0 {
+		cacheTime = 10
+	}
+	key := fmt.Sprintf("%d:%s", s.Task.Id, username)
+	now := time.Now()
+	if v, ok := unifiedStickyCache.Load(key); ok {
+		e := v.(unifiedCacheEntry)
+		if now.Before(e.expireAt) {
+			for _, c := range candidates {
+				if c.Id == e.clientId {
+					return c, nil
+				}
+			}
+		}
+		unifiedStickyCache.Delete(key)
+	}
+	picked := candidates[rand.Intn(len(candidates))]
+	unifiedStickyCache.Store(key, unifiedCacheEntry{
+		clientId: picked.Id,
+		expireAt: now.Add(time.Duration(cacheTime) * time.Minute),
+	})
+	return picked, nil
 }

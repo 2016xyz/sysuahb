@@ -195,6 +195,7 @@ type Tunnel struct {
 	Flow         *Flow
 	NowConn      int32
 	Password     string
+	CacheTime    int
 	Remark       string
 	TargetAddr   string
 	TargetType   string

@@ -14,6 +14,7 @@
                                 <span id="casehttpProxy" langtag="info-casehttpproxy"></span>
                                 <span id="casesocks5" langtag="info-casesocks5"></span>
                                 <span id="casemixProxy" langtag="info-casemixproxy"></span>
+                                <span id="caseunifiedProxy" langtag="info-caseunifiedproxy"></span>
                                 <span id="casesecret" langtag="info-casesecret"></span>
                                 <span id="casep2p" langtag="info-casep2p"></span>
                                 <span id="casefile" langtag="info-casefile"></span>
@@ -22,6 +23,7 @@
                                 <option value="tcp" langtag="scheme-tcp"></option>
                                 <option value="udp" langtag="scheme-udp"></option>
                                 <option value="mixProxy" langtag="scheme-mixProxy"></option>
+                                <option value="unifiedProxy" langtag="scheme-unifiedproxy"></option>
                                 {{/*<option value="httpProxy" langtag="scheme-httpProxy"></option>*/}}
                                 {{/*<option value="socks5" langtag="scheme-socks5"></option>*/}}
                                 <option value="secret" langtag="scheme-secret"></option>
@@ -54,6 +56,13 @@
                         <label class="control-label font-bold" langtag="word-serverport"></label>
                         <div class="col-sm-12">
                             <input class="form-control" langtag="info-suchasport" name="port" placeholder="" type="text">
+                        </div>
+                    </div>
+                    <div class="form-group" id="cache_time">
+                        <label class="control-label font-bold" langtag="word-cachetime"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" langtag="info-cachetime" name="cache_time" placeholder="" type="text" value="10">
+                            <span class="help-block m-b-none" langtag="info-cachetime"></span>
                         </div>
                     </div>
                     <div class="form-group" id="mix_proxy">
@@ -161,10 +170,14 @@
                         </div>
                     </div>
                     <div class="form-group" id="password">
-                        <label class="control-label font-bold" langtag="word-identificationkey"></label>
+                        <label class="control-label font-bold">
+                            <span langtag="word-identificationkey" id="pwd-label-ident"></span><span langtag="word-password" id="pwd-label-plain" style="display:none"></span>
+                        </label>
                         <div class="col-sm-12">
                             <input class="form-control" langtag="word-identificationkey" name="password" placeholder="" type="text">
-                            <span class="help-block m-b-none" langtag="info-identificationkey"></span>
+                            <span class="help-block m-b-none">
+                                <span langtag="info-identificationkey" id="pwd-help-ident"></span><span langtag="info-unifiedpassword" id="pwd-help-unified" style="display:none"></span>
+                            </span>
                         </div>
                     </div>
                     <div class="hr-line-dashed"></div>
@@ -190,6 +203,7 @@
     arr["tcp"] = ["port", "target", "proxy_protocol", "local_proxy", "client_id", "server_ip", "flow_reset", "flow_limit", "time_limit"]
     arr["udp"] = ["port", "target", "proxy_protocol", "local_proxy", "client_id", "server_ip", "flow_reset", "flow_limit", "time_limit"]
     arr["mixProxy"] = ["auth", "port", "client_id", "server_ip", "mix_proxy", "dest_acl_mode", "dest_acl_rules", "flow_reset", "flow_limit", "time_limit"]
+    arr["unifiedProxy"] = ["port", "cache_time", "password", "server_ip", "flow_reset", "flow_limit", "time_limit"]
     //arr["socks5"] = ["auth", "port", "client_id", "server_ip", "flow_reset", "flow_limit", "time_limit"]
     //arr["httpProxy"] = ["auth", "port", "client_id", "server_ip", "flow_reset", "flow_limit", "time_limit"]
     arr["secret"] = ["target_type", "target", "password", "client_id", "server_ip", "flow_reset", "flow_limit", "time_limit", "local_proxy"]
@@ -205,6 +219,21 @@
             $("#" + arr[o][i]).css("display", "block")
         }
         toggleDestAclRules()
+        toggleUnifiedPassword()
+    }
+
+    function toggleUnifiedPassword() {
+        var isUnified = ($("#type").val() == "unifiedProxy")
+        $("#pwd-label-ident").css("display", isUnified ? "none" : "inline")
+        $("#pwd-label-plain").css("display", isUnified ? "inline" : "none")
+        $("#pwd-help-ident").css("display", isUnified ? "none" : "inline")
+        $("#pwd-help-unified").css("display", isUnified ? "inline" : "none")
+        var $pwd = $("input[name='password']")
+        var pwdLang = isUnified ? "word-password" : "word-identificationkey"
+        $pwd.attr("langtag", pwdLang)
+        if (typeof languages !== 'undefined' && languages['content']) {
+            $pwd.attr("placeholder", languages['content'][pwdLang] || '')
+        }
     }
 
     function toggleDestAclRules() {
