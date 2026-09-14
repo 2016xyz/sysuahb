@@ -88,6 +88,10 @@ func (s *IndexController) Add() {
 			s.AjaxErr("permission denied")
 			return
 		}
+		if strings.TrimSpace(t.Password) == "" {
+			s.AjaxErr("unified proxy password is required")
+			return
+		}
 		t.CacheTime = s.GetIntNoErr("cache_time")
 		t.Target.LocalProxy = false
 	} else {
@@ -220,6 +224,10 @@ func (s *IndexController) Edit() {
 	if s.getEscapeString("type") == "unifiedProxy" {
 		t.CacheTime = s.GetIntNoErr("cache_time")
 		t.Target.LocalProxy = false
+		if strings.TrimSpace(t.Password) == "" {
+			s.AjaxErr("unified proxy password is required")
+			return
+		}
 	}
 	_ = file.GetDb().UpdateTask(t)
 	_ = server.StopServer(t.Id)

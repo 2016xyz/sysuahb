@@ -610,6 +610,14 @@
 		<zh-CN>验证码</zh-CN>
 		<en-US>Captcha</en-US>
 	</lang>
+	<lang id="word-click2verify">
+		<zh-CN>点击按钮进行验证</zh-CN>
+		<en-US>Click to verify</en-US>
+	</lang>
+	<lang id="word-remember">
+		<zh-CN>记住账号</zh-CN>
+		<en-US>Remember me</en-US>
+	</lang>
 	<lang id="word-port">
 		<zh-CN>端口</zh-CN>
 		<en-US>Port</en-US>
@@ -974,16 +982,16 @@
 		<en-US>Use port 8003 of public server 1.1.1.1 as HTTP/Socks5 proxy to access any device or resource in the Intranet.</en-US>
 	</lang>
 	<lang id="info-caseunifiedproxy">
-		<zh-CN>将公网服务器1.1.1.1的8003端口作为HTTP/SOCKS5代理，流量随机从在线客户端出口。代理用户名控制出口：auto 表示完全随机；纯数字如 1 表示固定使用客户端 1；其他如 abc-auto 表示在缓存时间内（默认10分钟）固定使用首次随机到的客户端。密码留空表示任意密码均可连接。</zh-CN>
-		<en-US>Use port 8003 of public server 1.1.1.1 as HTTP/Socks5 proxy; traffic exits via a random online client. The proxy username controls the exit: auto means fully random; a pure number like 1 pins client 1; others like abc-auto stick to the first randomly chosen client within the cache time (10 minutes by default). An empty password accepts any password.</en-US>
+		<zh-CN>将公网服务器1.1.1.1的8003端口作为HTTP/SOCKS5代理，按用户名路由出口：auto=每个新连接随机选在线客户端；纯数字如 1=固定使用客户端 1（不在线则连接失败）；abc-auto=粘滞模式，首次随机后按默认缓存时间保持；abc-auto-5m/30m/2h/1d=粘滞模式并自定义时长（支持 m/h/d）；其他用户名将被拒绝。已建立的连接不会中途切换出口。</zh-CN>
+		<en-US>Use port 8003 of public server 1.1.1.1 as HTTP/Socks5 proxy; the exit is routed by username: auto=random online client per new connection; a pure number like 1 pins client 1 (fails if offline); abc-auto=sticky with the default cache time; abc-auto-5m/30m/2h/1d=sticky with a custom TTL (m/h/d); any other username is rejected. Established connections never switch exits.</en-US>
 	</lang>
 	<lang id="info-cachetime">
-		<zh-CN>固定出口客户端的粘滞缓存时长（分钟），0 表示默认 10 分钟</zh-CN>
-		<en-US>Sticky cache duration (minutes) for pinned exit clients; 0 means the default 10 minutes</en-US>
+		<zh-CN>粘滞用户名（如 abc-auto）的默认缓存时长（分钟），0 表示默认 10 分钟；用户名自带时长（如 abc-auto-5m）时优先使用自带时长</zh-CN>
+		<en-US>Default sticky cache duration in minutes for usernames like abc-auto; 0 means the default 10 minutes. An explicit TTL in the username (e.g. abc-auto-5m) takes priority</en-US>
 	</lang>
 	<lang id="info-unifiedpassword">
-		<zh-CN>代理连接密码，留空表示任意密码均可连接</zh-CN>
-		<en-US>Proxy connection password; leave empty to accept any password</en-US>
+		<zh-CN>代理连接密码（必填），密码错误将拒绝连接</zh-CN>
+		<en-US>Proxy connection password (required); connections with a wrong password are rejected</en-US>
 	</lang>
 	<lang id="info-casetcp">
 		<zh-CN>通过公网服务器1.1.1.1的8001端口，连接内网机器10.1.50.101的22端口，实现SSH连接。</zh-CN>

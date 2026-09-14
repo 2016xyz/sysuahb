@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -651,10 +652,10 @@ func ProcessUnifiedHttp(c *conn.Conn, s *TunnelModeServer) error {
 		return err
 	}
 	user, pass, _ := parseProxyBasicAuth(r)
-	if s.Task.Password != "" && pass != s.Task.Password {
+	if s.Task.Password == "" || pass != s.Task.Password {
 		_, _ = c.Write([]byte(common.ProxyAuthRequiredBytes))
 		_ = c.Close()
-		return errors.New("401 Unauthorized")
+		return errors.New("407 Proxy Authentication Required")
 	}
 	if user == "" {
 		user = "auto"
@@ -699,12 +700,9 @@ func parseProxyBasicAuth(r *http.Request) (user, pass string, ok bool) {
 	return string(decoded), "", true
 }
 
-// unifiedCheckAuth unified proxy auth: empty password accepts anyone
+// unifiedCheckAuth unified proxy auth: the password is mandatory and must match exactly
 func unifiedCheckAuth(task *file.Tunnel, user, pass string) bool {
-	if task.Password == "" || pass == task.Password {
-		return true
-	}
-	return false
+	return task.Password != "" && pass == task.Password
 }
 
 // unifiedSocksAuth socks5 username/password auth for unified proxy, returns the username
@@ -762,30 +760,91 @@ type unifiedCacheEntry struct {
 
 var unifiedStickyCache sync.Map // key: taskId:username -> unifiedCacheEntry
 
-// pickUnifiedClient choose the exit client according to the username routing rules
+const (
+	unifiedModeRandom = "random"
+	unifiedModeFixed  = "fixed"
+	unifiedModeSticky = "sticky"
+)
+
+type unifiedRoute struct {
+	mode       string
+	clientId   int
+	ttlMinutes int
+}
+
+var unifiedTTLPattern = regexp.MustCompile(`^([1-9]\d*)([mhd])$`)
+
+// parseUnifiedUsername parses the proxy username into an exit routing rule.
+// priority: auto -> pure digits (fixed client id) -> xxx-auto-{time} -> xxx-auto -> invalid.
+// supported time units: m (minute), h (hour), d (day)
+func parseUnifiedUsername(username string) (unifiedRoute, bool) {
+	if username == "auto" {
+		return unifiedRoute{mode: unifiedModeRandom}, true
+	}
+	if id, err := strconv.Atoi(username); err == nil {
+		return unifiedRoute{mode: unifiedModeFixed, clientId: id}, true
+	}
+	parts := strings.Split(username, "-")
+	if len(parts) >= 2 {
+		last := parts[len(parts)-1]
+		if last == "auto" {
+			return unifiedRoute{mode: unifiedModeSticky}, true
+		}
+		if len(parts) >= 3 && parts[len(parts)-2] == "auto" {
+			if m := unifiedTTLPattern.FindStringSubmatch(last); m != nil {
+				n, err := strconv.Atoi(m[1])
+				if err != nil || n <= 0 || n > 5256000 {
+					return unifiedRoute{}, false
+				}
+				var minutes int
+				switch m[2] {
+				case "m":
+					minutes = n
+				case "h":
+					minutes = n * 60
+				case "d":
+					minutes = n * 24 * 60
+				}
+				return unifiedRoute{mode: unifiedModeSticky, ttlMinutes: minutes}, true
+			}
+		}
+	}
+	return unifiedRoute{}, false
+}
+
+// pickUnifiedClient choose the exit client according to the username routing rules.
+// the client is chosen once per new proxy connection and stays fixed for the
+// whole lifetime of that connection.
 func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, error) {
+	route, ok := parseUnifiedUsername(username)
+	if !ok {
+		return nil, fmt.Errorf("unified proxy: invalid username %q", username)
+	}
 	candidates := unifiedOnlineClients()
 	if len(candidates) == 0 {
 		return nil, errors.New("unified proxy: no online clients available")
 	}
 
-	if username == "auto" {
+	switch route.mode {
+	case unifiedModeRandom:
 		return candidates[rand.Intn(len(candidates))], nil
-	}
-	if id, err := strconv.Atoi(username); err == nil {
-		// pure digits: fixed client by Id
+	case unifiedModeFixed:
+		// explicitly pinned client: never fall back to another client
 		for _, c := range candidates {
-			if c.Id == id {
+			if c.Id == route.clientId {
 				return c, nil
 			}
 		}
-		return nil, fmt.Errorf("unified proxy: client %d is not online", id)
+		return nil, fmt.Errorf("unified proxy: client %d is not online", route.clientId)
 	}
 
-	// sticky: random client cached for CacheTime minutes
-	cacheTime := s.Task.CacheTime
-	if cacheTime <= 0 {
-		cacheTime = 10
+	// sticky: cached by the full username for the TTL (custom or task default)
+	ttlMinutes := route.ttlMinutes
+	if ttlMinutes <= 0 {
+		ttlMinutes = s.Task.CacheTime
+		if ttlMinutes <= 0 {
+			ttlMinutes = 10
+		}
 	}
 	key := fmt.Sprintf("%d:%s", s.Task.Id, username)
 	now := time.Now()
@@ -803,7 +862,7 @@ func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, err
 	picked := candidates[rand.Intn(len(candidates))]
 	unifiedStickyCache.Store(key, unifiedCacheEntry{
 		clientId: picked.Id,
-		expireAt: now.Add(time.Duration(cacheTime) * time.Minute),
+		expireAt: now.Add(time.Duration(ttlMinutes) * time.Minute),
 	})
 	return picked, nil
 }

@@ -269,6 +269,10 @@ func StopServer(id int) error {
 
 // AddTask add task
 func AddTask(t *file.Tunnel) error {
+	if t.Mode == "unifiedProxy" && strings.TrimSpace(t.Password) == "" {
+		logs.Error("unified proxy task %d (%s) refused to start: password is required", t.Id, t.Remark)
+		return errors.New("unified proxy password is required")
+	}
 	if t.Mode == "secret" || t.Mode == "p2p" {
 		logs.Info("secret task %s start ", t.Remark)
 		//RunList[t.Id] = nil

@@ -13180,10 +13180,9 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
 }
 
 .wow-login-card .btn-login {
-    position: relative;
-    top: -10px;
     height: auto;
     min-height: 48px;
+    margin: 2px 0 18px;
     padding: 13px 0;
     border: 1px solid #3d53f5;
     border-radius: 4px;
@@ -13210,13 +13209,14 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
 }
 
 .wow-remember {
-    display: block;
-    position: relative;
-    top: -25px;
-    margin: 0;
+    display: flex;
+    align-items: center;
+    margin: 0 0 16px;
     color: #515560;
     font-size: 13px;
     cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .wow-remember input {
@@ -13228,7 +13228,7 @@ html[theme="dark-mode"] .login-page .login-card .input-icon {
 }
 
 .wow-login-card .login-alt {
-    margin: 0;
+    margin: 0 0 6px;
     color: #74777a;
 }
 
@@ -13710,5 +13710,67 @@ html[theme="dark-mode"] body:not(.login-page) .fixed-table-container tbody td {
 
     body:not(.login-page) .fixed-table-toolbar .search input {
         width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    body:not(.login-page) nav.navbar-static-side {
+        display: block;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 2001;
+        width: 240px;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        visibility: hidden;
+        transform: translateX(-110%);
+        transition: transform 0.28s ease, visibility 0.28s ease;
+    }
+
+    body:not(.login-page) .mini-navbar nav.navbar-static-side {
+        visibility: visible;
+        transform: translateX(0);
+        box-shadow: 8px 0 28px rgba(29, 55, 111, 0.2);
+    }
+
+    body:not(.login-page) #page-wrapper {
+        width: 100%;
+    }
+
+    body:not(.login-page) .mini-navbar .nav-label,
+    body:not(.login-page) .mini-navbar .navbar-default .nav li a span {
+        display: inline;
+    }
+
+    body:not(.login-page) .mini-navbar .profile-element {
+        display: block;
+    }
+
+    body:not(.login-page) .mini-navbar .logo-element {
+        display: none;
+    }
+
+    body:not(.login-page) .mobile-nav-backdrop {
+        display: none;
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 2000;
+        background: rgba(15, 28, 58, 0.45);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.28s ease, visibility 0.28s ease;
+    }
+
+    body:not(.login-page) .mini-navbar .mobile-nav-backdrop {
+        display: block;
+        opacity: 1;
+        visibility: visible;
     }
 }

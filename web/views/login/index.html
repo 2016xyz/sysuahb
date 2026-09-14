@@ -48,14 +48,14 @@
                         <input class="wow-captcha-input" langtag="word-captcha" name="captcha" placeholder="点击按钮进行验证" required="">
                         <div class="captcha-container" title="click to refresh">{{create_captcha}}</div>
                         {{else}}
-                        <span class="wow-verification-label">点击按钮进行验证</span>
+                        <span class="wow-verification-label" langtag="word-click2verify">点击按钮进行验证</span>
                         {{end}}
                     </div>
-                    <button id="loginBtn" class="btn btn-primary btn-login block full-width" langtag="word-login" onclick="if (this.form.reportValidity()) login()" type="submit">
+                    <label class="wow-remember"><input type="checkbox" name="remember"> <span langtag="word-remember">记住账号</span></label>
+                    <button id="loginBtn" class="btn btn-primary btn-login block full-width" onclick="if (this.form.reportValidity()) login()" type="submit">
                         <span class="btn-label" langtag="word-login"></span>
                         <span class="btn-spinner" aria-hidden="true"><i class="fas fa-circle-notch fa-spin"></i></span>
                     </button>
-                    <label class="wow-remember"><input type="checkbox" name="remember"> <span>记住账号</span></label>
                     {{if eq true .register_allow}}
                     <p class="text-muted text-center login-alt"><small langtag="info-noaccount"></small> <a href="{{.web_base_url}}/login/register" langtag="word-register"></a></p>
                     {{end}}
@@ -149,6 +149,11 @@
         }
         $(function () {
             syncServerTime();
+            var savedUsername = localStorage.getItem('nps_login_username');
+            if (savedUsername) {
+                $('input[name="username"]').val(savedUsername);
+                $('input[name="remember"]').prop('checked', true);
+            }
         });
         function togglePwd(btn) {
             var $input = $(btn).siblings('input.login-pwd');
@@ -195,6 +200,11 @@
                 data: data,
                 success: function (res) {
                     if (res.status) {
+                        if ($('input[name="remember"]').prop('checked')) {
+                            localStorage.setItem('nps_login_username', data.username);
+                        } else {
+                            localStorage.removeItem('nps_login_username');
+                        }
                         showMsg(langreply(res.msg), 'success', 1000, function () {
                             window.location.href = window.nps.web_base_url + "/index/index";
                         });
