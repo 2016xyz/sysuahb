@@ -24,6 +24,8 @@ Since the original [NPS](https://github.com/ehang-io/nps) project has been inact
 - The service name, binary (`/usr/bin/<name>`), config directory (`/etc/<name>/`) and log file (`/var/log/<name>.log`) all follow that random name; the config file names inside stay fixed (`sysuahb.conf` / `sysficb.conf`) so your data is always easy to find
 - Re-running the installer automatically removes previous random-named installs (detected via their config marker) and installs fresh ones with new names
 
+- New feature: **Unified Proxy** — one HTTP/SOCKS5 proxy port routes traffic to different clients by login username, with a mandatory connection password (see [Unified Proxy](#unified-proxy))
+
 - **Documentation (upstream):** https://d-jy.net/docs/nps/
 - **Join the discussion:** [Telegram Group](https://t.me/npsdev)
 - **Android:** [djylb/npsclient](https://github.com/djylb/npsclient) | **OpenWrt:** [djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
@@ -36,6 +38,9 @@ Since the original [NPS](https://github.com/ehang-io/nps) project has been inact
 
 - **Multi-Protocol Support**  
   Supports TCP/UDP forwarding, HTTP/HTTPS reverse proxy, HTTP/SOCKS5 proxy, P2P mode, Proxy Protocol support, HTTP/3 support, and more for different private-network access scenarios.
+
+- **Unified Proxy (Username Routing)**  
+  One proxy port with one mandatory password: the login username decides which client the traffic exits from — random per connection, pinned to a client ID, or sticky with a custom TTL (see [Unified Proxy](#unified-proxy)).
 
 - **Cross-Platform Deployment**  
   Compatible with major platforms such as Linux and Windows, and can be easily installed as a system service.
@@ -51,6 +56,25 @@ Since the original [NPS](https://github.com/ehang-io/nps) project has been inact
 
 - **Multiple Connection Protocols**  
   Supports connecting to the server using TCP, KCP, TLS, QUIC, WS, and WSS protocols.
+
+---
+
+## Unified Proxy
+
+Create a single HTTP/SOCKS5 proxy task (one public port + one mandatory password) and route each connection to an exit client through the proxy **username** — no need to create a separate tunnel for every client:
+
+| Username | Behaviour |
+| --- | --- |
+| `auto` | A random **online** client is picked for **every new connection** |
+| `1` (pure digits) | Always exits via **client 1**; the connection **fails** if that client is offline |
+| `abc-auto` | **Sticky** mode: the client is picked on first use and kept for the task's default cache time (10 minutes by default) |
+| `abc-auto-30m` | **Sticky** mode with a custom TTL — supports `m` (minutes), `h` (hours), `d` (days), e.g. `5m`, `2h`, `1d` |
+| anything else | **Rejected** |
+
+- The **password is mandatory**: when it is missing or wrong, the HTTP proxy answers `407 Proxy Authentication Required` and SOCKS5 rejects the connection.
+- The sticky cache is keyed by the **full username**; when the cached client goes offline (or the entry expires), the next connection re-picks a client and the TTL restarts.
+- The exit client is fixed **per connection** — established connections never switch exits mid-way.
+- The default cache duration for sticky usernames is configured per task (`0` = 10 minutes); an explicit TTL in the username always takes priority.
 
 ---
 
