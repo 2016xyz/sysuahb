@@ -244,6 +244,14 @@
 		<zh-CN>WSS 启动命令</zh-CN>
 		<en-US>WSS Command</en-US>
 	</lang>
+	<lang id="word-quickinstall-linux">
+		<zh-CN>Linux 一键安装命令</zh-CN>
+		<en-US>Linux Quick Install Command</en-US>
+	</lang>
+	<lang id="word-quickinstall-win">
+		<zh-CN>Windows 一键安装命令</zh-CN>
+		<en-US>Windows Quick Install Command</en-US>
+	</lang>
 	<lang id="word-tcpport">
 		<zh-CN>TCP 端口</zh-CN>
 		<en-US>TCP Port</en-US>

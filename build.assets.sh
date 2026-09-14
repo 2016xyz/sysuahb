@@ -44,6 +44,10 @@ TARGETS=(
 NPC_TAR_FILES="conf/sysficb.conf conf/multi_account.conf"
 NPS_TAR_FILES="conf/sysuahb.conf web/views web/static"
 
+# Sync the installer into web/static so the server package serves it at
+# <web_base_url>/static/install.sh for one-click client installs
+cp -f install.sh web/static/install.sh
+
 NPS_BIN="sysuahb"
 NPC_BIN="sysficb"
 

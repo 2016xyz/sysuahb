@@ -138,24 +138,33 @@
                 + '<b langtag="word-compress"></b>: <span langtag="word-' + row.Cnf.Compress + '"></span>&emsp;'
                 + '<b langtag="word-connectbyconfig"></b>: <span langtag="word-' + row.ConfigConnAllow + '"></span>&emsp;<br/><br/>'
                 + '<b langtag="word-blackip"></b>: ' + row.BlackIpList + '&emsp;<br/><br/>'
-                {{if index . "tcp_p"}}
-                + '<b langtag="word-commandclient-tcp"></b>: ' + '<code onclick="oCopy(this)">' + "./npc{{.win}} -server=\"{{.tcp_ip}}:{{.tcp_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"tcp\"</code>&emsp;<br/><br/>"
-                {{end}}
-                {{if index . "kcp_p"}}
-                + '<b langtag="word-commandclient-kcp"></b>: ' + '<code onclick="oCopy(this)">' + "./npc{{.win}} -server=\"{{.kcp_ip}}:{{.kcp_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"kcp\"</code>&emsp;<br/><br/>"
-                {{end}}
-                {{if index . "tls_p"}}
-                + '<b langtag="word-commandclient-tls"></b>: ' + '<code onclick="oCopy(this)">' + "./npc{{.win}} -server=\"{{.tls_ip}}:{{.tls_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"tls\"</code>&emsp;<br/><br/>"
-                {{end}}
-                {{if index . "quic_p"}}
-                + '<b langtag="word-commandclient-quic"></b>: ' + '<code onclick="oCopy(this)">' + "./npc{{.win}} -server=\"{{.quic_addr}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"quic\"</code>&emsp;<br/><br/>"
-                {{end}}
-                {{if index . "ws_p"}}
-                + '<b langtag="word-commandclient-ws"></b>: ' + '<code onclick="oCopy(this)">' + "./npc{{.win}} -server=\"{{.ws_ip}}:{{.ws_p}}{{.ws_path}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"ws\"</code>&emsp;<br/><br/>"
-                {{end}}
-                {{if index . "wss_p"}}
-                + '<b langtag="word-commandclient-wss"></b>: ' + '<code onclick="oCopy(this)">' + "./npc{{.win}} -server=\"{{.wss_ip}}:{{.wss_p}}{{.ws_path}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"wss\"</code>&emsp;<br/><br/>"
-                {{end}}
+            var installBase = location.origin + "{{.web_base_url}}/static/install.sh";
+            var npcVer = "{{.version}}";
+            {{if index . "tcp_p"}}
+            tmp += '<b langtag="word-commandclient-tcp"></b>: ' + '<code onclick="oCopy(this)">' + "./sysficb{{.win}} -server=\"{{.tcp_ip}}:{{.tcp_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"tcp\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-linux"></b>: ' + '<code onclick="oCopy(this)">' + "bash &lt;(curl -fsSL " + installBase + ") npc " + npcVer + " -server=\"{{.tcp_ip}}:{{.tcp_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"tcp\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-win"></b>: ' + '<code onclick="oCopy(this)">' + "powershell -c \"try{Invoke-WebRequest 'https://github.com/2016xyz/sysuahb/releases/download/" + npcVer + "/windows_amd64_client.tar.gz' -OutFile c.tar.gz -UseBasicParsing}catch{Invoke-WebRequest 'https://ghfast.top/https://github.com/2016xyz/sysuahb/releases/download/" + npcVer + "/windows_amd64_client.tar.gz' -OutFile c.tar.gz -UseBasicParsing}; tar -xzf c.tar.gz; .\\sysficb.exe install -server='{{.tcp_ip}}:{{.tcp_p}}' -vkey='" + row.VerifyKey + "' -type='tcp'; .\\sysficb.exe start; Remove-Item c.tar.gz -ErrorAction SilentlyContinue\"" + '</code>&emsp;<br/><br/>'
+            {{end}}
+            {{if index . "kcp_p"}}
+            tmp += '<b langtag="word-commandclient-kcp"></b>: ' + '<code onclick="oCopy(this)">' + "./sysficb{{.win}} -server=\"{{.kcp_ip}}:{{.kcp_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"kcp\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-linux"></b>: ' + '<code onclick="oCopy(this)">' + "bash &lt;(curl -fsSL " + installBase + ") npc " + npcVer + " -server=\"{{.kcp_ip}}:{{.kcp_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"kcp\"</code>&emsp;<br/><br/>"
+            {{end}}
+            {{if index . "tls_p"}}
+            tmp += '<b langtag="word-commandclient-tls"></b>: ' + '<code onclick="oCopy(this)">' + "./sysficb{{.win}} -server=\"{{.tls_ip}}:{{.tls_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"tls\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-linux"></b>: ' + '<code onclick="oCopy(this)">' + "bash &lt;(curl -fsSL " + installBase + ") npc " + npcVer + " -server=\"{{.tls_ip}}:{{.tls_p}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"tls\"</code>&emsp;<br/><br/>"
+            {{end}}
+            {{if index . "quic_p"}}
+            tmp += '<b langtag="word-commandclient-quic"></b>: ' + '<code onclick="oCopy(this)">' + "./sysficb{{.win}} -server=\"{{.quic_addr}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"quic\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-linux"></b>: ' + '<code onclick="oCopy(this)">' + "bash &lt;(curl -fsSL " + installBase + ") npc " + npcVer + " -server=\"{{.quic_addr}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"quic\"</code>&emsp;<br/><br/>"
+            {{end}}
+            {{if index . "ws_p"}}
+            tmp += '<b langtag="word-commandclient-ws"></b>: ' + '<code onclick="oCopy(this)">' + "./sysficb{{.win}} -server=\"{{.ws_ip}}:{{.ws_p}}{{.ws_path}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"ws\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-linux"></b>: ' + '<code onclick="oCopy(this)">' + "bash &lt;(curl -fsSL " + installBase + ") npc " + npcVer + " -server=\"{{.ws_ip}}:{{.ws_p}}{{.ws_path}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"ws\"</code>&emsp;<br/><br/>"
+            {{end}}
+            {{if index . "wss_p"}}
+            tmp += '<b langtag="word-commandclient-wss"></b>: ' + '<code onclick="oCopy(this)">' + "./sysficb{{.win}} -server=\"{{.wss_ip}}:{{.wss_p}}{{.ws_path}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"wss\"</code>&emsp;<br/><br/>"
+                + '<b langtag="word-quickinstall-linux"></b>: ' + '<code onclick="oCopy(this)">' + "bash &lt;(curl -fsSL " + installBase + ") npc " + npcVer + " -server=\"{{.wss_ip}}:{{.wss_p}}{{.ws_path}}\" -vkey=\"" + row.VerifyKey + "\" -type=\"wss\"</code>&emsp;<br/><br/>"
+            {{end}}
             return tmp
         },
         //表格的列
