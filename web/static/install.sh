@@ -15,7 +15,7 @@
 # Usage:
 #   ./install.sh [mode] [version] [npc args...]
 #     mode:    npc | nps | all (default: all)
-#     version: release tag, e.g. v0.34.7 (default: latest)
+#     version: release tag, e.g. v0.34.7 (v prefix optional, default: latest)
 #     npc args: extra arguments forwarded to the client service, e.g.
 #       ./install.sh npc v0.34.7 -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 #
@@ -176,6 +176,17 @@ if [ "$INSTALL_VERSION" = "latest" ]; then
     USE_LATEST=1
   fi
 fi
+
+# Normalize version: accept "0.34.7" style input and add the "v" prefix
+case "$INSTALL_VERSION" in
+  ""|latest|v*) ;;
+  [0-9]*)
+    if printf '%s' "$INSTALL_VERSION" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
+      echo "Normalized version: v${INSTALL_VERSION}"
+      INSTALL_VERSION="v${INSTALL_VERSION}"
+    fi
+    ;;
+esac
 
 if [ "$USE_LATEST" -eq 1 ]; then
   echo "Version: latest (releases/latest/download)"
