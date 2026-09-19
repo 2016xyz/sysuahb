@@ -5,16 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
-	"math/rand"
 	"net"
 	"net/http"
-	"regexp"
-	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -627,7 +622,7 @@ func ProcessUnified(c *conn.Conn, s *TunnelModeServer) error {
 	}
 	client, err := s.pickUnifiedClient(username)
 	if err != nil {
-		logs.Warn("unified proxy pick client failed: %v", err)
+		logs.Warn("unified proxy pick client failed: user=%q err=%v", username, err)
 		_ = c.Close()
 		return err
 	}
@@ -658,11 +653,15 @@ func ProcessUnifiedHttp(c *conn.Conn, s *TunnelModeServer) error {
 		return errors.New("407 Proxy Authentication Required")
 	}
 	if user == "" {
-		user = "auto"
+		// The username is the routing rule, never defaulted: an empty username
+		// is rejected instead of silently falling back to "auto".
+		_, _ = c.Write([]byte(common.ProxyAuthRequiredBytes))
+		_ = c.Close()
+		return errors.New("407 Proxy Authentication Required: empty routing username")
 	}
 	client, err := s.pickUnifiedClient(user)
 	if err != nil {
-		logs.Warn("unified proxy pick client failed: %v", err)
+		logs.Warn("unified proxy pick client failed: user=%q err=%v", user, err)
 		_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
 		_ = c.Close()
 		return err
@@ -739,163 +738,69 @@ func (s *TunnelModeServer) unifiedSocksAuth(c net.Conn) (string, error) {
 	return string(user), nil
 }
 
-// unifiedOnlineClients returns all online clients available for unified proxy egress
-func unifiedOnlineClients() []*file.Client {
-	list := make([]*file.Client, 0)
-	file.GetDb().JsonDb.Clients.Range(func(key, value interface{}) bool {
-		c := value.(*file.Client)
-		if c.Id > 0 && c.Status && c.IsConnect {
-			list = append(list, c)
-		}
-		return true
-	})
-	sort.Slice(list, func(i, j int) bool { return list[i].Id < list[j].Id })
-	return list
-}
-
-type unifiedCacheEntry struct {
-	clientId int
-	expireAt time.Time
-}
-
-var unifiedStickyCache sync.Map // key: taskId:username -> unifiedCacheEntry
-
-const unifiedCacheCleanInterval = time.Minute
-
-var unifiedCacheCleanerOnce sync.Once
-
-// startUnifiedCacheCleaner launches a one-off background goroutine that periodically purges expired sticky entries.
-func startUnifiedCacheCleaner() {
-	unifiedCacheCleanerOnce.Do(func() {
-		go func() {
-			ticker := time.NewTicker(unifiedCacheCleanInterval)
-			defer ticker.Stop()
-			for range ticker.C {
-				cleanUnifiedStickyCache()
-			}
-		}()
-	})
-}
-
-// cleanUnifiedStickyCache removes expired entries from the sticky cache.
-func cleanUnifiedStickyCache() {
-	now := time.Now()
-	unifiedStickyCache.Range(func(key, value interface{}) bool {
-		if e, ok := value.(unifiedCacheEntry); ok && !now.Before(e.expireAt) {
-			unifiedStickyCache.Delete(key)
-		}
-		return true
-	})
-}
-
-const (
-	unifiedModeRandom = "random"
-	unifiedModeFixed  = "fixed"
-	unifiedModeSticky = "sticky"
-)
-
-type unifiedRoute struct {
-	mode       string
-	clientId   int
-	ttlMinutes int
-}
-
-var unifiedTTLPattern = regexp.MustCompile(`^([1-9]\d*)([mhd])$`)
-
-// parseUnifiedUsername parses the proxy username into an exit routing rule.
-// priority: auto -> pure digits (fixed client id) -> xxx-auto-{time} -> xxx-auto -> invalid.
-// supported time units: m (minute), h (hour), d (day)
-func parseUnifiedUsername(username string) (unifiedRoute, bool) {
-	if username == "auto" {
-		return unifiedRoute{mode: unifiedModeRandom}, true
-	}
-	if id, err := strconv.Atoi(username); err == nil {
-		return unifiedRoute{mode: unifiedModeFixed, clientId: id}, true
-	}
-	parts := strings.Split(username, "-")
-	if len(parts) >= 2 {
-		last := parts[len(parts)-1]
-		if last == "auto" {
-			return unifiedRoute{mode: unifiedModeSticky}, true
-		}
-		if len(parts) >= 3 && parts[len(parts)-2] == "auto" {
-			if m := unifiedTTLPattern.FindStringSubmatch(last); m != nil {
-				n, err := strconv.Atoi(m[1])
-				if err != nil || n <= 0 || n > 5256000 {
-					return unifiedRoute{}, false
-				}
-				var minutes int
-				switch m[2] {
-				case "m":
-					minutes = n
-				case "h":
-					minutes = n * 60
-				case "d":
-					minutes = n * 24 * 60
-				}
-				return unifiedRoute{mode: unifiedModeSticky, ttlMinutes: minutes}, true
-			}
-		}
-	}
-	return unifiedRoute{}, false
-}
-
-// pickUnifiedClient choose the exit client according to the username routing rules.
-// the client is chosen once per new proxy connection and stays fixed for the
-// whole lifetime of that connection.
+// pickUnifiedClient resolves a proxy username into an egress client through the
+// shared pipeline RouteParser -> ClientSelector -> StickyStore.
+//
+// The client is chosen exactly once per new proxy connection: HTTP keep-alive,
+// HTTPS CONNECT and SOCKS5 TCP keep the same egress for the whole lifetime of
+// that connection. A sticky TTL expiry only affects the next new connection,
+// it never tears down a connection that is already established.
 func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, error) {
-	return s.pickUnifiedClientFrom(username, unifiedOnlineClients())
+	return s.pickUnifiedClientFrom(username, nil)
 }
 
-// pickUnifiedClientFrom is the testable core of pickUnifiedClient with injected online candidates.
-func (s *TunnelModeServer) pickUnifiedClientFrom(username string, candidates []*file.Client) (*file.Client, error) {
-	route, ok := parseUnifiedUsername(username)
-	if !ok {
-		return nil, fmt.Errorf("unified proxy: invalid username %q", username)
+// pickUnifiedClientFrom is the testable core of pickUnifiedClient.
+// A nil online slice means "use the live client set".
+func (s *TunnelModeServer) pickUnifiedClientFrom(username string, online []*file.Client) (*file.Client, error) {
+	req, err := s.resolveUnifiedRoute(username)
+	if err != nil {
+		return nil, err
 	}
-	if len(candidates) == 0 {
-		return nil, errors.New("unified proxy: no online clients available")
-	}
+	return s.selectUnifiedClient(req, online)
+}
 
-	switch route.mode {
-	case unifiedModeRandom:
-		return candidates[rand.Intn(len(candidates))], nil
-	case unifiedModeFixed:
-		// explicitly pinned client: never fall back to another client
-		for _, c := range candidates {
-			if c.Id == route.clientId {
-				return c, nil
-			}
-		}
-		return nil, fmt.Errorf("unified proxy: client %d is not online", route.clientId)
+// resolveUnifiedRoute parses the username and scopes the sticky cache key to
+// this unified proxy task, so that two unified proxy instances never share
+// sticky entries.
+func (s *TunnelModeServer) resolveUnifiedRoute(username string) (RouteRequest, error) {
+	req, err := ParseRoute(username)
+	if err != nil {
+		return RouteRequest{}, err
 	}
+	req.CacheKey = CacheKeyFor(s.unifiedProxyID(), username)
+	return req, nil
+}
 
-	// sticky: cached by the full username for the TTL (custom or task default)
+func (s *TunnelModeServer) unifiedProxyID() int {
+	if s == nil || s.BaseServer == nil || s.Task == nil {
+		return 0
+	}
+	return s.Task.Id
+}
+
+// unifiedDefaultCacheTTL returns the task DefaultCacheTTL: the unified proxy
+// CacheTime expressed in minutes, 10 minutes when it is not configured.
+func (s *TunnelModeServer) unifiedDefaultCacheTTL() time.Duration {
+	if s == nil || s.BaseServer == nil || s.Task == nil || s.Task.CacheTime <= 0 {
+		return unifiedDefaultTTL
+	}
+	return time.Duration(s.Task.CacheTime) * time.Minute
+}
+
+// unifiedSelector returns the ClientSelector bound to this server sticky store.
+func (s *TunnelModeServer) unifiedSelector() *ClientSelector {
+	if s != nil && s.stickyStore != nil {
+		return NewClientSelector(s.stickyStore)
+	}
+	return defaultClientSelector()
+}
+
+// selectUnifiedClient runs the selector, injecting the online set when provided.
+func (s *TunnelModeServer) selectUnifiedClient(req RouteRequest, online []*file.Client) (*file.Client, error) {
 	startUnifiedCacheCleaner()
-	ttlMinutes := route.ttlMinutes
-	if ttlMinutes <= 0 {
-		ttlMinutes = s.Task.CacheTime
-		if ttlMinutes <= 0 {
-			ttlMinutes = 10
-		}
+	selector := s.unifiedSelector()
+	if online != nil {
+		return selector.SelectFrom(req, s.unifiedDefaultCacheTTL(), online)
 	}
-	key := fmt.Sprintf("%d:%s", s.Task.Id, username)
-	now := time.Now()
-	if v, ok := unifiedStickyCache.Load(key); ok {
-		e := v.(unifiedCacheEntry)
-		if now.Before(e.expireAt) {
-			for _, c := range candidates {
-				if c.Id == e.clientId {
-					return c, nil
-				}
-			}
-		}
-		unifiedStickyCache.Delete(key)
-	}
-	picked := candidates[rand.Intn(len(candidates))]
-	unifiedStickyCache.Store(key, unifiedCacheEntry{
-		clientId: picked.Id,
-		expireAt: now.Add(time.Duration(ttlMinutes) * time.Minute),
-	})
-	return picked, nil
+	return selector.Select(req, s.unifiedDefaultCacheTTL())
 }

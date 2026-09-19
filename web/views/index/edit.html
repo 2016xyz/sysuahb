@@ -194,10 +194,10 @@
                             <button class="btn btn-secondary" onclick="goback()" type="button">
                                 <i class="fa fa-fw fa-lg fa-window-close"></i> <span langtag="word-cancel"></span>
                             </button>
-                            <button class="btn btn-success" onclick="submitform('edit', '{{.web_base_url}}/index/edit', $('form').serializeArray())" type="button">
+                            <button class="btn btn-success" onclick="if (!validateUnifiedProxy()) return; submitform('edit', '{{.web_base_url}}/index/edit', $('form').serializeArray())" type="button">
                                 <i class="fa fa-fw fa-lg fa-check-circle"></i> <span langtag="word-save"></span>
                             </button>
-                            <button class="btn btn-warning" onclick="if ($('input[name=\'port\']').val() == '{{.t.Port}}') $('input[name=\'port\']').val(0); submitform('add', '{{.web_base_url}}/index/add', $('form').serializeArray())" type="button">
+                            <button class="btn btn-warning" onclick="if (!validateUnifiedProxy()) return; if ($('input[name=\'port\']').val() == '{{.t.Port}}') $('input[name=\'port\']').val(0); submitform('add', '{{.web_base_url}}/index/add', $('form').serializeArray())" type="button">
                                 <i class="fa fa-fw fa-lg fa-check-circle"></i> <span langtag="word-add"></span>
                             </button>
                         </div>
@@ -245,6 +245,26 @@
         if (typeof languages !== 'undefined' && languages['content']) {
             $pwd.attr("placeholder", languages['content'][pwdLang] || '')
         }
+    }
+
+    // Unified proxy: the routing username selects the egress, the password is
+    // the only authentication. An empty password would allow anonymous use of
+    // the egress pool, so it is refused here as well as on the server side.
+    function validateUnifiedProxy() {
+        if ($("#type").val() != "unifiedProxy") {
+            return true
+        }
+        var pwd = $.trim($("input[name='password']").val() || "")
+        if (pwd === "") {
+            showMsg(langreply("unified proxy password is required"), "error", 5000)
+            return false
+        }
+        var cacheVal = $.trim($("input[name='cache_time']").val() || "")
+        if (cacheVal !== "" && (isNaN(cacheVal) || parseInt(cacheVal, 10) < 0)) {
+            showMsg(langreply("cache time must be a non negative number"), "error", 5000)
+            return false
+        }
+        return true
     }
 
     function toggleDestAclRules() {

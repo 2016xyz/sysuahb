@@ -80,6 +80,7 @@ type Client struct {
 	MaxTunnelNum    int
 	Version         string
 	BlackIpList     []string
+	Tags            []string // unified proxy routing tags, normalized: [a-z0-9_-]+
 	CreateTime      string
 	LastOnlineTime  string
 	sync.RWMutex

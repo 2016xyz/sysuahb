@@ -1173,6 +1173,18 @@
 		<zh-CN>创建时间</zh-CN>
 		<en-US>Create Time</en-US>
 	</lang>
+	<lang id="word-tags">
+		<zh-CN>标签</zh-CN>
+		<en-US>Tags</en-US>
+	</lang>
+	<lang id="info-suchastags">
+		<zh-CN>例如&#10;gz&#10;telecom</zh-CN>
+		<en-US>Such as&#10;gz&#10;telecom</en-US>
+	</lang>
+	<lang id="info-desctags">
+		<zh-CN>一行一个或用逗号分隔；仅允许小写字母、数字、下划线和短横线（a-z 0-9 _ -），不允许点号；统一代理可用 tag.auto / key.tag-auto 按标签选择出口</zh-CN>
+		<en-US>One per line or comma separated; only a-z 0-9 _ - are allowed, dots are rejected. Unified proxy can route by tag via tag.auto / key.tag-auto</en-US>
+	</lang>
 	<lang id="word-lastonlinetime">
 		<zh-CN>上次在线时间</zh-CN>
 		<en-US>Last Online Time</en-US>

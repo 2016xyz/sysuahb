@@ -24,6 +24,9 @@ type TunnelModeServer struct {
 	address           string
 	listener          net.Listener
 	activeConnections sync.Map
+	// stickyStore backs the unified proxy sticky routing cache. When nil the
+	// process wide default store is used, tests inject a private one.
+	stickyStore StickyStore
 }
 
 // NewTunnelModeServer tcp|host|mixproxy

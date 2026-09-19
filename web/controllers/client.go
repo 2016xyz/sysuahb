@@ -52,6 +52,11 @@ func (s *ClientController) Add() {
 		s.display()
 	} else {
 		id := int(file.GetDb().JsonDb.GetClientId())
+		tags, err := file.NormalizeTags(file.SplitTagsText(s.getEscapeString("tags")))
+		if err != nil {
+			s.AjaxErr(err.Error())
+			return
+		}
 		t := &file.Client{
 			VerifyKey: s.getEscapeString("vkey"),
 			Id:        id,
@@ -77,10 +82,12 @@ func (s *ClientController) Add() {
 				TimeLimit:  common.GetTimeNoErrByStr(s.getEscapeString("time_limit")),
 			},
 			BlackIpList: RemoveRepeatedElement(strings.Split(s.getEscapeString("blackiplist"), "\r\n")),
+			Tags:        tags,
 			CreateTime:  time.Now().Format("2006-01-02 15:04:05"),
 		}
 		if err := file.GetDb().NewClient(t); err != nil {
 			s.AjaxErr(err.Error())
+			return
 		}
 		s.AjaxOkWithId("add success", id)
 	}
@@ -123,6 +130,7 @@ func (s *ClientController) Edit() {
 		} else {
 			s.Data["c"] = c
 			s.Data["BlackIpList"] = strings.Join(c.BlackIpList, "\r\n")
+			s.Data["Tags"] = strings.Join(c.TagList(), "\n")
 		}
 		s.SetInfo("edit client")
 		s.display()
@@ -186,6 +194,12 @@ func (s *ClientController) Edit() {
 			}
 
 			c.BlackIpList = RemoveRepeatedElement(strings.Split(s.getEscapeString("blackiplist"), "\r\n"))
+			tags, err := file.NormalizeTags(file.SplitTagsText(s.getEscapeString("tags")))
+			if err != nil {
+				s.AjaxErr(err.Error())
+				return
+			}
+			c.Tags = tags
 			file.GetDb().JsonDb.StoreClientsToJsonFile()
 		}
 		s.AjaxOk("save success")
