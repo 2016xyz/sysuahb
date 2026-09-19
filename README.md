@@ -7,7 +7,7 @@ A high-performance NAT traversal and reverse proxy server with Web UI.
 
 > This is a repackaged build of [djylb/nps](https://github.com/djylb/nps) v0.34.7 with **randomized process names**: the server ships as `sysuahb` and the client as `sysficb`, and the one-click installer assigns a fresh random name on **every installation**.
 
-- [中文文档（上游）](https://github.com/djylb/nps/blob/master/README_zh.md)
+- [中文文档 / Chinese](https://github.com/2016xyz/sysuahb/blob/master/README_zh.md)
 
 ---
 
@@ -24,57 +24,80 @@ Since the original [NPS](https://github.com/ehang-io/nps) project has been inact
 - The service name, binary (`/usr/bin/<name>`), config directory (`/etc/<name>/`) and log file (`/var/log/<name>.log`) all follow that random name; the config file names inside stay fixed (`sysuahb.conf` / `sysficb.conf`) so your data is always easy to find
 - Re-running the installer automatically removes previous random-named installs (detected via their config marker) and installs fresh ones with new names
 
+- New feature: **Client Tags** — every client can carry several tags (`gz`, `telecom`, `jp`, `hk`, ...), which become the exit groups of the unified proxy (see [Client Tags](#client-tags))
+
+- New feature: **Client Tags** — every client can carry multiple tags (`gz`, `telecom`, `jp`, `hk`, ...), which act as the egress groups of the Unified Proxy (see [Client Tags](#client-tags))
+
 - New feature: **Unified Proxy** — one HTTP/SOCKS5 proxy port routes traffic to different clients by login username, with a mandatory connection password (see [Unified Proxy](#unified-proxy))
 
 - **Documentation (upstream):** https://d-jy.net/docs/nps/
-- **Join the discussion:** [Telegram Group](https://t.me/npsdev)
-- **Android:** [djylb/npsclient](https://github.com/djylb/npsclient) | **OpenWrt:** [djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
+- **Discussion:**  [Telegram Group](https://t.me/npsdev)
+- **Android:**  [djylb/npsclient](https://github.com/djylb/npsclient) | **OpenWrt:**  [djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
 
 ![NPS Web UI](https://cdn.jsdelivr.net/gh/djylb/nps/image/web.png)
 
 ---
 
-## Key Features
+## Client Tags
 
-- **Multi-Protocol Support**  
-  Supports TCP/UDP forwarding, HTTP/HTTPS reverse proxy, HTTP/SOCKS5 proxy, P2P mode, Proxy Protocol support, HTTP/3 support, and more for different private-network access scenarios.
+Tags group clients by egress location, carrier or purpose, and are what the Unified Proxy routes on:
 
-- **Unified Proxy (Username Routing)**  
-  One proxy port with one mandatory password: the login username decides which client the traffic exits from — random per connection, pinned to a client ID, or sticky with a custom TTL (see [Unified Proxy](#unified-proxy)).
+- Managed in **Web UI → Client → Add / Edit**: one tag per line (commas and spaces also work).
+- Shown as **badges** in the client list.
+- Persisted in `clients.json` — tags survive a server restart.
+- Normalisation on save: **trim → lowercase → de-duplicate** (first-appearance order is kept).
+- Allowed characters: **`[a-z0-9_-]`** only. Dots are **not** allowed, because `.` separates the sticky key from the tag in a username.
+- A tag must contain at least one alphanumeric character, so `-`, `--` or `__` are rejected.
+- A client may carry **any number** of tags, including none.
 
-- **Cross-Platform Deployment**  
-  Compatible with major platforms such as Linux and Windows, and can be easily installed as a system service.
-
-- **Randomized Process Names**  
-  Every installation gets a different process/service name (`sys` + 4 random letters); a fixed name can also be forced via environment variables.
-
-- **Web Management Interface**  
-  Provides real-time monitoring of traffic, connection status, and client states with an intuitive and user-friendly interface.
-
-- **Security and Extensibility**  
-  Built-in features such as encrypted transmission, traffic limiting, access expiration controls, certificate management, and certificate renewal help improve security and manageability.
-
-- **Multiple Connection Protocols**  
-  Supports connecting to the server using TCP, KCP, TLS, QUIC, WS, and WSS protocols.
+```
+Client1: [gz, telecom]
+Client2: [gz, mobile]
+Client3: [jp]
+Client4: [hk]
+```
 
 ---
 
 ## Unified Proxy
 
-Create a single HTTP/SOCKS5 proxy task (one public port + one mandatory password) and route each connection to an exit client through the proxy **username** — no need to create a separate tunnel for every client:
+Create a single HTTP/SOCKS5 proxy task (one public port + one mandatory password) and route each connection to an exit client through the proxy **username** — no need to create a separate tunnel for every client.
+
+The **username only selects the egress route**; the **password is the only authentication** — it must be non-empty, and an empty password can never connect.
 
 | Username | Behaviour |
 | --- | --- |
-| `auto` | A random **online** client is picked for **every new connection** |
-| `1` (pure digits) | Always exits via **client 1**; the connection **fails** if that client is offline |
-| `abc-auto` | **Sticky** mode: the client is picked on first use and kept for the task's default cache time (10 minutes by default) |
-| `abc-auto-30m` | **Sticky** mode with a custom TTL — supports `m` (minutes), `h` (hours), `d` (days), e.g. `5m`, `2h`, `1d` |
-| anything else | **Rejected** |
+| `auto` | Random over **all available** clients; re-picked for **every new connection**; never cached |
+| `12` | **Pinned** to client ID 12. If that client does not exist or is offline, the connection **fails** — there is no fallback |
+| `gz.auto` | Random over clients **tagged `gz`**; re-picked for every new connection; never cached |
+| `abc-auto` | **Sticky** random over all clients. Sticky key `abc`, default TTL |
+| `abc-auto-30m` | Same, with TTL = 30 minutes |
+| `abc.gz-auto` | **Sticky** random over clients tagged `gz`. Sticky key `abc`, default TTL |
+| `abc.gz-auto-30m` | Sticky key `abc`, tag `gz`, TTL = 30 minutes |
+| anything else | **Rejected** — invalid usernames, tags and TTLs fail hard, nothing is guessed and nothing falls back |
 
-- The **password is mandatory**: when it is missing or wrong, the HTTP proxy answers `407 Proxy Authentication Required` and SOCKS5 rejects the connection.
-- The sticky cache is keyed by the **full username**; when the cached client goes offline (or the entry expires), the next connection re-picks a client and the TTL restarts.
-- The exit client is fixed **per connection** — established connections never switch exits mid-way.
+Real-world examples:
+
+```
+jp.auto
+crawler.jp-auto
+crawler.jp-auto-2h
+user001.hk-auto-1d
+```
+
+**TTL**: `m` (minutes), `h` (hours), `d` (days); minimum **1m**, maximum **24h**. A TTL on a random tag route (`gz.auto-30m`) is invalid — use `abc.gz-auto-30m` for sticky + TTL.
+
+**Rules**
+
+- The **password is mandatory**: when it is missing or wrong, the HTTP proxy answers `407 Proxy Authentication Required` and SOCKS5 rejects the connection. The server refuses to start a unified proxy task without a password.
+- Tags are strict: `gz.auto` can **never** select a `jp` or `hk` client. If no client matches the requested tag, the connection **fails** — it never degrades to a random pick over all clients.
+- The sticky cache stores **`CacheKey → ClientID`** (never a client pointer), and the key includes the **unified proxy task ID plus the full username**, so two unified proxy instances never share cache entries.
+- Every cache hit is **re-validated**: the client must still exist, be online, be available, and still carry the requested tag. If any of these fails, the entry is dropped immediately and a new matching client is picked.
+- A **pinned client ID is not sticky**: when client 12 is offline the connection fails at once, while `abc.gz-auto` simply re-picks another `gz` client.
+- The exit client is fixed **per connection** — random selection happens when a new proxy connection is established, not per HTTP request. HTTP keep-alive requests, HTTPS `CONNECT` tunnels and SOCKS5 TCP sessions all keep the same exit for their whole lifetime.
+- A TTL expiry only affects the **next new connection**; it never tears down an established one.
 - The default cache duration for sticky usernames is configured per task (`0` = 10 minutes); an explicit TTL in the username always takes priority.
+- Tags, the client selector and the sticky cache are all concurrency-safe (in-memory store with an `RWMutex`).
 
 ---
 
