@@ -185,6 +185,9 @@ func splitStickyUsername(username string) (key, tag, ttlText string, err error) 
 			return "", "", "", fmt.Errorf("unified proxy: invalid username %q", username)
 		}
 		ttlText = body[idx+len("-auto-"):]
+		if ttlText == "" {
+			return "", "", "", fmt.Errorf("unified proxy: invalid username %q: missing ttl after '-auto-'", username)
+		}
 		body = body[:idx+len("-auto")]
 	}
 	body = strings.TrimSuffix(body, "-auto")
