@@ -55,6 +55,8 @@ jobs:
         with:
           tag_name: v${{ env.NPS_VERSION }}
           files: "*.tar.gz"
+          # 版本号含 "-"（如 0.34.7-test1）视为预发布，不占用 releases/latest
+          prerelease: ${{ contains(env.NPS_VERSION, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -109,6 +111,8 @@ jobs:
         with:
           tag_name: v${{ env.NPS_VERSION }}
           files: "*.tar.gz"
+          # 版本号含 "-"（如 0.34.7-test1）视为预发布，不占用 releases/latest
+          prerelease: ${{ contains(env.NPS_VERSION, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -178,5 +182,7 @@ jobs:
         with:
           tag_name: v${{ env.NPS_VERSION }}
           files: "*.tar.gz"
+          # 版本号含 "-"（如 0.34.7-test1）视为预发布，不占用 releases/latest
+          prerelease: ${{ contains(env.NPS_VERSION, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
