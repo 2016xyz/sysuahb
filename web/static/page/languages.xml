@@ -51,6 +51,14 @@
 		<zh-CN>统一代理</zh-CN>
 		<en-US>Unified Proxy</en-US>
 	</lang>
+	<lang id="word-proxynode">
+		<zh-CN>代理节点</zh-CN>
+		<en-US>Proxy Nodes</en-US>
+	</lang>
+	<lang id="word-proxysettings">
+		<zh-CN>设置</zh-CN>
+		<en-US>Settings</en-US>
+	</lang>
 	<lang id="scheme-secret">
 		<zh-CN>私密代理</zh-CN>
 		<en-US>Secret</en-US>
@@ -1589,4 +1597,190 @@
 			<en-US>No results match {0}</en-US>
 		</lang>
 	</bootstrap-select>
+	<lang id="word-name">
+		<zh-CN>名称</zh-CN>
+		<en-US>Name</en-US>
+	</lang>
+	<lang id="word-protocol">
+		<zh-CN>协议</zh-CN>
+		<en-US>Protocol</en-US>
+	</lang>
+	<lang id="word-latency">
+		<zh-CN>延迟</zh-CN>
+		<en-US>Latency</en-US>
+	</lang>
+	<lang id="word-actions">
+		<zh-CN>操作</zh-CN>
+		<en-US>Actions</en-US>
+	</lang>
+	<lang id="word-check">
+		<zh-CN>检测</zh-CN>
+		<en-US>Check</en-US>
+	</lang>
+	<lang id="word-enable">
+		<zh-CN>启用</zh-CN>
+		<en-US>Enable</en-US>
+	</lang>
+	<lang id="word-edit">
+		<zh-CN>编辑</zh-CN>
+		<en-US>Edit</en-US>
+	</lang>
+	<lang id="word-import">
+		<zh-CN>导入</zh-CN>
+		<en-US>Import</en-US>
+	</lang>
+	<lang id="word-search">
+		<zh-CN>搜索</zh-CN>
+		<en-US>Search</en-US>
+	</lang>
+	<lang id="word-enabled">
+		<zh-CN>启用</zh-CN>
+		<en-US>Enabled</en-US>
+	</lang>
+	<lang id="word-availability">
+		<zh-CN>可用性</zh-CN>
+		<en-US>Availability</en-US>
+	</lang>
+	<lang id="word-failures">
+		<zh-CN>连续失败</zh-CN>
+		<en-US>Failures</en-US>
+	</lang>
+	<lang id="word-socks5">
+		<zh-CN>SOCKS5</zh-CN>
+		<en-US>SOCKS5</en-US>
+	</lang>
+	<lang id="page-proxynodelist">
+		<zh-CN>代理节点</zh-CN>
+		<en-US>Proxy Nodes</en-US>
+	</lang>
+	<lang id="word-addproxy">
+		<zh-CN>新增代理</zh-CN>
+		<en-US>Add Proxy</en-US>
+	</lang>
+	<lang id="word-importproxy">
+		<zh-CN>批量导入</zh-CN>
+		<en-US>Batch Import</en-US>
+	</lang>
+	<lang id="word-checkall">
+		<zh-CN>检测全部</zh-CN>
+		<en-US>Check All</en-US>
+	</lang>
+	<lang id="word-batchops">
+		<zh-CN>批量操作</zh-CN>
+		<en-US>Batch Ops</en-US>
+	</lang>
+	<lang id="word-checkselected">
+		<zh-CN>检测选中</zh-CN>
+		<en-US>Check Selected</en-US>
+	</lang>
+	<lang id="word-enableselected">
+		<zh-CN>启用选中</zh-CN>
+		<en-US>Enable Selected</en-US>
+	</lang>
+	<lang id="word-disableselected">
+		<zh-CN>禁用选中</zh-CN>
+		<en-US>Disable Selected</en-US>
+	</lang>
+	<lang id="word-addtag">
+		<zh-CN>添加标签</zh-CN>
+		<en-US>Add Tag</en-US>
+	</lang>
+	<lang id="word-removetag">
+		<zh-CN>删除标签</zh-CN>
+		<en-US>Remove Tag</en-US>
+	</lang>
+	<lang id="word-deleteselected">
+		<zh-CN>删除选中</zh-CN>
+		<en-US>Delete Selected</en-US>
+	</lang>
+	<lang id="word-deleteinvalid">
+		<zh-CN>删除无效代理</zh-CN>
+		<en-US>Delete Invalid Proxies</en-US>
+	</lang>
+	<lang id="word-lastcheck">
+		<zh-CN>最后检测</zh-CN>
+		<en-US>Last Check</en-US>
+	</lang>
+	<lang id="word-morefilters">
+		<zh-CN>更多筛选</zh-CN>
+		<en-US>More Filters</en-US>
+	</lang>
+	<lang id="word-importformat">
+		<zh-CN>每行一个，例如</zh-CN>
+		<en-US>One per line, e.g.</en-US>
+	</lang>
+	<lang id="word-healthsettings">
+		<zh-CN>健康检测设置</zh-CN>
+		<en-US>Health Check Settings</en-US>
+	</lang>
+	<lang id="word-checkurl">
+		<zh-CN>检测地址</zh-CN>
+		<en-US>Check URL</en-US>
+	</lang>
+	<lang id="word-autocheck">
+		<zh-CN>导入后自动检测</zh-CN>
+		<en-US>Auto check after import</en-US>
+	</lang>
+	<lang id="info-suchastags">
+		<zh-CN>例如：jp</zh-CN>
+		<en-US>e.g. jp</en-US>
+	</lang>
+	<lang id="word-checkinterval">
+		<zh-CN>正常间隔（秒）</zh-CN>
+		<en-US>Interval (s)</en-US>
+	</lang>
+	<lang id="word-retryinterval">
+		<zh-CN>异常重试间隔（秒）</zh-CN>
+		<en-US>Retry Interval (s)</en-US>
+	</lang>
+	<lang id="word-checktimeout">
+		<zh-CN>超时（秒）</zh-CN>
+		<en-US>Timeout (s)</en-US>
+	</lang>
+	<lang id="word-failthreshold">
+		<zh-CN>失败阈值</zh-CN>
+		<en-US>Fail Threshold</en-US>
+	</lang>
+	<lang id="word-recoversuccess">
+		<zh-CN>恢复成功次数</zh-CN>
+		<en-US>Recover Success</en-US>
+	</lang>
+	<lang id="word-maxconcurrency">
+		<zh-CN>最大并发</zh-CN>
+		<en-US>Max Concurrency</en-US>
+	</lang>
+	<lang id="word-stickyttl">
+		<zh-CN>粘性 TTL 范围</zh-CN>
+		<en-US>Sticky TTL Range</en-US>
+	</lang>
+	<lang id="word-minttl">
+		<zh-CN>最小 TTL（秒）</zh-CN>
+		<en-US>Min TTL (s)</en-US>
+	</lang>
+	<lang id="word-maxttl">
+		<zh-CN>最大 TTL（秒）</zh-CN>
+		<en-US>Max TTL (s)</en-US>
+	</lang>
+	<lang id="word-autocheckadd">
+		<zh-CN>新增后自动检测</zh-CN>
+		<en-US>Auto check after add</en-US>
+	</lang>
+	<lang id="word-autocheckimport">
+		<zh-CN>导入后自动检测</zh-CN>
+		<en-US>Auto check after import</en-US>
+	</lang>
+	<lang id="word-proxytagrule">
+		<zh-CN>标签规则：小写字母/数字/_/-，不允许点号</zh-CN>
+		<en-US>Tags: [a-z0-9_-] only, no dot</en-US>
+	</lang>
+	<lang id="word-selectall">
+		<zh-CN>全选结果</zh-CN>
+		<en-US>Select all results</en-US>
+	</lang>
+
+	<lang id="info-keeppassword">
+		<zh-CN>留空则保留原密码</zh-CN>
+		<en-US>Leave empty to keep the current password</en-US>
+	</lang>
+
 </content>

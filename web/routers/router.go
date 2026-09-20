@@ -22,6 +22,7 @@ func Init() {
 			beego.NSAutoRouter(&controllers.ClientController{}),
 			beego.NSAutoRouter(&controllers.AuthController{}),
 			beego.NSAutoRouter(&controllers.GlobalController{}),
+			beego.NSAutoRouter(&controllers.ProxyNodeController{}),
 		)
 		beego.AddNamespace(ns)
 	} else {
@@ -31,6 +32,6 @@ func Init() {
 		beego.AutoRouter(&controllers.ClientController{})
 		beego.AutoRouter(&controllers.AuthController{})
 		beego.AutoRouter(&controllers.GlobalController{})
-
+		beego.AutoRouter(&controllers.ProxyNodeController{})
 	}
 }

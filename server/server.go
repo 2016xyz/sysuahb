@@ -160,6 +160,9 @@ func StartNewServer(cnf *file.Tunnel, bridgeDisconnect int) {
 	}
 	go DealBridgeTask()
 	go dealClientFlow()
+	// Start the external proxy health scheduler with the server, so imported
+	// nodes are probed even before the first unified proxy connection.
+	proxy.StartProxyHealthLoop()
 	InitDashboardData()
 	if svr := NewMode(Bridge, cnf); svr != nil {
 		if err := svr.Start(); err != nil {

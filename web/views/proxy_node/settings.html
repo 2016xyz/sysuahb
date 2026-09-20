@@ -1,0 +1,95 @@
+<div class="row tile">
+    <div class="col-md-12 col-md-auto">
+        <div class="ibox float-e-margins">
+            <h3 class="ibox-title" langtag="word-healthsettings"></h3>
+            <div class="ibox-content">
+                <form class="form-horizontal">
+                    <div class="form-group" id="check_url">
+                        <label class="control-label font-bold" langtag="word-checkurl"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="check_url" type="text" value="{{.u.CheckURL}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="check_interval">
+                        <label class="control-label font-bold" langtag="word-checkinterval"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="check_interval" type="text" value="{{.u.CheckInterval}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="retry_interval">
+                        <label class="control-label font-bold" langtag="word-retryinterval"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="retry_interval" type="text" value="{{.u.RetryInterval}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="check_timeout">
+                        <label class="control-label font-bold" langtag="word-checktimeout"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="check_timeout" type="text" value="{{.u.CheckTimeout}}">
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group" id="fail_threshold">
+                        <label class="control-label font-bold" langtag="word-failthreshold"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="fail_threshold" type="text" value="{{.u.FailThreshold}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="recover_success">
+                        <label class="control-label font-bold" langtag="word-recoversuccess"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="recover_success" type="text" value="{{.u.RecoverSuccess}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="max_concurrency">
+                        <label class="control-label font-bold" langtag="word-maxconcurrency"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="max_concurrency" type="text" value="{{.u.MaxConcurrency}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="min_ttl">
+                        <label class="control-label font-bold" langtag="word-minttl"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="min_ttl" type="text" value="{{.u.MinTTL}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="max_ttl">
+                        <label class="control-label font-bold" langtag="word-maxttl"></label>
+                        <div class="col-sm-12">
+                            <input class="form-control" name="max_ttl" type="text" value="{{.u.MaxTTL}}">
+                        </div>
+                    </div>
+                    <div class="form-group" id="auto_check_add">
+                        <label class="control-label font-bold" langtag="word-autocheckadd"></label>
+                        <div class="col-sm-12">
+                            <select class="form-control selectpicker" name="auto_check_add">
+                                <option langtag="word-yes" value="1" {{if .u.AutoCheckOnAdd}}selected{{end}}></option>
+                                <option langtag="word-no" value="0" {{if not .u.AutoCheckOnAdd}}selected{{end}}></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="auto_check_import">
+                        <label class="control-label font-bold" langtag="word-autocheckimport"></label>
+                        <div class="col-sm-12">
+                            <select class="form-control selectpicker" name="auto_check_import">
+                                <option langtag="word-yes" value="1" {{if .u.AutoCheckOnImport}}selected{{end}}></option>
+                                <option langtag="word-no" value="0" {{if not .u.AutoCheckOnImport}}selected{{end}}></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group">
+                        <div class="col-lg-12 col-sm-offset-2">
+                            <button class="btn btn-secondary" onclick="goback()" type="button">
+                                <i class="fa fa-fw fa-lg fa-window-close"></i> <span langtag="word-cancel"></span>
+                            </button>
+                            <button class="btn btn-success" onclick="submitform('edit', '{{.web_base_url}}/proxy_node/settings', $('form').serializeArray())" type="button">
+                                <i class="fa fa-fw fa-lg fa-check-circle"></i> <span langtag="word-save"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

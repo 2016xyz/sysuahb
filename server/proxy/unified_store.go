@@ -7,19 +7,18 @@ import (
 
 // StickyStore is the abstraction of the sticky routing cache.
 //
-// V1 uses an in-memory implementation guarded by a RWMutex; a Redis backed
-// implementation can be plugged in later without touching the callers.
-//
-// The store only ever holds "CacheKey -> ClientID". Client pointers are never
-// cached, so a stale pointer can never leak an offline client into a new
+// V1 uses an in-memory RWMutex guarded implementation; a Redis backed one can
+// be added later without touching the callers. The store only ever holds
+// "CacheKey -> EgressRef" (client id or proxy node id). Pointers are never
+// cached, so a stale pointer can never leak an offline egress into a new
 // connection.
 type StickyStore interface {
-	// Get returns the cached client id for key. The second result is false
-	// when the entry is missing or already expired.
-	Get(key string) (int, bool)
-	// Set stores clientID under key with the given ttl. A non positive ttl
-	// falls back to the default TTL.
-	Set(key string, clientID int, ttl time.Duration)
+	// Get returns the cached egress reference for key. The second result is
+	// false when the entry is missing or already expired.
+	Get(key string) (EgressRef, bool)
+	// Set stores ref under key with the given ttl. A non positive ttl falls
+	// back to the default TTL.
+	Set(key string, ref EgressRef, ttl time.Duration)
 	// Delete removes key from the store.
 	Delete(key string)
 	// Len returns the number of live entries.
@@ -29,7 +28,7 @@ type StickyStore interface {
 }
 
 type stickyEntry struct {
-	clientID int
+	ref      EgressRef
 	expireAt time.Time
 }
 
@@ -48,33 +47,33 @@ func newMemoryStickyStore() *memoryStickyStore {
 	}
 }
 
-func (s *memoryStickyStore) Get(key string) (int, bool) {
+func (s *memoryStickyStore) Get(key string) (EgressRef, bool) {
 	if key == "" {
-		return 0, false
+		return EgressRef{}, false
 	}
 	s.mu.RLock()
 	entry, ok := s.entries[key]
 	now := s.now()
 	s.mu.RUnlock()
 	if !ok {
-		return 0, false
+		return EgressRef{}, false
 	}
 	if !now.Before(entry.expireAt) {
 		s.Delete(key)
-		return 0, false
+		return EgressRef{}, false
 	}
-	return entry.clientID, true
+	return entry.ref, true
 }
 
-func (s *memoryStickyStore) Set(key string, clientID int, ttl time.Duration) {
-	if key == "" || clientID <= 0 {
+func (s *memoryStickyStore) Set(key string, ref EgressRef, ttl time.Duration) {
+	if key == "" || !ref.Valid() {
 		return
 	}
 	if ttl <= 0 {
 		ttl = unifiedDefaultTTL
 	}
 	s.mu.Lock()
-	s.entries[key] = stickyEntry{clientID: clientID, expireAt: s.now().Add(ttl)}
+	s.entries[key] = stickyEntry{ref: ref, expireAt: s.now().Add(ttl)}
 	s.mu.Unlock()
 }
 

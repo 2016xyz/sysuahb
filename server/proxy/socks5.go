@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -620,21 +621,28 @@ func ProcessUnified(c *conn.Conn, s *TunnelModeServer) error {
 		logs.Warn("unified proxy validation failed: %v", err)
 		return err
 	}
-	client, err := s.pickUnifiedClient(username)
+	egress, err := s.pickUnifiedEgress(username, protoSocks5)
 	if err != nil {
-		logs.Warn("unified proxy pick client failed: user=%q err=%v", username, err)
+		logs.Warn("unified proxy pick egress failed: user=%q err=%v", username, err)
 		_ = c.Close()
 		return err
 	}
-	if s.Bridge.IsServer() {
-		if err := s.CheckFlowAndConnNum(client); err != nil {
-			logs.Warn("unified proxy client Id %d, task Id %d, error %v", client.Id, s.Task.Id, err)
-			_ = c.Close()
-			return err
+	if egress.IsClient() {
+		client := egress.Client()
+		if s.Bridge.IsServer() {
+			if err := s.CheckFlowAndConnNum(client); err != nil {
+				logs.Warn("unified proxy client Id %d, task Id %d, error %v", client.Id, s.Task.Id, err)
+				_ = c.Close()
+				return err
+			}
+			defer client.CutConn()
 		}
-		defer client.CutConn()
+		s.handleSocks5Request(c, client)
+		return nil
 	}
-	s.handleSocks5Request(c, client)
+	// External proxy egress: the whole TCP session is tunneled through the
+	// upstream SOCKS5 proxy. The egress is pinned for the connection lifetime.
+	s.handleSocks5ViaProxy(c, egress.Node())
 	return nil
 }
 
@@ -659,23 +667,29 @@ func ProcessUnifiedHttp(c *conn.Conn, s *TunnelModeServer) error {
 		_ = c.Close()
 		return errors.New("407 Proxy Authentication Required: empty routing username")
 	}
-	client, err := s.pickUnifiedClient(user)
+	egress, err := s.pickUnifiedEgress(user, protoHttp)
 	if err != nil {
-		logs.Warn("unified proxy pick client failed: user=%q err=%v", user, err)
+		logs.Warn("unified proxy pick egress failed: user=%q err=%v", user, err)
 		_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
 		_ = c.Close()
 		return err
 	}
-	if s.Bridge.IsServer() {
-		if err := s.CheckFlowAndConnNum(client); err != nil {
-			logs.Warn("unified proxy client Id %d, task Id %d, error %v", client.Id, s.Task.Id, err)
-			_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
-			_ = c.Close()
-			return err
+	if egress.IsClient() {
+		client := egress.Client()
+		if s.Bridge.IsServer() {
+			if err := s.CheckFlowAndConnNum(client); err != nil {
+				logs.Warn("unified proxy client Id %d, task Id %d, error %v", client.Id, s.Task.Id, err)
+				_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
+				_ = c.Close()
+				return err
+			}
+			defer client.CutConn()
 		}
-		defer client.CutConn()
+		return s.handleHttpProxy(c, client, addr, rb, r)
 	}
-	return s.handleHttpProxy(c, client, addr, rb, r)
+	// External proxy egress: the request is tunneled through the upstream
+	// HTTP proxy instead of a bridge client.
+	return s.handleHttpViaProxy(c, egress.Node(), addr, rb, r)
 }
 
 // parseProxyBasicAuth extract credentials from Proxy-Authorization header.
@@ -738,25 +752,38 @@ func (s *TunnelModeServer) unifiedSocksAuth(c net.Conn) (string, error) {
 	return string(user), nil
 }
 
-// pickUnifiedClient resolves a proxy username into an egress client through the
-// shared pipeline RouteParser -> ClientSelector -> StickyStore.
+// pickUnifiedEgress resolves a proxy username into an egress (NPS client or
+// external proxy node) through the shared pipeline
+// RouteParser -> EgressSelector -> StickyStore.
 //
-// The client is chosen exactly once per new proxy connection: HTTP keep-alive,
+// The egress is chosen exactly once per new proxy connection: HTTP keep-alive,
 // HTTPS CONNECT and SOCKS5 TCP keep the same egress for the whole lifetime of
 // that connection. A sticky TTL expiry only affects the next new connection,
 // it never tears down a connection that is already established.
-func (s *TunnelModeServer) pickUnifiedClient(username string) (*file.Client, error) {
-	return s.pickUnifiedClientFrom(username, nil)
+func (s *TunnelModeServer) pickUnifiedEgress(username string, protocol egressProtocol) (unifiedEgress, error) {
+	return s.pickUnifiedEgressFrom(username, protocol, nil)
 }
 
-// pickUnifiedClientFrom is the testable core of pickUnifiedClient.
-// A nil online slice means "use the live client set".
-func (s *TunnelModeServer) pickUnifiedClientFrom(username string, online []*file.Client) (*file.Client, error) {
+// pickUnifiedEgressFrom is the testable core of pickUnifiedEgress.
+// A nil pool means "use the live client + proxy pool".
+func (s *TunnelModeServer) pickUnifiedEgressFrom(username string, protocol egressProtocol, pool []unifiedEgress) (unifiedEgress, error) {
 	req, err := s.resolveUnifiedRoute(username)
 	if err != nil {
-		return nil, err
+		return unifiedEgress{}, err
 	}
-	return s.selectUnifiedClient(req, online)
+	ref, err := s.selectUnifiedEgress(req, protocol, pool)
+	if err != nil {
+		return unifiedEgress{}, err
+	}
+	if pool != nil {
+		for _, eg := range pool {
+			if eg.ref == ref {
+				return eg, nil
+			}
+		}
+		return unifiedEgress{}, fmt.Errorf("unified proxy: egress %s vanished", ref)
+	}
+	return ResolveEgress(ref)
 }
 
 // resolveUnifiedRoute parses the username and scopes the sticky cache key to
@@ -787,20 +814,23 @@ func (s *TunnelModeServer) unifiedDefaultCacheTTL() time.Duration {
 	return time.Duration(s.Task.CacheTime) * time.Minute
 }
 
-// unifiedSelector returns the ClientSelector bound to this server sticky store.
-func (s *TunnelModeServer) unifiedSelector() *ClientSelector {
+// unifiedSelector returns the EgressSelector bound to this server sticky store.
+func (s *TunnelModeServer) unifiedSelector() *EgressSelector {
 	if s != nil && s.stickyStore != nil {
-		return NewClientSelector(s.stickyStore)
+		return NewEgressSelector(s.stickyStore)
 	}
-	return defaultClientSelector()
+	return defaultEgressSelector()
 }
 
-// selectUnifiedClient runs the selector, injecting the online set when provided.
-func (s *TunnelModeServer) selectUnifiedClient(req RouteRequest, online []*file.Client) (*file.Client, error) {
+// selectUnifiedEgress runs the selector, injecting the pool when provided.
+func (s *TunnelModeServer) selectUnifiedEgress(req RouteRequest, protocol egressProtocol, pool []unifiedEgress) (EgressRef, error) {
 	startUnifiedCacheCleaner()
-	selector := s.unifiedSelector()
-	if online != nil {
-		return selector.SelectFrom(req, s.unifiedDefaultCacheTTL(), online)
+	if pool == nil {
+		startProxyHealthLoopIfConfigured()
 	}
-	return selector.Select(req, s.unifiedDefaultCacheTTL())
+	selector := s.unifiedSelector()
+	if pool != nil {
+		return selector.SelectFrom(req, s.unifiedDefaultCacheTTL(), protocol, pool)
+	}
+	return selector.Select(req, s.unifiedDefaultCacheTTL(), protocol)
 }

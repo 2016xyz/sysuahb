@@ -19,11 +19,13 @@ import (
 
 func NewJsonDb(runPath string) *JsonDb {
 	return &JsonDb{
-		RunPath:        runPath,
-		TaskFilePath:   filepath.Join(runPath, "conf", "tasks.json"),
-		HostFilePath:   filepath.Join(runPath, "conf", "hosts.json"),
-		ClientFilePath: filepath.Join(runPath, "conf", "clients.json"),
-		GlobalFilePath: filepath.Join(runPath, "conf", "global.json"),
+		RunPath:         runPath,
+		TaskFilePath:    filepath.Join(runPath, "conf", "tasks.json"),
+		HostFilePath:    filepath.Join(runPath, "conf", "hosts.json"),
+		ClientFilePath:  filepath.Join(runPath, "conf", "clients.json"),
+		GlobalFilePath:  filepath.Join(runPath, "conf", "global.json"),
+		ProxyFilePath:   filepath.Join(runPath, "conf", "proxies.json"),
+		UnifiedFilePath: filepath.Join(runPath, "conf", "unified.json"),
 	}
 }
 
@@ -32,15 +34,20 @@ type JsonDb struct {
 	Hosts            sync.Map
 	HostsTmp         sync.Map
 	Clients          sync.Map
+	Proxies          sync.Map // external proxy nodes for the unified proxy egress pool
 	Global           *Glob
+	Unified          *UnifiedSettings
 	RunPath          string
 	ClientIncreaseId int32  //client increased id
 	TaskIncreaseId   int32  //task increased id
 	HostIncreaseId   int32  //host increased id
+	ProxyIncreaseId  int32  //proxy node increased id
 	TaskFilePath     string //task file path
 	HostFilePath     string //host file path
 	ClientFilePath   string //client file path
 	GlobalFilePath   string //global file path
+	ProxyFilePath    string //proxy node file path
+	UnifiedFilePath  string //unified proxy settings file path
 }
 
 func (s *JsonDb) LoadTaskFromJsonFile() {
@@ -48,7 +55,11 @@ func (s *JsonDb) LoadTaskFromJsonFile() {
 	loadSyncMapFromFile(s.TaskFilePath, Tunnel{}, func(v interface{}) {
 		var err error
 		post := v.(*Tunnel)
-		if post.Client, err = s.GetClient(post.Client.Id); err != nil {
+		// unifiedProxy tasks have no backing client: their egress pool is
+		// the set of online clients plus external proxy nodes.
+		if post.Mode == "unifiedProxy" {
+			post.Client = nil
+		} else if post.Client, err = s.GetClient(post.Client.Id); err != nil {
 			return
 		}
 		if post.Password != "" {
@@ -128,6 +139,63 @@ func (s *JsonDb) LoadGlobalFromJsonFile() {
 		}
 		s.Global = post
 	})
+}
+
+// LoadProxyFromJsonFile loads every external proxy node from conf/proxies.json.
+func (s *JsonDb) LoadProxyFromJsonFile() {
+	loadSyncMapFromFile(s.ProxyFilePath, ProxyNode{}, func(v interface{}) {
+		post := v.(*ProxyNode)
+		post.ResetStatusToUnknown()
+		s.Proxies.Store(post.Id, post)
+		if post.Id > int(s.ProxyIncreaseId) {
+			s.ProxyIncreaseId = int32(post.Id)
+		}
+	})
+}
+
+// LoadUnifiedFromJsonFile loads the unified proxy runtime settings.
+func (s *JsonDb) LoadUnifiedFromJsonFile() {
+	settings := NewUnifiedSettings()
+	loadSyncMapFromFileWithSingleJson(s.UnifiedFilePath, func(v string) {
+		loaded := new(UnifiedSettings)
+		if json.Unmarshal([]byte(v), &loaded) != nil {
+			return
+		}
+		loaded.Normalize()
+		settings = loaded
+	})
+	s.Unified = settings
+}
+
+// GetProxyNode returns the proxy node with the given id.
+func (s *JsonDb) GetProxyNode(id int) (p *ProxyNode, err error) {
+	if v, ok := s.Proxies.Load(id); ok {
+		p = v.(*ProxyNode)
+		return
+	}
+	err = errors.New("can not find proxy node")
+	return
+}
+
+var proxyLock sync.Mutex
+
+// StoreProxyToJsonFile persists every proxy node to conf/proxies.json.
+func (s *JsonDb) StoreProxyToJsonFile() {
+	proxyLock.Lock()
+	storeSyncMapToFile(&s.Proxies, s.ProxyFilePath)
+	proxyLock.Unlock()
+}
+
+// StoreUnifiedToJsonFile persists the unified settings to conf/unified.json.
+func (s *JsonDb) StoreUnifiedToJsonFile() {
+	proxyLock.Lock()
+	storeSingleJsonToFile(s.Unified, s.UnifiedFilePath)
+	proxyLock.Unlock()
+}
+
+// GetProxyId allocates the next proxy node id.
+func (s *JsonDb) GetProxyId() int32 {
+	return atomic.AddInt32(&s.ProxyIncreaseId, 1)
 }
 
 func (s *JsonDb) GetClient(id int) (c *Client, err error) {
@@ -226,6 +294,14 @@ func loadObsoleteJsonFile(b []byte, t interface{}, f func(value interface{})) {
 			}
 			f(&client)
 			//break
+		case ProxyNode:
+			var proxy ProxyNode
+			if err = json.Unmarshal([]byte(v), &proxy); err != nil {
+				fmt.Println("Error:", err)
+				return
+			}
+			f(&proxy)
+			//break
 		case Host:
 			var host Host
 			if err = json.Unmarshal([]byte(v), &host); err != nil {
@@ -260,6 +336,18 @@ func loadJsonFile(b []byte, t interface{}, f func(value interface{})) error {
 		}
 		for i := range clients {
 			f(&clients[i])
+		}
+		//break
+	case ProxyNode:
+		var proxies []ProxyNode
+		if len(b) != 0 {
+			err = json.Unmarshal(b, &proxies)
+			if err != nil {
+				return err
+			}
+		}
+		for i := range proxies {
+			f(&proxies[i])
 		}
 		//break
 	case Host:
@@ -415,6 +503,29 @@ func storeGlobalToFile(m *Glob, filePath string) {
 	_ = file.Sync()
 	_ = file.Close()
 	// must close file first, then rename it
+	err = os.Rename(filePath+".tmp", filePath)
+	if err != nil {
+		logs.Error("store to file err %v, data will lost", err)
+	}
+}
+
+// storeSingleJsonToFile writes one JSON document to filePath atomically.
+func storeSingleJsonToFile(value interface{}, filePath string) {
+	file, err := os.Create(filePath + ".tmp")
+	if err != nil {
+		panic(err)
+	}
+
+	b, err := json.Marshal(value)
+	if err != nil {
+		panic(err)
+	}
+	_, err = file.Write(b)
+	if err != nil {
+		panic(err)
+	}
+	_ = file.Sync()
+	_ = file.Close()
 	err = os.Rename(filePath+".tmp", filePath)
 	if err != nil {
 		logs.Error("store to file err %v, data will lost", err)

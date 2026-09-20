@@ -84,6 +84,16 @@
                     <i class="fa fa-network-wired fa-lg fa-fw"></i>
                     <span class="nav-label" langtag="scheme-unifiedproxy"></span></a>
                 </li>
+                <li class="{{if eq "proxynode" .menu}}active{{end}}">
+                    <a href="{{.web_base_url}}/proxy_node/list" class="d-flex align-items-center">
+                    <i class="fa fa-server fa-lg fa-fw"></i>
+                    <span class="nav-label" langtag="word-proxynode"></span></a>
+                </li>
+                <li class="{{if eq "proxysettings" .menu}}active{{end}}">
+                    <a href="{{.web_base_url}}/proxy_node/settings" class="d-flex align-items-center">
+                    <i class="fa fa-sliders fa-lg fa-fw"></i>
+                    <span class="nav-label" langtag="word-proxysettings"></span></a>
+                </li>
                 {{end}}
                 <li class="{{if eq "secret" .menu}}active{{end}}">
                     <a href="{{.web_base_url}}/index/secret" class="d-flex align-items-center">

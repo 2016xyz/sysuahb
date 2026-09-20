@@ -1,0 +1,314 @@
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="ibox float-e-margins">
+                <div class="ibox-title">
+                    <h5 langtag="page-proxynodelist"></h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                        <a class="close-link"><i class="fa fa-times"></i></a>
+                    </div>
+                </div>
+                <div class="content">
+                    <div class="table-responsive">
+                        <div id="toolbar">
+                            <div class="d-flex w-100 flex-wrap">
+                                <a class="btn btn-primary dim mr-2" href="{{.web_base_url}}/proxy_node/add">
+                                    <i class="fa fa-fw fa-lg fa-plus"></i> <span langtag="word-addproxy"></span>
+                                </a>
+                                <a class="btn btn-info dim mr-2" href="{{.web_base_url}}/proxy_node/import">
+                                    <i class="fa fa-fw fa-lg fa-upload"></i> <span langtag="word-importproxy"></span>
+                                </a>
+                                <a class="btn btn-success dim mr-2" onclick="proxyBatch('check')">
+                                    <i class="fa fa-fw fa-lg fa-heartbeat"></i> <span langtag="word-checkall"></span>
+                                </a>
+                                <div class="btn-group mr-2">
+                                    <button class="btn btn-warning dim dropdown-toggle" data-toggle="dropdown">
+                                        <i class="fa fa-fw fa-lg fa-tasks"></i> <span langtag="word-batchops"></span>
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a onclick="proxyBatch('check')"><span langtag="word-checkselected"></span></a></li>
+                                        <li><a onclick="proxyBatch('enable')"><span langtag="word-enableselected"></span></a></li>
+                                        <li><a onclick="proxyBatch('disable')"><span langtag="word-disableselected"></span></a></li>
+                                        <li><a onclick="proxyTag('add_tag')"><span langtag="word-addtag"></span></a></li>
+                                        <li><a onclick="proxyTag('remove_tag')"><span langtag="word-removetag"></span></a></li>
+                                        <li class="divider"></li>
+                                        <li><a onclick="proxyBatch('delete')"><span langtag="word-deleteselected"></span></a></li>
+                                        <li><a onclick="proxyDeleteInvalid()"><span langtag="word-deleteinvalid"></span></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap mb-2">
+                            <input id="f_search" class="form-control mr-2 mb-1" style="max-width:220px" placeholder="name / ip">
+                            <input id="f_tag" class="form-control mr-2 mb-1" style="max-width:160px" placeholder="tag">
+                            <select id="f_status" class="form-control mr-2 mb-1" style="max-width:160px">
+                                <option value="">all status</option>
+                                <option value="available">Available</option>
+                                <option value="unavailable">Unavailable</option>
+                                <option value="unknown">Unknown</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                            <button class="btn btn-primary dim mr-2 mb-1" onclick="proxyReload()">
+                                <i class="fa fa-fw fa-search"></i> <span langtag="word-search"></span>
+                            </button>
+                            <button class="btn btn-default dim mb-1" onclick="toggleMore()">
+                                <i class="fa fa-fw fa-filter"></i> <span langtag="word-morefilters"></span>
+                            </button>
+                        </div>
+                        <div id="moreFilters" class="d-none flex-wrap mb-2">
+                            <select id="f_protocol" class="form-control mr-2 mb-1" style="max-width:160px">
+                                <option value="">HTTP + SOCKS5</option>
+                                <option value="http">HTTP</option>
+                                <option value="socks5">SOCKS5</option>
+                            </select>
+                            <input id="f_latency_min" class="form-control mr-2 mb-1" style="max-width:140px" placeholder="latency min (ms)">
+                            <input id="f_latency_max" class="form-control mr-2 mb-1" style="max-width:140px" placeholder="latency max (ms)">
+                            <input id="f_failures" class="form-control mr-2 mb-1" style="max-width:180px" placeholder="failures >=">
+                        </div>
+                        <table id="table" class="table-striped table-hover" data-mobile-responsive="true"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="tagModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><span langtag="word-tags"></span></h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input id="tagInput" class="form-control" type="text" placeholder="gz, telecom">
+                <p class="help-block m-b-none" langtag="info-desctags"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal"><span langtag="word-cancel"></span></button>
+                <button type="button" class="btn btn-primary" onclick="proxyTagSubmit()"><span langtag="word-save"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="delInvalidModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><span langtag="word-deleteinvalid"></span></h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <select id="delInvalidFilter" class="form-control mb-2">
+                    <option value="failures3">failures &gt;= 3</option>
+                    <option value="failures5">failures &gt;= 5</option>
+                    <option value="no_success_24h">no success 24h</option>
+                    <option value="no_success_7d">no success 7d</option>
+                </select>
+                <p><b langtag="word-actions"></b>: <span id="delInvalidCount">-</span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal"><span langtag="word-cancel"></span></button>
+                <button type="button" class="btn btn-danger" onclick="proxyDeleteInvalidSubmit()"><span langtag="word-delete"></span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var proxyBase = '{{.web_base_url}}/proxy_node';
+    var pendingTagOp = 'add_tag';
+
+    function proxyEscape(v) {
+        return $('<div/>').text(v == null ? '' : v).html();
+    }
+
+    function proxyRows() {
+        var sel = $('#table').bootstrapTable('getSelections') || [];
+        var ids = [];
+        for (var i = 0; i < sel.length; i++) { ids.push(sel[i].Id); }
+        return ids;
+    }
+
+    function proxyQuery() {
+        return {
+            search: $('#f_search').val() || '',
+            tag: $('#f_tag').val() || '',
+            status: $('#f_status').val() || '',
+            protocol: $('#f_protocol').val() || '',
+            latency_min: $('#f_latency_min').val() || '',
+            latency_max: $('#f_latency_max').val() || '',
+            failures: $('#f_failures').val() || ''
+        };
+    }
+
+    function proxyReload() { $('#table').bootstrapTable('refresh'); }
+    function toggleMore() { $('#moreFilters').toggleClass('d-none'); }
+
+    function proxyBatch(op) {
+        var ids = proxyRows();
+        if (ids.length === 0 && op !== 'check') {
+            // "check all" has no selection: check every node
+            if (op === 'check') { proxyCheckAll(); return; }
+            showMsg('no proxy selected', 'warning', 1500);
+            return;
+        }
+        if (op === 'check' && ids.length === 0) { proxyCheckAll(); return; }
+        if (op === 'delete' && !confirm('delete selected proxy?')) { return; }
+        $.post(proxyBase + '/batchops', { op: op, ids: ids.join(','), tags: '' }, function (res) {
+            if (res && res.status) { proxyReload(); }
+        });
+    }
+
+    function proxyCheckAll() {
+        $.post(proxyBase + '/checkall', {}, function (res) {
+            if (res && res.status) { proxyReload(); }
+        });
+    }
+
+    function proxyCheckOne(id) {
+        $.post(proxyBase + '/check', { id: id }, function () { setTimeout(proxyReload, 800); });
+    }
+
+    function proxyToggle(id, enabled) {
+        $.post(proxyBase + '/changestatus', { id: id, enabled: enabled ? 1 : 0 }, function () { proxyReload(); });
+    }
+
+    function proxyDel(id) {
+        if (!confirm('delete proxy?')) { return; }
+        $.post(proxyBase + '/del', { id: id }, function () { proxyReload(); });
+    }
+
+    function proxyTag(op) {
+        if (proxyRows().length === 0) { showMsg('no proxy selected', 'warning', 1500); return; }
+        pendingTagOp = op;
+        $('#tagInput').val('');
+        $('#tagModal').modal('show');
+    }
+
+    function proxyTagSubmit() {
+        var ids = proxyRows();
+        $.post(proxyBase + '/batchops', { op: pendingTagOp, ids: ids.join(','), tags: $('#tagInput').val() || '' }, function (res) {
+            if (res && res.status) { $('#tagModal').modal('hide'); proxyReload(); }
+        });
+    }
+
+    function proxyDeleteInvalid() {
+        $.post(proxyBase + '/deleteinvalid', { preview: 1, filter: $('#delInvalidFilter').val() || 'failures3' }, function (res) {
+            $('#delInvalidCount').text(res && res.count != null ? res.count : '-');
+            $('#delInvalidModal').modal('show');
+        }, 'json');
+    }
+
+    function proxyDeleteInvalidSubmit() {
+        $.post(proxyBase + '/deleteinvalid', { filter: $('#delInvalidFilter').val() || 'failures3' }, function (res) {
+            if (res && res.status) { $('#delInvalidModal').modal('hide'); proxyReload(); }
+        });
+    }
+
+    $('#table').bootstrapTable({
+        toolbar: '#toolbar',
+        method: 'post',
+        contentType: 'application/x-www-form-urlencoded',
+        url: proxyBase + '/list',
+        queryParams: function (params) {
+            var q = proxyQuery();
+            q.offset = params.offset;
+            q.limit = params.limit;
+            return q;
+        },
+        pagination: true,
+        sidePagination: 'server',
+        pageSize: 20,
+        pageList: [10, 20, 50, 100],
+        search: false,
+        showRefresh: true,
+        showToggle: true,
+        showColumns: true,
+        clickToSelect: true,
+        idField: 'Id',
+        columns: [
+            { checkbox: true },
+            {
+                field: 'Name', title: '<span langtag="word-name"></span>', halign: 'center', sortable: true,
+                formatter: function (v) { return proxyEscape(v); }
+            },
+            {
+                field: 'Host', title: '<span langtag="word-address"></span>', halign: 'center', sortable: true,
+                formatter: function (v, row) { return proxyEscape(v + ':' + row.Port); }
+            },
+            {
+                field: 'Protocols', title: '<span langtag="word-protocol"></span>', halign: 'center', sortable: true,
+                formatter: function (v, row) {
+                    if (row.Http) { return '<span class="badge badge-info">HTTP</span> ' + (row.Socks5 ? '<span class="badge badge-primary">SOCKS5</span>' : ''); }
+                    return '<span class="badge badge-primary">SOCKS5</span>';
+                }
+            },
+            {
+                field: 'Tags', title: '<span langtag="word-tags"></span>', halign: 'center',
+                formatter: function (v) {
+                    if (!v || v.length === 0) { return '<span class="text-muted">-</span>'; }
+                    var html = '';
+                    for (var i = 0; i < v.length; i++) {
+                        html += '<span class="badge badge-success" style="margin:1px 2px;">' + proxyEscape(v[i]) + '</span>';
+                    }
+                    return html;
+                }
+            },
+            {
+                field: 'Status', title: '<span langtag="word-status"></span>', halign: 'center', sortable: true,
+                formatter: function (v) {
+                    var cls = 'badge-secondary';
+                    if (v === 'Available') { cls = 'badge-success'; }
+                    else if (v === 'Unavailable') { cls = 'badge-danger'; }
+                    else if (v === 'Disabled') { cls = 'badge-dark'; }
+                    return '<span class="badge ' + cls + '">' + proxyEscape(v) + '</span>';
+                }
+            },
+            {
+                field: 'Latency', title: '<span langtag="word-latency"></span>', halign: 'center', sortable: true,
+                formatter: function (v) { return v > 0 ? (v + ' ms') : '-'; }
+            },
+            {
+                field: 'LastCheckTime', title: '<span langtag="word-lastcheck"></span>', halign: 'center',
+                formatter: function (v) {
+                    if (!v) { return '-'; }
+                    return proxyEscape(humanizeTime(v));
+                }
+            },
+            {
+                field: 'Failures', title: '<span langtag="word-failures"></span>', halign: 'center', sortable: true
+            },
+            {
+                field: 'Id', title: '<span langtag="word-actions"></span>', halign: 'center', width: '120px',
+                formatter: function (v, row) {
+                    var html = '<div class="btn-group">';
+                    html += '<button class="btn btn-xs btn-default dropdown-toggle" data-toggle="dropdown">&hellip;</button>';
+                    html += '<ul class="dropdown-menu dropdown-menu-right">';
+                    html += '<li><a onclick="proxyCheckOne(' + v + ')"><span langtag="word-check"></span></a></li>';
+                    html += '<li><a href="' + proxyBase + '/edit?id=' + v + '"><span langtag="word-edit"></span></a></li>';
+                    html += '<li><a onclick="proxyToggle(' + v + ',' + (row.Enabled ? '0' : '1') + ')">' + (row.Enabled ? '<span langtag="word-disable"></span>' : '<span langtag="word-enable"></span>') + '</a></li>';
+                    html += '<li class="divider"></li>';
+                    html += '<li><a onclick="proxyDel(' + v + ')"><span langtag="word-delete"></span></a></li>';
+                    html += '</ul></div>';
+                    return html;
+                }
+            }
+        ]
+    });
+
+    function humanizeTime(ms) {
+        var diff = Date.now() - ms;
+        if (diff < 0) { diff = 0; }
+        var s = Math.floor(diff / 1000);
+        if (s < 60) { return s + 's ago'; }
+        var m = Math.floor(s / 60);
+        if (m < 60) { return m + 'm ago'; }
+        var h = Math.floor(m / 60);
+        if (h < 24) { return h + 'h ago'; }
+        return Math.floor(h / 24) + 'd ago';
+    }
+</script>

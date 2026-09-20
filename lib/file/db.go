@@ -33,6 +33,8 @@ func GetDb() *DbUtils {
 		jsonDb.LoadTaskFromJsonFile()
 		jsonDb.LoadHostFromJsonFile()
 		jsonDb.LoadGlobalFromJsonFile()
+		jsonDb.LoadProxyFromJsonFile()
+		jsonDb.LoadUnifiedFromJsonFile()
 		Db = &DbUtils{JsonDb: jsonDb}
 	})
 	return Db
@@ -375,6 +377,47 @@ func (s *DbUtils) DelClient(id int) error {
 	s.JsonDb.Clients.Delete(id)
 	s.JsonDb.StoreClientsToJsonFile()
 	return nil
+}
+
+// GetProxyNode returns the external proxy node with the given id.
+func (s *DbUtils) GetProxyNode(id int) (p *ProxyNode, err error) {
+	return s.JsonDb.GetProxyNode(id)
+}
+
+// NewProxyNode persists a new external proxy node, allocating its id.
+func (s *DbUtils) NewProxyNode(p *ProxyNode) error {
+	if p.Id == 0 {
+		p.Id = int(s.JsonDb.GetProxyId())
+	}
+	s.JsonDb.Proxies.Store(p.Id, p)
+	s.JsonDb.StoreProxyToJsonFile()
+	return nil
+}
+
+// UpdateProxyNode persists changes of an existing proxy node.
+func (s *DbUtils) UpdateProxyNode(p *ProxyNode) error {
+	s.JsonDb.Proxies.Store(p.Id, p)
+	s.JsonDb.StoreProxyToJsonFile()
+	return nil
+}
+
+// DelProxyNode removes a proxy node.
+func (s *DbUtils) DelProxyNode(id int) error {
+	s.JsonDb.Proxies.Delete(id)
+	s.JsonDb.StoreProxyToJsonFile()
+	return nil
+}
+
+// ProxyNodeList returns every stored (visible) proxy node.
+func (s *DbUtils) ProxyNodeList() []*ProxyNode {
+	list := make([]*ProxyNode, 0)
+	s.JsonDb.Proxies.Range(func(key, value interface{}) bool {
+		if p, ok := value.(*ProxyNode); ok && p != nil {
+			list = append(list, p)
+		}
+		return true
+	})
+	return list
 }
 
 func (s *DbUtils) NewClient(c *Client) error {
