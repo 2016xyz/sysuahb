@@ -306,6 +306,48 @@ func (p *ProxyNode) ResetStatusToUnknown() {
 	p.Unlock()
 }
 
+// ProxyConfig is the caller-editable subset of ProxyNode used by the web
+// form. Applying it goes through ProxyNode.UpdateConfig so every write to a
+// shared node is lock-guarded.
+type ProxyConfig struct {
+	Name     string
+	Host     string
+	Port     int
+	Username string
+	Password string
+	Http     bool
+	Socks5   bool
+	Tags     []string
+	Enabled  bool
+}
+
+// UpdateConfig replaces the configuration fields under the write lock. The
+// runtime health state (Status/Latency/...) is left untouched except for the
+// enabled/disabled transition, which must reset the health verdict.
+func (p *ProxyNode) UpdateConfig(c ProxyConfig) {
+	p.Lock()
+	p.Name = c.Name
+	p.Host = c.Host
+	p.Port = c.Port
+	p.Username = c.Username
+	if c.Password != "" {
+		p.Password = c.Password
+	}
+	p.Http = c.Http
+	p.Socks5 = c.Socks5
+	p.Tags = c.Tags
+	enabledChanged := p.Enabled != c.Enabled
+	p.Enabled = c.Enabled
+	p.Unlock()
+	if enabledChanged {
+		if c.Enabled {
+			p.ResetStatusToUnknown()
+		} else {
+			p.MarkDisabled()
+		}
+	}
+}
+
 // String implements a log-safe representation: the password never appears.
 func (p *ProxyNode) String() string {
 	if p == nil {

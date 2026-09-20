@@ -99,27 +99,24 @@ func (s *ProxyNodeController) parseProxyForm(node *file.ProxyNode, keepPassword 
 		return fmt.Errorf("at least one of HTTP / SOCKS5 must be enabled")
 	}
 
-	if keepPassword {
-		if password != "" {
-			node.Password = password
-		}
-	} else {
-		node.Password = password
-	}
-
 	normalized, err := file.NormalizeTags(file.SplitTagsText(tagsText))
 	if err != nil {
 		return err
 	}
 
-	node.Name = name
-	node.Host = host
-	node.Port = port
-	node.Username = username
-	node.Http = http
-	node.Socks5 = socks5
-	node.Tags = normalized
-	node.Enabled = enabled
+	// Build a detached config; the caller applies it under the node lock so a
+	// concurrent health check never observes half-written fields.
+	node.UpdateConfig(file.ProxyConfig{
+		Name:     name,
+		Host:     host,
+		Port:     port,
+		Username: username,
+		Password: password,
+		Http:     http,
+		Socks5:   socks5,
+		Tags:     normalized,
+		Enabled:  enabled,
+	})
 	return nil
 }
 
@@ -400,18 +397,21 @@ func (s *ProxyNodeController) Settings() {
 		return
 	}
 	settings := file.GetDb().JsonDb.GetUnifiedSettings()
-	settings.CheckURL = strings.TrimSpace(s.GetString("check_url"))
-	settings.CheckInterval = s.GetIntNoErr("check_interval")
-	settings.RetryInterval = s.GetIntNoErr("retry_interval")
-	settings.CheckTimeout = s.GetIntNoErr("check_timeout")
-	settings.FailThreshold = s.GetIntNoErr("fail_threshold")
-	settings.RecoverSuccess = s.GetIntNoErr("recover_success")
-	settings.MaxConcurrency = s.GetIntNoErr("max_concurrency")
-	settings.MinTTL = s.GetIntNoErr("min_ttl")
-	settings.MaxTTL = s.GetIntNoErr("max_ttl")
-	settings.AutoCheckOnAdd = s.GetBoolNoErr("auto_check_add")
-	settings.AutoCheckOnImport = s.GetBoolNoErr("auto_check_import")
-	settings.Normalize()
+	next := file.UnifiedSettings{
+		CheckURL:          strings.TrimSpace(s.GetString("check_url")),
+		CheckInterval:     s.GetIntNoErr("check_interval"),
+		RetryInterval:     s.GetIntNoErr("retry_interval"),
+		CheckTimeout:      s.GetIntNoErr("check_timeout"),
+		FailThreshold:     s.GetIntNoErr("fail_threshold"),
+		RecoverSuccess:    s.GetIntNoErr("recover_success"),
+		MaxConcurrency:    s.GetIntNoErr("max_concurrency"),
+		MinTTL:            s.GetIntNoErr("min_ttl"),
+		MaxTTL:            s.GetIntNoErr("max_ttl"),
+		AutoCheckOnAdd:    s.GetBoolNoErr("auto_check_add"),
+		AutoCheckOnImport: s.GetBoolNoErr("auto_check_import"),
+	}
+	// Locked update: the health scheduler reads these fields concurrently.
+	settings.Update(next)
 	file.GetDb().JsonDb.StoreUnifiedToJsonFile()
 	s.AjaxOk("modified success")
 }

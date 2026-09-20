@@ -76,6 +76,13 @@ func (s *JsonDb) GetUnifiedSettings() *UnifiedSettings {
 func (u *UnifiedSettings) Normalize() {
 	u.Lock()
 	defer u.Unlock()
+	u.normalizeLocked()
+}
+
+// normalizeLocked is Normalize without locking: callers that already hold the
+// write lock (Update) must use this to avoid a self-deadlock on the
+// non-reentrant RWMutex.
+func (u *UnifiedSettings) normalizeLocked() {
 	if u.CheckURL == "" {
 		u.CheckURL = defaultCheckURL
 	}
@@ -105,7 +112,26 @@ func (u *UnifiedSettings) Normalize() {
 	}
 }
 
-// Snapshot returns a lock-free copy of the settings, safe to marshal or read.
+// Update applies new settings under the write lock and normalizes them, so a
+// concurrent reader (health scheduler, sticky cache) never sees a torn value.
+func (u *UnifiedSettings) Update(from UnifiedSettings) {
+	u.Lock()
+	defer u.Unlock()
+	u.CheckURL = from.CheckURL
+	u.CheckInterval = from.CheckInterval
+	u.RetryInterval = from.RetryInterval
+	u.CheckTimeout = from.CheckTimeout
+	u.FailThreshold = from.FailThreshold
+	u.RecoverSuccess = from.RecoverSuccess
+	u.MaxConcurrency = from.MaxConcurrency
+	u.MinTTL = from.MinTTL
+	u.MaxTTL = from.MaxTTL
+	u.AutoCheckOnAdd = from.AutoCheckOnAdd
+	u.AutoCheckOnImport = from.AutoCheckOnImport
+	u.normalizeLocked()
+}
+
+// Snapshot returns a locked copy of the settings, safe to marshal or read.
 func (u *UnifiedSettings) Snapshot() UnifiedSettings {
 	u.RLock()
 	defer u.RUnlock()

@@ -10,14 +10,11 @@ func withUnifiedSettings(t *testing.T, mutate func(*file.UnifiedSettings)) {
 	t.Helper()
 	settings := file.GetDb().JsonDb.GetUnifiedSettings()
 	snapshot := settings.Snapshot()
-	mutate(settings)
+	next := snapshot
+	mutate(&next)
+	settings.Update(next)
 	t.Cleanup(func() {
-		settings.CheckURL = snapshot.CheckURL
-		settings.FailThreshold = snapshot.FailThreshold
-		settings.RecoverSuccess = snapshot.RecoverSuccess
-		settings.CheckTimeout = snapshot.CheckTimeout
-		settings.RetryInterval = snapshot.RetryInterval
-		settings.CheckInterval = snapshot.CheckInterval
+		settings.Update(snapshot)
 	})
 }
 
