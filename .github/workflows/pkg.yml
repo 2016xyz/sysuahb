@@ -61,6 +61,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_assets_old:
+    # Serialised after build_assets: several jobs calling
+    # softprops/action-gh-release in parallel race on release creation
+    # ("already_exists: tag_name") and leave stray draft releases behind.
+    needs: build_assets
     runs-on: ubuntu-latest
 
     steps:
@@ -117,6 +121,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_android:
+    needs: build_assets
     runs-on: ubuntu-latest
     env:
       API: '24'
