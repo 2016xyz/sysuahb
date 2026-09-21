@@ -259,7 +259,7 @@ go build -o sysuahb cmd/nps/nps.go
 
 #### **NPC 客户端**
 ```bash
-go build -o sysficb cmd/npc/npc.go
+go build -o sysficb cmd/npc/client.go
 ```
 
 编译完成后，即可使用 `./sysuahb` 或 `./sysficb` 启动；安装为服务时进程名跟随二进制文件名。
