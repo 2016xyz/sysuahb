@@ -13,10 +13,10 @@
                     <div class="table-responsive">
                         <div id="toolbar">
                             <div class="d-flex w-100 flex-wrap">
-                                <a class="btn btn-primary dim mr-2" href="{{.web_base_url}}/proxy_node/add">
+                                <a class="btn btn-primary dim mr-2" href="{{.web_base_url}}/proxynode/add">
                                     <i class="fa fa-fw fa-lg fa-plus"></i> <span langtag="word-addproxy"></span>
                                 </a>
-                                <a class="btn btn-info dim mr-2" href="{{.web_base_url}}/proxy_node/import">
+                                <a class="btn btn-info dim mr-2" href="{{.web_base_url}}/proxynode/import">
                                     <i class="fa fa-fw fa-lg fa-upload"></i> <span langtag="word-importproxy"></span>
                                 </a>
                                 <a class="btn btn-success dim mr-2" onclick="proxyBatch('check')">
@@ -119,7 +119,7 @@
 </div>
 
 <script>
-    var proxyBase = '{{.web_base_url}}/proxy_node';
+    var proxyBase = '{{.web_base_url}}/proxynode';
     var pendingTagOp = 'add_tag';
 
     function proxyEscape(v) {
