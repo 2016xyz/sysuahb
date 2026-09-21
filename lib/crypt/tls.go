@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"example.com/svcmgr/lib/logs"
 	"github.com/brianvoe/gofakeit/v7"
-	"github.com/djylb/nps/lib/logs"
 )
 
 var (

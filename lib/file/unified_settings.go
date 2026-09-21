@@ -29,7 +29,9 @@ type UnifiedSettings struct {
 	AutoCheckOnAdd    bool `json:"AutoCheckOnAdd"`
 	AutoCheckOnImport bool `json:"AutoCheckOnImport"`
 
-	sync.RWMutex
+	// mu guards every field above. Deliberately a named field (not embedded)
+	// so copying a UnifiedSettings value never copies the lock.
+	mu sync.RWMutex `json:"-"`
 }
 
 // Default values required by the specification.
@@ -74,8 +76,8 @@ func (s *JsonDb) GetUnifiedSettings() *UnifiedSettings {
 // defaults. It is called on load and on save, so a hand-edited JSON file can
 // never break the runtime.
 func (u *UnifiedSettings) Normalize() {
-	u.Lock()
-	defer u.Unlock()
+	u.mu.Lock()
+	defer u.mu.Unlock()
 	u.normalizeLocked()
 }
 
@@ -114,9 +116,9 @@ func (u *UnifiedSettings) normalizeLocked() {
 
 // Update applies new settings under the write lock and normalizes them, so a
 // concurrent reader (health scheduler, sticky cache) never sees a torn value.
-func (u *UnifiedSettings) Update(from UnifiedSettings) {
-	u.Lock()
-	defer u.Unlock()
+func (u *UnifiedSettings) Update(from *UnifiedSettingsCopy) {
+	u.mu.Lock()
+	defer u.mu.Unlock()
 	u.CheckURL = from.CheckURL
 	u.CheckInterval = from.CheckInterval
 	u.RetryInterval = from.RetryInterval
@@ -131,11 +133,27 @@ func (u *UnifiedSettings) Update(from UnifiedSettings) {
 	u.normalizeLocked()
 }
 
-// Snapshot returns a locked copy of the settings, safe to marshal or read.
-func (u *UnifiedSettings) Snapshot() UnifiedSettings {
-	u.RLock()
-	defer u.RUnlock()
-	return UnifiedSettings{
+// UnifiedSettingsCopy is a lock-free plain copy of the settings values, used
+// for snapshots and safe to pass by value.
+type UnifiedSettingsCopy struct {
+	CheckURL       string `json:"CheckURL"`
+	CheckInterval  int    `json:"CheckInterval"`
+	RetryInterval  int    `json:"RetryInterval"`
+	CheckTimeout   int    `json:"CheckTimeout"`
+	FailThreshold  int    `json:"FailThreshold"`
+	RecoverSuccess int    `json:"RecoverSuccess"`
+	MaxConcurrency int    `json:"MaxConcurrency"`
+	MinTTL         int    `json:"MinTTL"`
+	MaxTTL         int    `json:"MaxTTL"`
+
+	AutoCheckOnAdd    bool `json:"AutoCheckOnAdd"`
+	AutoCheckOnImport bool `json:"AutoCheckOnImport"`
+}
+
+func (u *UnifiedSettings) Snapshot() UnifiedSettingsCopy {
+	u.mu.RLock()
+	defer u.mu.RUnlock()
+	return UnifiedSettingsCopy{
 		CheckURL:          u.CheckURL,
 		CheckInterval:     u.CheckInterval,
 		RetryInterval:     u.RetryInterval,
@@ -150,33 +168,54 @@ func (u *UnifiedSettings) Snapshot() UnifiedSettings {
 	}
 }
 
+// Duration helpers on the lock-free copy.
+func (c UnifiedSettingsCopy) CheckIntervalDuration() time.Duration {
+	return time.Duration(c.CheckInterval) * time.Second
+}
+
+func (c UnifiedSettingsCopy) RetryIntervalDuration() time.Duration {
+	return time.Duration(c.RetryInterval) * time.Second
+}
+
+func (c UnifiedSettingsCopy) CheckTimeoutDuration() time.Duration {
+	return time.Duration(c.CheckTimeout) * time.Second
+}
+
+func (c UnifiedSettingsCopy) MinTTLDuration() time.Duration {
+	return time.Duration(c.MinTTL) * time.Second
+}
+
+func (c UnifiedSettingsCopy) MaxTTLDuration() time.Duration {
+	return time.Duration(c.MaxTTL) * time.Second
+}
+
 // CheckIntervalDuration etc. helpers keep the time unit conversions in one place.
 func (u *UnifiedSettings) CheckIntervalDuration() time.Duration {
-	u.RLock()
-	defer u.RUnlock()
+	u.mu.RLock()
+	defer u.mu.RUnlock()
 	return time.Duration(u.CheckInterval) * time.Second
 }
 
 func (u *UnifiedSettings) RetryIntervalDuration() time.Duration {
-	u.RLock()
-	defer u.RUnlock()
+	u.mu.RLock()
+	defer u.mu.RUnlock()
 	return time.Duration(u.RetryInterval) * time.Second
 }
 
 func (u *UnifiedSettings) CheckTimeoutDuration() time.Duration {
-	u.RLock()
-	defer u.RUnlock()
+	u.mu.RLock()
+	defer u.mu.RUnlock()
 	return time.Duration(u.CheckTimeout) * time.Second
 }
 
 func (u *UnifiedSettings) MinTTLDuration() time.Duration {
-	u.RLock()
-	defer u.RUnlock()
+	u.mu.RLock()
+	defer u.mu.RUnlock()
 	return time.Duration(u.MinTTL) * time.Second
 }
 
 func (u *UnifiedSettings) MaxTTLDuration() time.Duration {
-	u.RLock()
-	defer u.RUnlock()
+	u.mu.RLock()
+	defer u.mu.RUnlock()
 	return time.Duration(u.MaxTTL) * time.Second
 }

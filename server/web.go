@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"unsafe"
 
+	"example.com/svcmgr/bridge"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/server/connection"
+	"example.com/svcmgr/server/proxy"
+	"example.com/svcmgr/server/tool"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/bridge"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/server/connection"
-	"github.com/djylb/nps/server/proxy"
-	"github.com/djylb/nps/server/tool"
 )
 
 var _ = unsafe.Sizeof(0)

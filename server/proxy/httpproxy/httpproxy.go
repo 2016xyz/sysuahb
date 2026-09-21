@@ -11,14 +11,14 @@ import (
 	"strings"
 	"time"
 
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/index"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/server/connection"
+	"example.com/svcmgr/server/proxy"
 	"github.com/beego/beego"
 	"github.com/caddyserver/certmagic"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/index"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/server/connection"
-	"github.com/djylb/nps/server/proxy"
 )
 
 type HttpProxy struct {

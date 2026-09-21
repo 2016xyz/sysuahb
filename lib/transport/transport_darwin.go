@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/djylb/nps/lib/common"
+	"example.com/svcmgr/lib/common"
 	"golang.org/x/sys/unix"
 )
 

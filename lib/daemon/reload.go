@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"example.com/svcmgr/lib/common"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/common"
 )
 
 func init() {

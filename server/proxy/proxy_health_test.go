@@ -3,18 +3,18 @@ package proxy
 import (
 	"testing"
 
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/file"
 )
 
-func withUnifiedSettings(t *testing.T, mutate func(*file.UnifiedSettings)) {
+func withUnifiedSettings(t *testing.T, mutate func(*file.UnifiedSettingsCopy)) {
 	t.Helper()
 	settings := file.GetDb().JsonDb.GetUnifiedSettings()
 	snapshot := settings.Snapshot()
 	next := snapshot
 	mutate(&next)
-	settings.Update(next)
+	settings.Update(&next)
 	t.Cleanup(func() {
-		settings.Update(snapshot)
+		settings.Update(&snapshot)
 	})
 }
 
@@ -24,7 +24,7 @@ func TestRunProxyCheckSuccess(t *testing.T) {
 	proxyAddr, closeProxy := startFakeHttpProxy(t, "", "")
 	defer closeProxy()
 
-	withUnifiedSettings(t, func(s *file.UnifiedSettings) {
+	withUnifiedSettings(t, func(s *file.UnifiedSettingsCopy) {
 		s.CheckURL = targetURL
 		s.FailThreshold = 3
 		s.RecoverSuccess = 1
@@ -52,7 +52,7 @@ func TestRunProxyCheckSuccess(t *testing.T) {
 }
 
 func TestRunProxyCheckFailureThresholdAndRecovery(t *testing.T) {
-	withUnifiedSettings(t, func(s *file.UnifiedSettings) {
+	withUnifiedSettings(t, func(s *file.UnifiedSettingsCopy) {
 		s.CheckURL = "http://127.0.0.1:9/generate_204"
 		s.FailThreshold = 3
 		s.RecoverSuccess = 1

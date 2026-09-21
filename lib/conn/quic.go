@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
+	"example.com/svcmgr/lib/common"
 	"github.com/quic-go/quic-go"
 )
 

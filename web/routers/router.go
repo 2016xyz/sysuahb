@@ -3,8 +3,8 @@ package routers
 import (
 	"net/http"
 
+	"example.com/svcmgr/web/controllers"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/web/controllers"
 )
 
 func Init() {

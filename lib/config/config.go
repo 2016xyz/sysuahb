@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/file"
 )
 
 type CommonConfig struct {

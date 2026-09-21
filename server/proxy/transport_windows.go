@@ -4,7 +4,7 @@
 package proxy
 
 import (
-	"github.com/djylb/nps/lib/conn"
+	"example.com/svcmgr/lib/conn"
 )
 
 func HandleTrans(c *conn.Conn, s *TunnelModeServer) error {

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/rate"
+	"example.com/svcmgr/server"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/rate"
-	"github.com/djylb/nps/server"
 	"github.com/skip2/go-qrcode"
 )
 

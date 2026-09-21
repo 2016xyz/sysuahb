@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
 )
 
 func TestFlowSubDoesNotGoNegative(t *testing.T) {

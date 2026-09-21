@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/server/proxy"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/server/proxy"
 )
 
 // ProxyNodeController manages external proxy nodes (HTTP / SOCKS5) that the
@@ -397,7 +397,7 @@ func (s *ProxyNodeController) Settings() {
 		return
 	}
 	settings := file.GetDb().JsonDb.GetUnifiedSettings()
-	next := file.UnifiedSettings{
+	next := file.UnifiedSettingsCopy{
 		CheckURL:          strings.TrimSpace(s.GetString("check_url")),
 		CheckInterval:     s.GetIntNoErr("check_interval"),
 		RetryInterval:     s.GetIntNoErr("retry_interval"),
@@ -411,7 +411,7 @@ func (s *ProxyNodeController) Settings() {
 		AutoCheckOnImport: s.GetBoolNoErr("auto_check_import"),
 	}
 	// Locked update: the health scheduler reads these fields concurrently.
-	settings.Update(next)
+	settings.Update(&next)
 	file.GetDb().JsonDb.StoreUnifiedToJsonFile()
 	s.AjaxOk("modified success")
 }

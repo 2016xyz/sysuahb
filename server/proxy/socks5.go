@@ -14,11 +14,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/lib/transport"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/lib/transport"
 )
 
 func readLenPrefixedString(r io.Reader) (string, error) {

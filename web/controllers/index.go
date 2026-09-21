@@ -3,8 +3,8 @@ package controllers
 import (
 	"html/template"
 
+	"example.com/svcmgr/server"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/server"
 )
 
 type IndexController struct {

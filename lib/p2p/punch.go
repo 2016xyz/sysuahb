@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/logs"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/logs"
 )
 
 func sendP2PTestMsg(

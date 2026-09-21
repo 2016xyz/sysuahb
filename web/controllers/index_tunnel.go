@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/server"
+	"example.com/svcmgr/server/tool"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/server"
-	"github.com/djylb/nps/server/tool"
 )
 
 func (s *IndexController) GetTunnel() {

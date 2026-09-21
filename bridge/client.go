@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/lib/mux"
-	"github.com/djylb/nps/lib/pool"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/lib/mux"
+	"example.com/svcmgr/lib/pool"
 	"github.com/quic-go/quic-go"
 )
 

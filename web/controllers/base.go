@@ -8,13 +8,13 @@ import (
 	"strconv"
 	"strings"
 
+	"example.com/svcmgr/bridge"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/server"
+	"example.com/svcmgr/server/connection"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/bridge"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/server"
-	"github.com/djylb/nps/server/connection"
 )
 
 type BaseController struct {

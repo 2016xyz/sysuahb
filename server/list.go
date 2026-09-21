@@ -4,8 +4,8 @@ import (
 	"math"
 	"sort"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/file"
 )
 
 func GetTunnel(start, length int, typeVal string, clientId int, search string, sortField string, order string) ([]*file.Tunnel, int) {

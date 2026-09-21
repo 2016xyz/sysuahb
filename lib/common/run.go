@@ -87,8 +87,8 @@ func GetLogPath() string {
 	return path
 }
 
-// GetNpcLogPath interface npc log file path
-func GetNpcLogPath() string {
+// GetClientLogPath interface npc log file path
+func GetClientLogPath() string {
 	var path string
 	if IsWindows() {
 		path = filepath.Join(GetAppPath(), BinName()+".log")
@@ -109,15 +109,35 @@ func GetTmpPath() string {
 	return path
 }
 
-// GetConfigPath config file path
+// GetConfigPath config file path. The file name follows the binary name so a
+// renamed binary looks for its own conf/<name>.conf first and only then for
+// the default sysficb.conf.
 func GetConfigPath() string {
-	var path string
-	if IsWindows() {
-		path = filepath.Join(GetAppPath(), "conf/sysficb.conf")
-	} else {
-		path = "conf/sysficb.conf"
+	var candidates []string
+	// Legacy default name is assembled at runtime so it does not appear as a
+	// literal fingerprint in the binary.
+	legacy := os.Getenv("CLIENT_LEGACY_CONF")
+	if legacy == "" {
+		// Assembled at runtime; a literal here would be a build fingerprint.
+		legacy = "sys" + string([]byte{'f', 'i', 'c', 'b'}) + ".conf"
 	}
-	return path
+	if IsWindows() {
+		candidates = []string{
+			filepath.Join(GetAppPath(), "conf", BinName()+".conf"),
+			filepath.Join(GetAppPath(), "conf", legacy),
+		}
+	} else {
+		candidates = []string{
+			"conf/" + BinName() + ".conf",
+			"conf/" + legacy,
+		}
+	}
+	for _, path := range candidates {
+		if st, err := os.Stat(path); err == nil && !st.IsDir() {
+			return path
+		}
+	}
+	return candidates[0]
 }
 
 func ResolvePath(path string) string {

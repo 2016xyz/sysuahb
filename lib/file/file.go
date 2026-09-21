@@ -11,10 +11,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/lib/rate"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/lib/rate"
 )
 
 func NewJsonDb(runPath string) *JsonDb {

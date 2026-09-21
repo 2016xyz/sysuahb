@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/index"
-	"github.com/djylb/nps/lib/rate"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/index"
+	"example.com/svcmgr/lib/rate"
 )
 
 type DbUtils struct {

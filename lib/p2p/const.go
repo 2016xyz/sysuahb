@@ -3,7 +3,7 @@ package p2p
 import (
 	"time"
 
-	"github.com/djylb/nps/lib/common"
+	"example.com/svcmgr/lib/common"
 )
 
 const (

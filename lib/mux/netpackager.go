@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"github.com/djylb/nps/lib/logs"
+	"example.com/svcmgr/lib/logs"
 )
 
 type basePackager struct {

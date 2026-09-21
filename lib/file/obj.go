@@ -7,9 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/rate"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/rate"
 )
 
 // ACLMode: 0=off, 1=whitelist(deny-by-default), 2=blacklist(allow-by-default)

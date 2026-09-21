@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/djylb/nps/lib/crypt"
+	"example.com/svcmgr/lib/crypt"
 )
 
 func TestIsValidAuthKey(t *testing.T) {

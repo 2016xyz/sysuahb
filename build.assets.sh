@@ -74,6 +74,8 @@ build_binary() {
   [ "$os" = "windows" ] && ext=".exe"
   local out
   out=$(out_bin "$name")
+  local name_src="$name"
+  if [ "$name" = "npc" ]; then name_src="client"; fi
 
   local envstr=""
   case "$arch" in
@@ -104,13 +106,13 @@ build_binary() {
 
   local build_ldflags="$COMMON_LDFLAGS"
   if [[ -n "$arch_tag" ]]; then
-    build_ldflags+=" -X 'github.com/djylb/nps/lib/install.BuildTarget=${arch_tag}'"
+    build_ldflags+=" -X 'example.com/svcmgr/lib/install.BuildTarget=${arch_tag}'"
   fi
 
   if [[ -n "$envstr" ]]; then
-    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" $envstr go build -trimpath -ldflags \"$build_ldflags\" -o \"$out$ext\" \"./cmd/$name/$name.go\""
+    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" $envstr go build -trimpath -ldflags \"$build_ldflags\" -o \"$out$ext\" \"./cmd/$name/${name_src}.go\""
   else
-    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" go build -trimpath -ldflags \"$build_ldflags\" -o \"$out$ext\" \"./cmd/$name/$name.go\""
+    eval "CGO_ENABLED=0 GOOS=\"$os\" GOARCH=\"$arch\" go build -trimpath -ldflags \"$build_ldflags\" -o \"$out$ext\" \"./cmd/$name/${name_src}.go\""
   fi
 }
 
@@ -125,6 +127,8 @@ package_binary() {
   [ "$os" = "windows" ] && ext=".exe"
   local out
   out=$(out_bin "$name")
+  local name_src="$name"
+  if [ "$name" = "npc" ]; then name_src="client"; fi
   local bin="$out$ext"
 
   local arch_tag="$arch"

@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/file"
 )
 
 // dialViaProxyNode opens a tunnel to target ("host:port") through the given

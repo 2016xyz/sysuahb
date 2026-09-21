@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/logs"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/logs"
 )
 
 type Service interface {

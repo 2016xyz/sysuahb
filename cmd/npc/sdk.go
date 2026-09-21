@@ -7,10 +7,10 @@ import (
 	"C"
 	"context"
 
-	"github.com/djylb/nps/client"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/lib/version"
+	"example.com/svcmgr/client"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/lib/version"
 )
 
 var cl *client.TRPClient

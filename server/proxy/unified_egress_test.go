@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/file"
 )
 
 func newTestClient(id int, tags ...string) *file.Client {

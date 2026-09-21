@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/server/connection"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/server/connection"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 )

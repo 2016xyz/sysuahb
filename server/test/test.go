@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/file"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/file"
 )
 
 func TestServerConfig() {

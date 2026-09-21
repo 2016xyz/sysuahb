@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/djylb/nps/lib/crypt"
+	"example.com/svcmgr/lib/crypt"
 )
 
 type fakeNetError struct {

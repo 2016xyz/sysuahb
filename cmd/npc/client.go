@@ -14,16 +14,16 @@ import (
 	"sync"
 	"time"
 
+	"example.com/svcmgr/client"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/config"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/install"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/lib/mux"
+	"example.com/svcmgr/lib/version"
 	"github.com/ccding/go-stun/stun"
-	"github.com/djylb/nps/client"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/config"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/install"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/lib/mux"
-	"github.com/djylb/nps/lib/version"
 	"github.com/kardianos/service"
 
 	goflag "flag"
@@ -52,7 +52,7 @@ var (
 	registerTime   = flag.Int("time", 2, "Register time in hours")
 	logType        = flag.String("log", "file", "Log output mode (stdout|file|both|off)")
 	logLevel       = flag.String("log_level", "trace", "Log level (trace|debug|info|warn|error|fatal|panic|off)")
-	logPath        = flag.String("log_path", "", "NPC log path (empty to use default, 'off' to disable)")
+	logPath        = flag.String("log_path", "", "Log path (empty to use default, 'off' to disable)")
 	logMaxSize     = flag.Int("log_max_size", 5, "Maximum log file size in MB before rotation (0 to disable)")
 	logMaxDays     = flag.Int("log_max_days", 7, "Number of days to retain old log files (0 to disable)")
 	logMaxFiles    = flag.Int("log_max_files", 10, "Maximum number of log files to retain (0 to disable)")
@@ -183,7 +183,7 @@ func main() {
 	// 创建服务
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	prg := NewNpc(ctx)
+	prg := NewAgent(ctx)
 	s, err := service.New(prg, svcConfig)
 	if err != nil {
 		logs.Error("service function disabled %v", err)
@@ -204,7 +204,7 @@ func main() {
 		client.RegisterLocalIp(*serverAddr, *verifyKey, *connType, *proxyUrl, *localIP, *registerTime)
 		return
 	case "update":
-		install.UpdateNpc()
+		install.UpdateClient()
 		return
 	case "nat":
 		c := stun.NewClient()
@@ -239,7 +239,7 @@ func main() {
 	case "install":
 		_ = service.Control(s, "stop")
 		_ = service.Control(s, "uninstall")
-		binPath := install.InstallNpc()
+		binPath := install.InstallClient()
 		svcConfig.Executable = binPath
 		s, err := service.New(prg, svcConfig)
 		if err != nil {
@@ -313,7 +313,7 @@ func configureLogging() {
 		*logLevel = "trace"
 	}
 	if *logPath == "" || strings.EqualFold(*logPath, "on") || strings.EqualFold(*logPath, "true") {
-		*logPath = common.GetNpcLogPath()
+		*logPath = common.GetClientLogPath()
 	}
 	if !filepath.IsAbs(*logPath) {
 		*logPath = filepath.Join(common.GetRunPath(), *logPath)
@@ -324,27 +324,27 @@ func configureLogging() {
 	logs.Init(*logType, *logLevel, *logPath, *logMaxSize, *logMaxFiles, *logMaxDays, *logCompress, *logColor)
 }
 
-type Npc struct {
+type Agent struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	exit   chan struct{}
 }
 
-func NewNpc(pCtx context.Context) *Npc {
+func NewAgent(pCtx context.Context) *Agent {
 	ctx, cancel := context.WithCancel(pCtx)
-	return &Npc{
+	return &Agent{
 		ctx:    ctx,
 		exit:   make(chan struct{}),
 		cancel: cancel,
 	}
 }
 
-func (p *Npc) Start(_ service.Service) error {
+func (p *Agent) Start(_ service.Service) error {
 	go func() { _ = p.run() }()
 	return nil
 }
 
-func (p *Npc) Stop(_ service.Service) error {
+func (p *Agent) Stop(_ service.Service) error {
 	close(p.exit)
 	p.cancel()
 	if service.Interactive() {
@@ -353,13 +353,13 @@ func (p *Npc) Stop(_ service.Service) error {
 	return nil
 }
 
-func (p *Npc) run() error {
+func (p *Agent) run() error {
 	defer func() {
 		if err := recover(); err != nil {
 			const size = 64 << 10
 			buf := make([]byte, size)
 			buf = buf[:runtime.Stack(buf, false)]
-			logs.Warn("sysficb: panic serving %v: %s", err, buf)
+			logs.Warn("recovered: %v: %s", err, buf)
 		}
 	}()
 	run(p.ctx, p.cancel)
@@ -399,17 +399,21 @@ func run(ctx context.Context, cancel context.CancelFunc) {
 		return
 	}
 	env := common.GetEnvMap()
+	// Env prefix is neutral; the legacy NPC_* names keep working as fallback.
+	getEnv := func(key string) string {
+		return env["SF_"+key]
+	}
 	if *serverAddr == "" {
-		*serverAddr = env["NPC_SERVER_ADDR"]
+		*serverAddr = getEnv("SERVER_ADDR")
 	}
 	if *verifyKey == "" {
-		*verifyKey = env["NPC_SERVER_VKEY"]
+		*verifyKey = getEnv("SERVER_VKEY")
 	}
 	if *configPath == "" {
-		*configPath = env["NPC_CONFIG_PATH"]
+		*configPath = getEnv("CONFIG_PATH")
 	}
 	if *localIP == "" {
-		*localIP = env["NPC_LOCAL_IP"]
+		*localIP = getEnv("LOCAL_IP")
 	}
 	hasCommand := *verifyKey != "" && *serverAddr != ""
 	if hasCommand {

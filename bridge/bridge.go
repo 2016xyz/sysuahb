@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/logs"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/logs"
 )
 
 var (

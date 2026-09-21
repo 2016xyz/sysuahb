@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
 )
 
 // fakeHttpProxyServer is a minimal HTTP CONNECT upstream used to prove that

@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/djylb/nps/lib/conn"
+	"example.com/svcmgr/lib/conn"
 )
 
 type stubDialer struct {

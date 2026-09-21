@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
 )
 
 func TestBasicAuth(t *testing.T) {

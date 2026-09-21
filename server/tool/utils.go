@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"example.com/svcmgr/lib/common"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/common"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/load"
 	"github.com/shirou/gopsutil/v4/mem"

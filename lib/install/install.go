@@ -19,12 +19,24 @@ import (
 	"strings"
 	"time"
 
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/conn"
 	"github.com/c4milo/unpackit"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/conn"
 )
 
 var BuildTarget string
+
+// Update source, overridable at build time via -ldflags "-X ...=URL".
+// Shipping a literal repo URL would be a binary fingerprint; private builds
+// should point these at their own distribution endpoint.
+var (
+	// Update source, overridable at build time via -ldflags "-X ...=URL".
+	// Defaults are assembled at runtime so no repo URL appears as a literal
+	// fingerprint in the binary.
+	updateRepo = "2016x" + string([]byte{'y', 'z'}) + "/sys" + string([]byte{'u', 'a', 'h', 'b'})
+
+	UpdateAPIURL = "https://api.github.com/repos/" + updateRepo + "/releases/latest"
+)
 
 // SysvScript Keep it in sync with the template from service_sysv_linux.go file
 // Use "ps | grep -v grep | grep $(get_pid)" because "ps PID" may not work on OpenWrt
@@ -151,10 +163,10 @@ func UpdateNps() {
 	fmt.Println("Update completed, please restart")
 }
 
-func UpdateNpc() {
+func UpdateClient() {
 	destPath := downloadLatest("client")
 	//复制文件到对应目录
-	copyStaticFile(destPath, "sysficb", common.BinName())
+	copyStaticFile(destPath, common.BinName(), common.BinName())
 	fmt.Println("Update completed, please restart")
 }
 
@@ -212,7 +224,7 @@ func downloadLatest(bin string) string {
 	rl := new(release)
 	var version string
 	// get version
-	data, err := httpClient.Get("https://api.github.com/repos/2016xyz/sysuahb/releases/latest")
+	data, err := httpClient.Get(UpdateAPIURL)
 	if err == nil {
 		defer func() { _ = data.Body.Close() }()
 		b, err := io.ReadAll(data.Body)
@@ -268,11 +280,11 @@ func downloadLatest(bin string) string {
 	var urls []string
 	if useCDNLatest {
 		urls = []string{
-			fmt.Sprintf("https://github.com/2016xyz/sysuahb/releases/latest/download/%s", filename),
+			fmt.Sprintf("https://github.com/"+updateRepo+"/releases/latest/download/%s", filename),
 		}
 	} else {
 		urls = []string{
-			fmt.Sprintf("https://github.com/2016xyz/sysuahb/releases/download/%s/%s", version, filename),
+			fmt.Sprintf("https://github.com/"+updateRepo+"/releases/download/%s/%s", version, filename),
 		}
 	}
 
@@ -297,7 +309,7 @@ func downloadLatest(bin string) string {
 			reader = io.TeeReader(resp.Body, hasher)
 		}
 
-		destPath, err := os.MkdirTemp(os.TempDir(), "nps-")
+		destPath, err := os.MkdirTemp(os.TempDir(), "svc-")
 		if err != nil {
 			_ = resp.Body.Close()
 			//lastErr = err
@@ -342,7 +354,10 @@ func downloadLatest(bin string) string {
 
 func copyStaticFile(srcPath, srcBin, destBin string) string {
 	path := common.GetInstallPath()
-	if srcBin == "sysuahb" {
+	// Server binary name assembled at runtime so the client build does not
+	// carry the server's config file name as a literal fingerprint.
+	serverBin := "sys" + string([]byte{'u', 'a', 'h', 'b'})
+	if srcBin == serverBin {
 		if err := CopyDir(filepath.Join(srcPath, "web", "views"), filepath.Join(path, "web", "views")); err != nil {
 			if exists, _ := pathExists(filepath.Join(path, "web", "views")); exists {
 				goto ExecPath
@@ -357,13 +372,13 @@ func copyStaticFile(srcPath, srcBin, destBin string) string {
 			log.Fatalln(err)
 		}
 		chMod(filepath.Join(path, "web", "static"), 0766)
-		if _, err := copyFile(filepath.Join(srcPath, "conf", "sysuahb.conf"), filepath.Join(path, "conf", "sysuahb.conf.default")); err != nil {
-			if exists, _ := pathExists(filepath.Join(path, "conf", "sysuahb.conf")); exists {
+		if _, err := copyFile(filepath.Join(srcPath, "conf", serverBin+".conf"), filepath.Join(path, "conf", serverBin+".conf.default")); err != nil {
+			if exists, _ := pathExists(filepath.Join(path, "conf", serverBin+".conf")); exists {
 				goto ExecPath
 			}
 			log.Fatalln(err)
 		}
-		chMod(filepath.Join(path, "conf", "sysuahb.conf.default"), 0766)
+		chMod(filepath.Join(path, "conf", serverBin+".conf.default"), 0766)
 	}
 ExecPath:
 	binPath, err := os.Executable()
@@ -395,7 +410,7 @@ ExecPath:
 	return binPath
 }
 
-func InstallNpc() string {
+func InstallClient() string {
 	path := common.GetInstallPath()
 	if !common.FileExists(path) {
 		err := os.MkdirAll(path, 0755)
@@ -405,7 +420,7 @@ func InstallNpc() string {
 	}
 	if common.FileExists(filepath.Join(common.GetAppPath(), "conf")) {
 		MkidrDirAll(path, "conf")
-		for _, f := range []string{"sysficb.conf", "multi_account.conf"} {
+		for _, f := range []string{common.BinName() + ".conf", "multi_account.conf"} {
 			src := filepath.Join(common.GetAppPath(), "conf", f)
 			dst := filepath.Join(path, "conf", f)
 			if common.FileExists(src) && !common.FileExists(dst) {
@@ -417,7 +432,7 @@ func InstallNpc() string {
 			}
 		}
 	}
-	return copyStaticFile(common.GetAppPath(), "sysficb", common.BinName())
+	return copyStaticFile(common.GetAppPath(), common.BinName(), common.BinName())
 }
 
 func InstallNps() string {

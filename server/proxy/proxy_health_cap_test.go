@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/djylb/nps/lib/file"
+	"example.com/svcmgr/lib/file"
 )
 
 // TestHealthCheckConcurrencyCap verifies the MaxConcurrency setting: even with
@@ -44,7 +44,7 @@ func TestHealthCheckConcurrencyCap(t *testing.T) {
 	}()
 	proxyHost, proxyPort := splitAddr(t, ln.Addr().String())
 
-	withUnifiedSettings(t, func(s *file.UnifiedSettings) {
+	withUnifiedSettings(t, func(s *file.UnifiedSettingsCopy) {
 		s.CheckURL = "http://127.0.0.1:9/generate_204"
 		s.CheckTimeout = 2
 		s.MaxConcurrency = 4

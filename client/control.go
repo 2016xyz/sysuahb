@@ -19,12 +19,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/config"
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/lib/version"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/config"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/lib/version"
 	"github.com/quic-go/quic-go"
 	"github.com/xtaci/kcp-go/v5"
 	"golang.org/x/net/proxy"
@@ -324,7 +324,13 @@ func NewConn(tp string, vkey string, server string, proxyUrl string, localIP str
 	var tlsFp []byte
 
 	timeout := time.Second * 10
-	alpn := "nps"
+	// ALPN marker: configurable so the default protocol tag is not a static
+	// fingerprint. Falls back to the legacy value for old servers.
+	alpn := os.Getenv("SVC_ALPN")
+	if alpn == "" {
+		// Legacy default kept for protocol compatibility with older servers.
+		alpn = "nps"
+	}
 	server, path = common.SplitServerAndPath(server)
 	if path == "" {
 		path = "/ws"

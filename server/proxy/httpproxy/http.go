@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/goroutine"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/server/proxy"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/goroutine"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/server/proxy"
 )
 
 type ctxKey string

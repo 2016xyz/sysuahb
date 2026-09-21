@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/djylb/nps/lib/common"
+	"example.com/svcmgr/lib/common"
 )
 
 func InitDaemon(f string, runPath string, pidPath string) {

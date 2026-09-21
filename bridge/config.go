@@ -6,12 +6,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/conn"
-	"github.com/djylb/nps/lib/crypt"
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/logs"
-	"github.com/djylb/nps/server/tool"
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/conn"
+	"example.com/svcmgr/lib/crypt"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/logs"
+	"example.com/svcmgr/server/tool"
 )
 
 func (s *Bridge) getConfig(c *conn.Conn, isPub bool, client *file.Client, ver int, vs, uuid string) {

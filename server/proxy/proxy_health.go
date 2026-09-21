@@ -7,8 +7,8 @@ import (
 
 	"github.com/panjf2000/ants/v2"
 
-	"github.com/djylb/nps/lib/file"
-	"github.com/djylb/nps/lib/logs"
+	"example.com/svcmgr/lib/file"
+	"example.com/svcmgr/lib/logs"
 )
 
 // proxyHealthChecker probes every enabled external proxy node in the
@@ -113,10 +113,12 @@ func listProxyNodes() []*file.ProxyNode {
 	return list
 }
 
-func settingsSnapshot() file.UnifiedSettings {
+func settingsSnapshot() file.UnifiedSettingsCopy {
 	settings := file.GetDb().JsonDb.GetUnifiedSettings()
 	if settings == nil {
-		return *file.NewUnifiedSettings()
+		def := file.NewUnifiedSettings()
+		cp := def.Snapshot()
+		return cp
 	}
 	return settings.Snapshot()
 }

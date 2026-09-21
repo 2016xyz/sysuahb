@@ -135,14 +135,14 @@ func TestLogAndTmpPaths(t *testing.T) {
 		if got := GetLogPath(); got != filepath.Join(appPath, "sysuahb.log") {
 			t.Fatalf("GetLogPath() = %q, want %q", got, filepath.Join(appPath, "sysuahb.log"))
 		}
-		if got := GetNpcLogPath(); got != filepath.Join(appPath, "sysuahb.log") {
-			t.Fatalf("GetNpcLogPath() = %q, want %q", got, filepath.Join(appPath, "sysuahb.log"))
+		if got := GetClientLogPath(); got != filepath.Join(appPath, "sysuahb.log") {
+			t.Fatalf("GetClientLogPath() = %q, want %q", got, filepath.Join(appPath, "sysuahb.log"))
 		}
 		if got := GetTmpPath(); got != appPath {
 			t.Fatalf("GetTmpPath() = %q, want %q", got, appPath)
 		}
-		if got := GetConfigPath(); got != filepath.Join(appPath, "conf/sysficb.conf") {
-			t.Fatalf("GetConfigPath() = %q, want %q", got, filepath.Join(appPath, "conf/sysficb.conf"))
+		if got := GetConfigPath(); got != filepath.Join(appPath, "conf/sysuahb.conf") {
+			t.Fatalf("GetConfigPath() = %q, want %q", got, filepath.Join(appPath, "conf/sysuahb.conf"))
 		}
 		return
 	}
@@ -150,13 +150,13 @@ func TestLogAndTmpPaths(t *testing.T) {
 	if got := GetLogPath(); got != "/var/log/sysuahb.log" {
 		t.Fatalf("GetLogPath() = %q, want %q", got, "/var/log/sysuahb.log")
 	}
-	if got := GetNpcLogPath(); got != "/var/log/sysuahb.log" {
-		t.Fatalf("GetNpcLogPath() = %q, want %q", got, "/var/log/sysuahb.log")
+	if got := GetClientLogPath(); got != "/var/log/sysuahb.log" {
+		t.Fatalf("GetClientLogPath() = %q, want %q", got, "/var/log/sysuahb.log")
 	}
 	if got := GetTmpPath(); got != "/tmp" {
 		t.Fatalf("GetTmpPath() = %q, want %q", got, "/tmp")
 	}
-	if got := GetConfigPath(); got != "conf/sysficb.conf" {
-		t.Fatalf("GetConfigPath() = %q, want %q", got, "conf/sysficb.conf")
+	if got := GetConfigPath(); got != "conf/sysuahb.conf" {
+		t.Fatalf("GetConfigPath() = %q, want %q", got, "conf/sysuahb.conf")
 	}
 }

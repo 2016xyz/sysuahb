@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"example.com/svcmgr/lib/logs"
 	"github.com/araddon/dateparse"
-	"github.com/djylb/nps/lib/logs"
 )
 
 func Max(values ...int) int {
@@ -179,7 +179,7 @@ func IsBlackIp(ipPort, vkey string, blackIpList []string) bool {
 
 // ParseStr parse template
 func ParseStr(str string) (string, error) {
-	tmp := template.New("npc")
+	tmp := template.New("cfg")
 	w := new(bytes.Buffer)
 	tmp, err := tmp.Parse(str)
 	if err != nil {

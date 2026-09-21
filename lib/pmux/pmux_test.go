@@ -4,7 +4,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/djylb/nps/lib/logs"
+	"example.com/svcmgr/lib/logs"
 )
 
 func getFreePort(t *testing.T) int {

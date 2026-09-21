@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"example.com/svcmgr/lib/mux"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/mux"
 )
 
 func writeTestConfig(t *testing.T, content string) string {

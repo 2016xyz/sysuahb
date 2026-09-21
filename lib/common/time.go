@@ -6,8 +6,8 @@ import (
 	"time"
 	_ "time/tzdata"
 
+	"example.com/svcmgr/lib/logs"
 	"github.com/beevik/ntp"
-	"github.com/djylb/nps/lib/logs"
 )
 
 var (

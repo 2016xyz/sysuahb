@@ -1,4 +1,4 @@
-module github.com/djylb/nps
+module example.com/svcmgr
 
 go 1.26
 

@@ -3,9 +3,9 @@ package controllers
 import (
 	"encoding/hex"
 
+	"example.com/svcmgr/lib/common"
+	"example.com/svcmgr/lib/crypt"
 	"github.com/beego/beego"
-	"github.com/djylb/nps/lib/common"
-	"github.com/djylb/nps/lib/crypt"
 )
 
 type AuthController struct {
