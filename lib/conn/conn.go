@@ -44,6 +44,8 @@ func NewConn(conn net.Conn) *Conn {
 }
 
 func (s *Conn) SetRb(rbs ...[]byte) *Conn {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	for _, rb := range rbs {
 		if len(rb) > 0 {
 			s.rbs = append(s.rbs, rb)
@@ -327,11 +329,11 @@ func (s *Conn) Close() error {
 				h(s)
 			}()
 		}
+		s.mu.Lock()
 		for i := range s.rbs {
 			s.rbs[i] = nil
 		}
 		s.rbs = nil
-		s.mu.Lock()
 		if s.wBuf != nil {
 			s.wBuf.Reset()
 		}
@@ -396,6 +398,7 @@ func (s *Conn) Read(b []byte) (n int, err error) {
 		return 0, err
 	}
 
+	s.mu.Lock()
 	for len(s.rbs) > 0 {
 		cur := s.rbs[0]
 		if len(cur) == 0 {
@@ -412,8 +415,10 @@ func (s *Conn) Read(b []byte) (n int, err error) {
 				s.rbs = nil
 			}
 		}
+		s.mu.Unlock()
 		return n, nil
 	}
+	s.mu.Unlock()
 
 	return s.Conn.Read(b)
 }
