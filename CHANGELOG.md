@@ -83,6 +83,16 @@
   - 导入标签未归一化；`parseStdURL` 死代码；Trojan 请求对非法目标静默回退 443
 - 版本：`0.34.7-test9`
 
+### v0.34.7-test10 (2026-09-22)
+- **移除「全能代理」功能**：(SS / SSR / VMess / VLESS / Trojan / TUIC / Hysteria2 / NaiveProxy 隧道协议节点)
+  - 删除页面与控制器 `omni_proxy`(列表 / 添加 / 批量导入 / Clash 订阅) 及菜单项、路由
+  - 删除分享链接解析 `lib/file/sharelink.go`、协议常量 `lib/file/scheme.go`
+  - 删除协议拨号 `server/proxy/tunnel_dial.go`、`server/proxy/trojan.go`
+  - `ProxyNode` 回归纯 HTTP / SOCKS5 节点，移除 Scheme/Method/TLS/SNI 等隧道字段
+  - 清理依赖 `sagernet/sing*`、`gofrs/uuid`
+- 保留：统一代理出口池、代理节点页(增删改/批量导入/健康检测/设置)、NPS Client 出口
+- 版本：`0.34.7-test10`
+
 
 ## Stable
 

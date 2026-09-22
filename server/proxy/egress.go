@@ -87,11 +87,6 @@ func (p egressProtocol) Supports(n *file.ProxyNode) bool {
 	if n == nil {
 		return false
 	}
-	// A tunnel node terminates the protocol itself, so it can carry both the
-	// HTTP and the SOCKS5 entry of the unified proxy.
-	if n.IsTunnel() {
-		return true
-	}
 	if p == protoSocks5 {
 		return n.SupportsSocks5()
 	}

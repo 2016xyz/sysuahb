@@ -75,10 +75,9 @@ func TestDialPathReadsCredentialsUnderLock(t *testing.T) {
 			if err2 == nil && c2 != nil {
 				_ = c2.Close()
 			}
-			// These are the values the log lines and the tunnel dialer read.
+			// These are the values the log lines and the dialer read.
 			_ = node.Addr()
 			_ = node.String()
-			_ = node.SchemeName()
 			_ = node.HostValue()
 			_, _ = node.Credentials()
 		}

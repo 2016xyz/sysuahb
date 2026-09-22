@@ -25,7 +25,7 @@ func TestDuplicateKeysMatchIncomingLinkKeys(t *testing.T) {
 	}
 
 	// These are exactly the keys the importer computes for incoming links.
-	for _, proto := range []string{SchemeHTTP, SchemeSOCKS5} {
+	for _, proto := range []string{"http", "socks5"} {
 		incoming := duplicateKey(proto, "1.2.3.4", 8080, "User")
 		if _, ok := set[incoming]; !ok {
 			t.Fatalf("existing node does not match incoming %s link key %q; keys=%v", proto, incoming, keys)
@@ -35,24 +35,6 @@ func TestDuplicateKeysMatchIncomingLinkKeys(t *testing.T) {
 	// The empty-protocol key that the buggy caller used must not be in the set.
 	if _, ok := set[duplicateKey("", "1.2.3.4", 8080, "User")]; ok {
 		t.Fatal("DuplicateKeys must not emit an empty-protocol key")
-	}
-}
-
-// A tunnel node occupies exactly one dedupe key: its scheme.
-func TestDuplicateKeysForTunnelNode(t *testing.T) {
-	node := NewProxyNode()
-	node.Scheme = SchemeVMess
-	node.Host = "5.6.7.8"
-	node.Port = 443
-	node.Username = "uuid"
-
-	keys := node.DuplicateKeys()
-	if len(keys) != 1 {
-		t.Fatalf("a tunnel node should occupy 1 key, got %d (%v)", len(keys), keys)
-	}
-	want := duplicateKey(SchemeVMess, "5.6.7.8", 443, "uuid")
-	if keys[0] != want {
-		t.Fatalf("tunnel key = %q, want %q", keys[0], want)
 	}
 }
 
