@@ -24,11 +24,11 @@ Since the original [NPS](https://github.com/ehang-io/nps) project has been inact
 - The service name, binary (`/usr/bin/<name>`), config directory (`/etc/<name>/`) and log file (`/var/log/<name>.log`) all follow that random name; the config file names inside stay fixed (`sysuahb.conf` / `sysficb.conf`) so your data is always easy to find
 - Re-running the installer automatically removes previous random-named installs (detected via their config marker) and installs fresh ones with new names
 
-- New feature: **Client Tags** — every client can carry several tags (`gz`, `telecom`, `jp`, `hk`, ...), which become the exit groups of the unified proxy (see [Client Tags](#client-tags))
+- New feature (test builds only): **Client Tags** — every client can carry multiple tags (`gz`, `telecom`, `jp`, `hk`, ...), which act as the egress groups of the Unified Proxy (see [Client Tags](#client-tags)). Tags require a `-testN` build — the stable `v0.34.7` does not have them.
 
-- New feature: **Client Tags** — every client can carry multiple tags (`gz`, `telecom`, `jp`, `hk`, ...), which act as the egress groups of the Unified Proxy (see [Client Tags](#client-tags))
+- **Unified Proxy** — one HTTP/SOCKS5 proxy port routes traffic to different clients by login username, with a mandatory connection password (see [Unified Proxy](#unified-proxy)). Username types `auto` / `<clientId>` / `<key>-auto[-ttl]` work on the stable `v0.34.7`.
 
-- New feature: **Unified Proxy** — one HTTP/SOCKS5 proxy port routes traffic to different clients by login username, with a mandatory connection password (see [Unified Proxy](#unified-proxy))
+- New feature (test builds only): **Client Tags** routing in the Unified Proxy username (`gz.auto`, `abc.gz-auto-2h`) and **proxy nodes** — external HTTP/SOCKS5 upstream proxies joining the same egress pool as NPS clients (see [Test builds](docs/install-test.md))
 
 - **Documentation (upstream):** https://d-jy.net/docs/nps/
 - **Discussion:**  [Telegram Group](https://t.me/npsdev)
@@ -108,6 +108,8 @@ For detailed configuration options, refer to the upstream [Documentation](https:
 ### One-Click Deploy (Linux)
 
 The installer auto-detects OS/ARCH, downloads the matching tarball from [Releases](https://github.com/2016xyz/sysuahb/releases), generates a random name (`sys` + 4 letters), registers the service, and starts it. Run it as root.
+
+> **Version note:** with no version argument the installer uses `latest`, which is the **stable `v0.34.7`**. Test builds (`v0.34.7-testN`) must be requested explicitly and are never installed automatically — see [Test builds](docs/install-test.md).
 
 #### Server (nps)
 

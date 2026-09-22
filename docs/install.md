@@ -6,6 +6,32 @@ NPS 提供多种安装方式，推荐使用 **一键脚本安装**（Linux），
 
 ---
 
+## 0. 版本选择
+
+| 类型 | 版本号写法 | 说明 |
+| --- | --- | --- |
+| 稳定版（推荐） | `v0.34.7` | 不指定版本时默认 `latest`，即稳定版 **`v0.34.7`** |
+| 测试版 | `v0.34.7-test6`（当前推荐）；历史：`-test1` / `-test2` / `-test3` / `-test4`（`-test5` 已撤下） | 必须**显式指定**，可带 `v` 前缀或纯数字开头 |
+
+**`latest` 永远指向稳定版 `v0.34.7`**：预发布版本（版本号含 `-`）自动标记为 pre-release，不会占用 `releases/latest`，也不会覆盖 Docker 的 `latest` 镜像。
+
+指定版本安装：
+
+```bash
+# 稳定版（显式固定版本，等价于不写版本号）
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps v0.34.7
+
+# 测试版（必须显式指定版本号）
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps v0.34.7-test6
+```
+
+> ⚠️ 版本号写错（如不存在的 `0.34.8`）会**直接报错退出**，不会静默装成 `latest`。
+> 测试版的新功能、安装、回滚与风险说明见 [测试版安装指南](install-test.md)。
+>
+> 📌 **关于脚本版本**：上面的命令把 `install.sh` 固定在发布标签 `v0.34.7` 上，该标签里的脚本**不含** 2026-09-21 加入的版本号归一化修复（`0.34.7-testN` 不带 `v` 会被静默装成稳定版）。**安装测试版请使用 `v0.34.7-test7` 或更新标签里的脚本**（见[测试版安装指南](install-test.md)）。
+
+---
+
 ## 1. 一键脚本安装（Linux，推荐）
 
 > 此方式不支持 **Windows** 安装。
@@ -268,7 +294,8 @@ go build -o sysficb cmd/npc/client.go
 
 ## 7. 相关链接
 
-- **最新发布版本**：[GitHub Releases](https://github.com/2016xyz/sysuahb/releases/latest)
+- **最新发布版本**：[GitHub Releases](https://github.com/2016xyz/sysuahb/releases/latest)（= 稳定版 `v0.34.7`）
+- **测试版**：[测试版安装指南](install-test.md) · [全部 Releases 列表](https://github.com/2016xyz/sysuahb/releases)
 - **Android**：[djylb/npsclient](https://github.com/djylb/npsclient)
 - **OpenWrt**：[djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
 - **DockerHub 镜像（上游）**

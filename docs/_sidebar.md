@@ -1,5 +1,6 @@
 * 入门
     * [安装](install.md)
+    * [测试版安装](install-test.md)
     * [启动](run.md)
     * [使用示例](example.md)
 * 服务端

@@ -177,13 +177,19 @@ if [ "$INSTALL_VERSION" = "latest" ]; then
   fi
 fi
 
-# Normalize version: accept "0.34.7" style input and add the "v" prefix
+# Normalize version: accept "0.34.7" and "0.34.7-test6" style input and add the
+# "v" prefix. Input that starts with a digit but does not look like a version is
+# rejected outright, so a typo can never silently install a different release.
 case "$INSTALL_VERSION" in
   ""|latest|v*) ;;
   [0-9]*)
-    if printf '%s' "$INSTALL_VERSION" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
+    if printf '%s' "$INSTALL_VERSION" | grep -Eq '^[0-9]+(\.[0-9]+)*(-[0-9A-Za-z][0-9A-Za-z._-]*)?$'; then
       echo "Normalized version: v${INSTALL_VERSION}"
       INSTALL_VERSION="v${INSTALL_VERSION}"
+    else
+      echo "Error: invalid version: $INSTALL_VERSION" >&2
+      echo "       expected e.g. 0.34.7, 0.34.7-test6, v0.34.7-test6, or latest" >&2
+      exit 1
     fi
     ;;
 esac
@@ -290,9 +296,12 @@ download() {
       ${GH_BASE}/releases/latest/download/${FILE}
     "
   else
+    # A pinned version must resolve to exactly that tag: silently falling back
+    # to releases/latest here would install a different version than requested
+    # (e.g. "0.34.7-test6" 404s without the "v" prefix and used to land on the
+    # stable build instead).
     URLS="
       ${GH_BASE}/releases/download/${INSTALL_VERSION}/${FILE}
-      ${GH_BASE}/releases/latest/download/${FILE}
     "
   fi
 
