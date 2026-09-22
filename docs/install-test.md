@@ -33,10 +33,12 @@
 | `v0.34.7-test4` | **外部代理节点**接入统一出口池（Egress：NPS Client + HTTP/SOCKS5 外部代理） |
 | `v0.34.7-test5` | 已撤下（tag 已删除，**无法安装**） |
 | `v0.34.7-test6` | 修复代理节点页面全部 404、CI 发布竞争、连接数据竞争；客户端二进制指纹清理 |
-| `v0.34.7-test7` | **推荐测试版**：修复安装脚本版本号解析（见 3.3）——`0.34.7-testN` 不再被静默装成稳定版；固定版本安装失败时直接报错而不回退 `latest`；新增本安装文档 |
-| `v0.34.7-test8` | **全能代理**：统一代理菜单下新增「全能代理」页，支持导入 SS / SSR / VMess / VLESS / Trojan / TUIC / Hysteria2 / NaiveProxy / SOCKS5 分享链接与 Clash 订阅；SS / SSR / VMess / VLESS / Trojan 可作为统一代理出口并参与健康检测 |
+| `v0.34.7-test7` | 修复安装脚本版本号解析（见 3.3）——`0.34.7-testN` 不再被静默装成稳定版；固定版本安装失败时直接报错而不回退 `latest`；新增本安装文档 |
+| `v0.34.7-test8` | **已废弃**：曾经的「全能代理」（SS / SSR / VMess / VLESS / Trojan / TUIC / Hysteria2 / NaiveProxy 分享链接与 Clash 订阅），已于 `test10` 移除，**不建议安装** |
+| `v0.34.7-test9` | 统一代理 / 代理节点 **代码审计修复**（12 处缺陷：SSRF、数据竞争、死锁、丢失更新、导入去重失效等） |
+| `v0.34.7-test10` | **推荐测试版**：移除全能代理与隧道协议，回到「NPS Client + HTTP/SOCKS5 外部代理」统一出口池；菜单为 统一代理 / 代理节点 / 设置 三项；移除 sing 系列依赖 |
 
-> 建议直接安装 `v0.34.7-test8`。
+> 建议直接安装 `v0.34.7-test10`。
 
 ---
 
@@ -45,13 +47,13 @@
 ### 3.1 服务端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s nps 0.34.7-test7
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s nps 0.34.7-test10
 ```
 
 ### 3.2 客户端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s npc 0.34.7-test7 -server=xxx:123 -vkey=xxx -type=tls
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s npc 0.34.7-test10 -server=xxx:123 -vkey=xxx -type=tls
 ```
 
 ### 3.3 版本号写法（重要）
@@ -75,13 +77,13 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/insta
 ### 3.4 环境变量方式
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo env NPS_INSTALL_VERSION=v0.34.7-test7 sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo env NPS_INSTALL_VERSION=v0.34.7-test10 sh -s nps
 ```
 
 ### 3.5 便携模式（只解压，不注册服务）
 
 ```bash
-NPS_INSTALL_DIR=/opt/nps-test NPS_START=0 sh install.sh nps 0.34.7-test7
+NPS_INSTALL_DIR=/opt/nps-test NPS_START=0 sh install.sh nps 0.34.7-test10
 ```
 
 ---
@@ -91,14 +93,14 @@ NPS_INSTALL_DIR=/opt/nps-test NPS_START=0 sh install.sh nps 0.34.7-test7
 下载地址把版本号换成测试版标签即可：
 
 ```
-https://github.com/2016xyz/sysuahb/releases/download/v0.34.7-test7/<os>_<arch>_server.tar.gz
-https://github.com/2016xyz/sysuahb/releases/download/v0.34.7-test7/<os>_<arch>_client.tar.gz
+https://github.com/2016xyz/sysuahb/releases/download/v0.34.7-test10/<os>_<arch>_server.tar.gz
+https://github.com/2016xyz/sysuahb/releases/download/v0.34.7-test10/<os>_<arch>_client.tar.gz
 ```
 
 例如 Linux amd64：
 
 ```bash
-curl -fsSL -o server.tar.gz https://github.com/2016xyz/sysuahb/releases/download/v0.34.7-test7/linux_amd64_server.tar.gz
+curl -fsSL -o server.tar.gz https://github.com/2016xyz/sysuahb/releases/download/v0.34.7-test10/linux_amd64_server.tar.gz
 tar xzf server.tar.gz
 ```
 
@@ -111,8 +113,8 @@ tar xzf server.tar.gz
 预发布不发布 `latest` 标签，必须显式指定版本号：
 
 ```bash
-docker pull ghcr.io/2016xyz/sysuahb:0.34.7-test7
-docker pull ghcr.io/2016xyz/sysficb:0.34.7-test7
+docker pull ghcr.io/2016xyz/sysuahb:0.34.7-test10
+docker pull ghcr.io/2016xyz/sysuahb:0.34.7-test10
 ```
 
 > Docker 标签用的是 **不带 `v`** 的 semver 形式（`0.34.7-test7`），而 GitHub 发布标签带 `v`（`v0.34.7-test7`），注意区分。
@@ -132,7 +134,7 @@ docker pull ghcr.io/2016xyz/sysficb:0.34.7-test7
 # => Version: 0.34.7
 
 # 测试版
-# => Version: 0.34.7-test7
+# => Version: 0.34.7-test10
 ```
 
 还可以确认测试版独有功能是否到位：
