@@ -13731,7 +13731,7 @@ html[theme="dark-mode"] body:not(.login-page) .fixed-table-container tbody td {
         transition: transform 0.28s ease, visibility 0.28s ease;
     }
 
-    body:not(.login-page) .mini-navbar nav.navbar-static-side {
+    body:not(.login-page).mini-navbar nav.navbar-static-side {
         visibility: visible;
         transform: translateX(0);
         box-shadow: 8px 0 28px rgba(29, 55, 111, 0.2);
@@ -13741,16 +13741,16 @@ html[theme="dark-mode"] body:not(.login-page) .fixed-table-container tbody td {
         width: 100%;
     }
 
-    body:not(.login-page) .mini-navbar .nav-label,
-    body:not(.login-page) .mini-navbar .navbar-default .nav li a span {
+    body:not(.login-page).mini-navbar .nav-label,
+    body:not(.login-page).mini-navbar .navbar-default .nav li a span {
         display: inline;
     }
 
-    body:not(.login-page) .mini-navbar .profile-element {
+    body:not(.login-page).mini-navbar .profile-element {
         display: block;
     }
 
-    body:not(.login-page) .mini-navbar .logo-element {
+    body:not(.login-page).mini-navbar .logo-element {
         display: none;
     }
 
@@ -13768,7 +13768,7 @@ html[theme="dark-mode"] body:not(.login-page) .fixed-table-container tbody td {
         transition: opacity 0.28s ease, visibility 0.28s ease;
     }
 
-    body:not(.login-page) .mini-navbar .mobile-nav-backdrop {
+    body:not(.login-page).mini-navbar .mobile-nav-backdrop {
         display: block;
         opacity: 1;
         visibility: visible;
