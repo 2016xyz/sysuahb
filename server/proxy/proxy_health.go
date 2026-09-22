@@ -150,7 +150,7 @@ func runProxyCheck(id int) {
 	now := time.Now()
 	if err != nil {
 		node.MarkCheckFailure(truncateError(err.Error(), 200), now, settings.FailThreshold)
-		logs.Warn("proxy health: node %d (%s) check failed: %v", node.Id, node.Name, err)
+		logs.Warn("proxy health: node %s check failed: %v", node.String(), err)
 	} else {
 		node.MarkCheckSuccess(latency, now, settings.RecoverSuccess)
 	}

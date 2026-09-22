@@ -21,7 +21,8 @@ import (
 // scheme is reduced to one net.Conn, so the caller (unified proxy relay and
 // health probe) never has to know which protocol is underneath.
 func dialTunnelNode(node *file.ProxyNode, target string, timeout time.Duration) (net.Conn, error) {
-	switch node.Scheme {
+	scheme := node.SchemeName()
+	switch scheme {
 	case file.SchemeSS, file.SchemeSSR:
 		return dialShadowsocks(node, target, timeout)
 	case file.SchemeVMess:
@@ -31,7 +32,7 @@ func dialTunnelNode(node *file.ProxyNode, target string, timeout time.Duration) 
 	case file.SchemeTrojan:
 		return dialTrojan(node, target, timeout)
 	default:
-		return nil, fmt.Errorf("proxy node %d: scheme %q is not dialable yet", node.Id, node.Scheme)
+		return nil, fmt.Errorf("proxy node %d: scheme %q is not dialable yet", node.Id, scheme)
 	}
 }
 
@@ -162,7 +163,12 @@ func dialTrojan(node *file.ProxyNode, target string, timeout time.Duration) (net
 	if err != nil {
 		return nil, err
 	}
-	if _, err = conn.Write(trojanRequest(node.PasswordValue(), target)); err != nil {
+	req, err := trojanRequest(node.PasswordValue(), target)
+	if err != nil {
+		_ = conn.Close()
+		return nil, err
+	}
+	if _, err = conn.Write(req); err != nil {
 		_ = conn.Close()
 		return nil, fmt.Errorf("trojan handshake: %w", err)
 	}
@@ -181,7 +187,7 @@ func dialTransport(node *file.ProxyNode, timeout time.Duration) (net.Conn, error
 	}
 	name := node.SNIName()
 	if name == "" {
-		name = node.Host
+		name = node.HostValue()
 	}
 	tlsConn := tls.Client(conn, &tls.Config{
 		ServerName:         name,

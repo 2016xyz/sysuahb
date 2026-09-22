@@ -89,11 +89,14 @@ func NewProxyNode() *ProxyNode {
 	}
 }
 
-// Addr returns "host:port".
+// Addr returns "host:port". It takes the read lock because UpdateConfig may
+// rewrite Host/Port while a dial is looking the address up.
 func (p *ProxyNode) Addr() string {
 	if p == nil {
 		return ""
 	}
+	p.RLock()
+	defer p.RUnlock()
 	return fmt.Sprintf("%s:%d", p.Host, p.Port)
 }
 
@@ -163,6 +166,31 @@ func (p *ProxyNode) PasswordValue() string {
 	p.RLock()
 	defer p.RUnlock()
 	return p.Password
+}
+
+// Credentials returns the username/password pair under a single read lock.
+// Callers in the dial path must use this instead of reading the fields
+// directly: UpdateConfig writes them under the write lock, so unsynchronised
+// reads are a data race.
+func (p *ProxyNode) Credentials() (string, string) {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Username, p.Password
+}
+
+// HostValue returns the host under the read lock; used by the dial path to
+// derive a TLS server name.
+func (p *ProxyNode) HostValue() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Host
+}
+
+// NameValue returns the remark under the read lock for log lines.
+func (p *ProxyNode) NameValue() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Name
 }
 
 func (p *ProxyNode) FlowName() string {
@@ -282,8 +310,17 @@ func (p *ProxyNode) AddTags(tags []string) error {
 	}
 	p.Lock()
 	merged := append(append([]string{}, p.Tags...), normalized...)
+	// Normalise inside the same critical section: releasing the lock between
+	// the read and the SetTags call would let two concurrent AddTags calls
+	// drop one another's tag (lost update).
+	next, err := NormalizeTags(merged)
+	if err != nil {
+		p.Unlock()
+		return err
+	}
+	p.Tags = next
 	p.Unlock()
-	return p.SetTags(merged)
+	return nil
 }
 
 // RemoveTags deletes tags (case-insensitive) from the node.
@@ -340,6 +377,12 @@ func (p *ProxyNode) MarkCheckSuccess(latency time.Duration, now time.Time, recov
 		recoverThreshold = 1
 	}
 	p.Lock()
+	// A node that was disabled while the probe was in flight must stay
+	// Disabled: a late result may never resurrect it or overwrite the verdict.
+	if !p.Enabled {
+		p.Unlock()
+		return
+	}
 	p.ConsecutiveFailures = 0
 	p.ConsecutiveSuccesses++
 	p.LastCheckTime = now
@@ -359,6 +402,12 @@ func (p *ProxyNode) MarkCheckFailure(msg string, now time.Time, threshold int) {
 		threshold = 1
 	}
 	p.Lock()
+	// Same guard as MarkCheckSuccess: never let an in-flight probe overwrite
+	// the Disabled verdict of a node that was switched off meanwhile.
+	if !p.Enabled {
+		p.Unlock()
+		return
+	}
 	p.LastCheckTime = now
 	p.ConsecutiveFailures++
 	p.ConsecutiveSuccesses = 0
@@ -392,9 +441,14 @@ func (p *ProxyNode) ResetStatusToUnknown() {
 	p.Unlock()
 }
 
-// ProxyConfig is the caller-editable subset of ProxyNode used by the web
-// form. Applying it goes through ProxyNode.UpdateConfig so every write to a
-// shared node is lock-guarded.
+// ProxyConfig carries the editable fields of a plain HTTP/SOCKS5 node.
+//
+// Tunnel fields (Scheme/Method/TLS/...) are deliberately NOT part of it: this
+// struct is filled from the "代理节点" form, which knows nothing about tunnel
+// protocols. An earlier revision copied the tunnel fields here unconditionally,
+// so saving that form wiped the scheme of an SS/VMess/Trojan node and turned it
+// into a protocol-less zombie. Tunnel nodes are created from a share link and
+// are only ever edited on the 全能代理 page.
 type ProxyConfig struct {
 	Name     string
 	Host     string
@@ -405,19 +459,6 @@ type ProxyConfig struct {
 	Socks5   bool
 	Tags     []string
 	Enabled  bool
-
-	Scheme     string
-	Method     string
-	Flow       string
-	AlterId    int
-	TLS        bool
-	SNI        string
-	SkipVerify bool
-	Network    string
-	Path       string
-	HostHeader string
-	ALPN       string
-	Link       string
 }
 
 // UpdateConfig replaces the configuration fields under the write lock. The
@@ -435,20 +476,8 @@ func (p *ProxyNode) UpdateConfig(c ProxyConfig) {
 	p.Http = c.Http
 	p.Socks5 = c.Socks5
 	p.Tags = c.Tags
-	p.Scheme = c.Scheme
-	p.Method = c.Method
-	p.Flow = c.Flow
-	p.AlterId = c.AlterId
-	p.TLS = c.TLS
-	p.SNI = c.SNI
-	p.SkipVerify = c.SkipVerify
-	p.Network = c.Network
-	p.Path = c.Path
-	p.HostHeader = c.HostHeader
-	p.ALPN = c.ALPN
-	if c.Link != "" {
-		p.Link = c.Link
-	}
+	// Tunnel fields are intentionally left untouched: this form only edits the
+	// plain HTTP/SOCKS5 view, so it must not clear a tunnel node's scheme.
 	enabledChanged := p.Enabled != c.Enabled
 	p.Enabled = c.Enabled
 	p.Unlock()
@@ -468,7 +497,9 @@ func (p *ProxyNode) String() string {
 	}
 	p.RLock()
 	defer p.RUnlock()
-	return fmt.Sprintf("proxy#%d[%s %s %s]", p.Id, p.Name, p.Addr(), p.ProtocolsLocked())
+	// Address is formatted inline: calling Addr() here would take the read
+	// lock a second time, which deadlocks as soon as a writer is queued.
+	return fmt.Sprintf("proxy#%d[%s %s:%d %s]", p.Id, p.Name, p.Host, p.Port, p.ProtocolsLocked())
 }
 
 // ProtocolsLocked is Protocols for callers that already hold the lock.
@@ -588,4 +619,39 @@ func (p *ProxyNode) DuplicateKey(protocol string) string {
 func duplicateKey(protocol, host string, port int, username string) string {
 	return fmt.Sprintf("%s|%s|%d|%s", strings.ToLower(strings.TrimSpace(protocol)),
 		strings.ToLower(strings.TrimSpace(host)), port, strings.TrimSpace(username))
+}
+
+// DuplicateKeys returns every dedupe key this node occupies.
+//
+// A plain node can speak HTTP and SOCKS5 at once, and the key includes the
+// protocol, so such a node legitimately occupies one key per protocol. A
+// tunnel node occupies exactly one (its scheme).
+//
+// Batch import must build its "already present" set from this, not from
+// DuplicateKey(""): passing an empty protocol produced keys that could never
+// match the "http"/"socks5" keys computed for incoming links, so re-importing
+// an existing plain proxy silently created a duplicate.
+func (p *ProxyNode) DuplicateKeys() []string {
+	if p == nil {
+		return nil
+	}
+	host, port, username := p.AddressParts()
+	if IsTunnelScheme(p.SchemeName()) {
+		return []string{duplicateKey(p.SchemeName(), host, port, username)}
+	}
+	keys := make([]string, 0, 2)
+	if p.SupportsHttp() {
+		keys = append(keys, duplicateKey(SchemeHTTP, host, port, username))
+	}
+	if p.SupportsSocks5() {
+		keys = append(keys, duplicateKey(SchemeSOCKS5, host, port, username))
+	}
+	return keys
+}
+
+// AddressParts returns host/port/username under one read lock.
+func (p *ProxyNode) AddressParts() (string, int, string) {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Host, p.Port, p.Username
 }

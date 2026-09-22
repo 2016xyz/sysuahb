@@ -43,6 +43,13 @@ func (s *ProxyNodeController) filteredProxyRows() []file.ProxyNodeView {
 
 	out := make([]file.ProxyNodeView, 0)
 	for _, node := range file.GetDb().ProxyNodeList() {
+		// This page manages plain HTTP/SOCKS5 nodes only. Tunnel nodes (SS,
+		// VMess, Trojan, ...) live on the 全能代理 page: the edit form here has
+		// no tunnel fields, so showing them would invite a save that wipes
+		// their scheme.
+		if node.IsTunnel() {
+			continue
+		}
 		if search != "" && !strings.Contains(strings.ToLower(node.Name), search) && !strings.Contains(strings.ToLower(node.Host), search) {
 			continue
 		}
@@ -162,6 +169,13 @@ func (s *ProxyNodeController) Edit() {
 	node, err := file.GetDb().GetProxyNode(id)
 	if err != nil || node == nil {
 		s.AjaxErr("proxy not found")
+		return
+	}
+	// Defence in depth: the list already hides tunnel nodes, but the endpoint
+	// is directly callable. This form cannot express tunnel settings, so a
+	// save here would clear the node's scheme and leave it unusable.
+	if node.IsTunnel() {
+		s.AjaxErr("this is a tunnel protocol node; edit it on the 全能代理 page")
 		return
 	}
 	if err := s.parseProxyForm(node, true); err != nil {
@@ -365,7 +379,11 @@ func (s *ProxyNodeController) DeleteInvalid() {
 	targets := make([]int, 0)
 	for _, node := range file.GetDb().ProxyNodeList() {
 		status, _, _, lastSuccess, failures, _ := node.HealthSnapshot()
-		if node.EnabledState() && status != file.ProxyStatusUnavailable {
+		// Strict match on the documented rule: only a node the health checker
+		// itself marked Unavailable is a candidate. An operator-disabled node
+		// is skipped on purpose -- switching it off is a deliberate choice,
+		// not evidence that it is broken, so it must never be swept up here.
+		if !node.EnabledState() || status != file.ProxyStatusUnavailable {
 			continue
 		}
 		if failures < threshold {

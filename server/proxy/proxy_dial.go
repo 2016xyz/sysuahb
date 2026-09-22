@@ -49,8 +49,8 @@ func dialViaProxyNode(node *file.ProxyNode, protocol egressProtocol, target stri
 // golang.org/x/net/proxy client (RFC 1928 + RFC 1929 username/password auth).
 func dialSocks5Proxy(node *file.ProxyNode, target string, timeout time.Duration) (net.Conn, error) {
 	var auth *proxy.Auth
-	if node.Username != "" || node.Password != "" {
-		auth = &proxy.Auth{User: node.Username, Password: node.Password}
+	if user, password := node.Credentials(); user != "" || password != "" {
+		auth = &proxy.Auth{User: user, Password: password}
 	}
 	base := &net.Dialer{Timeout: timeout}
 	dialer, err := proxy.SOCKS5("tcp", node.Addr(), auth, base)
@@ -84,8 +84,8 @@ func dialHttpProxy(node *file.ProxyNode, target string, timeout time.Duration) (
 	req.WriteString(" HTTP/1.1\r\nHost: ")
 	req.WriteString(target)
 	req.WriteString("\r\n")
-	if node.Username != "" || node.Password != "" {
-		cred := base64.StdEncoding.EncodeToString([]byte(node.Username + ":" + node.Password))
+	if user, password := node.Credentials(); user != "" || password != "" {
+		cred := base64.StdEncoding.EncodeToString([]byte(user + ":" + password))
 		req.WriteString("Proxy-Authorization: Basic ")
 		req.WriteString(cred)
 		req.WriteString("\r\n")

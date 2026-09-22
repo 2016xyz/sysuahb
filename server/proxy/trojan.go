@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"net"
 )
 
@@ -15,14 +16,21 @@ var errBadPort = errors.New("invalid port")
 //	hex(sha224(password)) CR LF
 //	command(0x01) address-type address port
 //	CR LF
-func trojanRequest(password, target string) []byte {
+func trojanRequest(password, target string) ([]byte, error) {
 	sum := sha256.Sum224([]byte(password))
 	host, portStr, err := net.SplitHostPort(target)
 	if err != nil {
-		host = target
-		portStr = "443"
+		// The caller always passes "host:port"; guessing a port here would
+		// silently send the request to a different service.
+		return nil, fmt.Errorf("trojan: target %q is not host:port: %w", target, err)
 	}
-	port, _ := parsePort(portStr)
+	port, err := parsePort(portStr)
+	if err != nil {
+		return nil, fmt.Errorf("trojan: %w", err)
+	}
+	if len(host) > 255 {
+		return nil, errors.New("trojan: target host too long")
+	}
 
 	buf := make([]byte, 0, 128)
 	buf = append(buf, hex.EncodeToString(sum[:])...)
@@ -33,7 +41,7 @@ func trojanRequest(password, target string) []byte {
 	binary.BigEndian.PutUint16(p[:], uint16(port))
 	buf = append(buf, p[:]...)
 	buf = append(buf, '\r', '\n')
-	return buf
+	return buf, nil
 }
 
 func appendTrojanAddr(buf []byte, host string) []byte {

@@ -36,7 +36,7 @@ func (s *TunnelModeServer) handleSocks5ViaProxy(c net.Conn, node *file.ProxyNode
 	}
 	upstream, err := dialViaProxyNode(node, protoSocks5, addr, dialEgressTimeout)
 	if err != nil {
-		logs.Warn("unified proxy: socks5 dial via proxy %d (%s) to %s failed: %v", node.Id, node.Name, addr, err)
+		logs.Warn("unified proxy: socks5 dial via %s to %s failed: %v", node.String(), addr, err)
 		sendSocks5Reply(c, repGeneralFailure)
 		_ = c.Close()
 		return
@@ -124,7 +124,7 @@ func startProxyHealthLoopIfConfigured() {
 func (s *TunnelModeServer) handleHttpViaProxy(c *conn.Conn, node *file.ProxyNode, addr string, rb []byte, r *http.Request) error {
 	upstream, err := dialViaProxyNode(node, protoHttp, addr, dialEgressTimeout)
 	if err != nil {
-		logs.Warn("unified proxy: http dial via proxy %d (%s) to %s failed: %v", node.Id, node.Name, addr, err)
+		logs.Warn("unified proxy: http dial via %s to %s failed: %v", node.String(), addr, err)
 		_, _ = c.Write([]byte("HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n"))
 		_ = c.Close()
 		return err

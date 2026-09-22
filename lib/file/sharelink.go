@@ -285,11 +285,9 @@ func parseStdURL(scheme, raw string, fill func(*ProxyNode, *url.URL)) (*ProxyNod
 	node.Scheme = scheme
 	node.Host = host
 	node.Port = port
-	if u.User != nil {
-		fill(node, u)
-	} else {
-		fill(node, u)
-	}
+	// fill inspects u.User itself (Userinfo accessors are nil-receiver safe),
+	// so there is no separate "no credentials" branch here.
+	fill(node, u)
 	name, _ := url.QueryUnescape(u.Fragment)
 	node.Name = firstNonEmpty(name, host)
 	node.Link = raw
