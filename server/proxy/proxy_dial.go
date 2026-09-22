@@ -20,10 +20,14 @@ import (
 
 // dialViaProxyNode opens a tunnel to target ("host:port") through the given
 // external proxy node. The protocol argument selects which upstream protocol
-// must be used; it is validated against the node capabilities by the caller.
+// must be used for plain HTTP/SOCKS5 nodes; nodes that carry a tunnel scheme
+// (ss, vmess, trojan, ...) ignore it and dial with their own protocol.
 func dialViaProxyNode(node *file.ProxyNode, protocol egressProtocol, target string, timeout time.Duration) (net.Conn, error) {
 	if node == nil {
 		return nil, errors.New("proxy node is nil")
+	}
+	if node.IsTunnel() {
+		return dialTunnelNode(node, target, timeout)
 	}
 	switch protocol {
 	case protoHttp:

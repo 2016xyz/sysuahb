@@ -59,6 +59,13 @@
 - 文档：本版起 `install.sh` 内嵌修复，测试版安装命令可正常按版本号工作
 - 版本：`0.34.7-test7`
 
+### v0.34.7-test8 (2026-09-21)
+- 新增**全能代理**页面（统一代理菜单下）：一个页面管理 SS / SSR / VMess / VLESS / Trojan / TUIC / Hysteria2 / NaiveProxy / SOCKS5 节点
+  - 支持分享链接导入（`ss://` `ssr://` `vmess://` `vless://` `trojan://` `tuic://` `hysteria2://` `naive+https://` `socks5://`）与 Clash 订阅地址（base64 或明文链接列表）
+  - 节点复用统一代理的出口池、粘滞缓存与健康检测：SS / SSR / VMess / VLESS / Trojan 可真实拨号并参与出口选择
+  - 去重键为 `协议 + 地址 + 端口 + 用户名`，单条失败不影响整批
+- 版本：`0.34.7-test8`
+
 
 ## Stable
 

@@ -49,6 +49,23 @@ type ProxyNode struct {
 	Tags     []string `json:"Tags"`
 	Enabled  bool     `json:"Enabled"`
 
+	// Tunnel protocol configuration. Scheme is empty for the original plain
+	// HTTP/SOCKS5 nodes, which are described by the Http/Socks5 flags above.
+	// For every other scheme the node is dialed with its own protocol and the
+	// fields below carry what that protocol needs.
+	Scheme     string `json:"Scheme,omitempty"`
+	Method     string `json:"Method,omitempty"`  // ss/ssr cipher, vmess security
+	Flow       string `json:"Flow,omitempty"`    // vless flow
+	AlterId    int    `json:"AlterId,omitempty"` // vmess alter id
+	TLS        bool   `json:"TLS,omitempty"`
+	SNI        string `json:"SNI,omitempty"`
+	SkipVerify bool   `json:"SkipVerify,omitempty"`
+	Network    string `json:"Network,omitempty"` // tcp / ws / grpc / quic
+	Path       string `json:"Path,omitempty"`
+	HostHeader string `json:"HostHeader,omitempty"`
+	ALPN       string `json:"ALPN,omitempty"`
+	Link       string `json:"Link,omitempty"` // original share link, for re-editing
+
 	// LastSuccessTime is persisted: it backs the "not successful for 24h/7d"
 	// batch-delete filters across restarts.
 	LastSuccessTime time.Time `json:"LastSuccessTime,omitempty"`
@@ -80,10 +97,14 @@ func (p *ProxyNode) Addr() string {
 	return fmt.Sprintf("%s:%d", p.Host, p.Port)
 }
 
-// Protocols returns the configured protocol support list, e.g. "HTTP+SOCKS5".
+// Protocols returns the configured protocol support list, e.g. "HTTP+SOCKS5"
+// for a plain node, or the tunnel scheme label for a tunnel node.
 func (p *ProxyNode) Protocols() string {
 	p.RLock()
 	defer p.RUnlock()
+	if IsTunnelScheme(p.Scheme) {
+		return SchemeLabel(p.Scheme)
+	}
 	switch {
 	case p.Http && p.Socks5:
 		return "HTTP+SOCKS5"
@@ -107,6 +128,71 @@ func (p *ProxyNode) SupportsSocks5() bool {
 	p.RLock()
 	defer p.RUnlock()
 	return p.Socks5
+}
+
+// IsTunnel reports whether the node uses a tunnel protocol instead of the
+// plain HTTP/SOCKS5 flags.
+func (p *ProxyNode) IsTunnel() bool {
+	if p == nil {
+		return false
+	}
+	p.RLock()
+	defer p.RUnlock()
+	return IsTunnelScheme(p.Scheme)
+}
+
+// SchemeName returns the node's scheme, "" for a plain node.
+func (p *ProxyNode) SchemeName() string {
+	if p == nil {
+		return ""
+	}
+	p.RLock()
+	defer p.RUnlock()
+	return p.Scheme
+}
+
+// MethodName / PasswordValue / FlowName read the tunnel fields under the lock
+// so the dialer never touches them while a config update holds the write lock.
+func (p *ProxyNode) MethodName() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Method
+}
+
+func (p *ProxyNode) PasswordValue() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Password
+}
+
+func (p *ProxyNode) FlowName() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.Flow
+}
+
+func (p *ProxyNode) AlterIdValue() int {
+	p.RLock()
+	defer p.RUnlock()
+	return p.AlterId
+}
+
+func (p *ProxyNode) TLSEnabled() bool {
+	p.RLock()
+	defer p.RUnlock()
+	return p.TLS
+}
+
+func (p *ProxyNode) SNIName() string {
+	p.RLock()
+	defer p.RUnlock()
+	return p.SNI
+}
+
+func (p *ProxyNode) SkipVerifyEnabled() bool {
+	p.RLock()
+	defer p.RUnlock()
+	return p.SkipVerify
 }
 
 // EnabledState reads Enabled under the lock.
@@ -319,6 +405,19 @@ type ProxyConfig struct {
 	Socks5   bool
 	Tags     []string
 	Enabled  bool
+
+	Scheme     string
+	Method     string
+	Flow       string
+	AlterId    int
+	TLS        bool
+	SNI        string
+	SkipVerify bool
+	Network    string
+	Path       string
+	HostHeader string
+	ALPN       string
+	Link       string
 }
 
 // UpdateConfig replaces the configuration fields under the write lock. The
@@ -336,6 +435,20 @@ func (p *ProxyNode) UpdateConfig(c ProxyConfig) {
 	p.Http = c.Http
 	p.Socks5 = c.Socks5
 	p.Tags = c.Tags
+	p.Scheme = c.Scheme
+	p.Method = c.Method
+	p.Flow = c.Flow
+	p.AlterId = c.AlterId
+	p.TLS = c.TLS
+	p.SNI = c.SNI
+	p.SkipVerify = c.SkipVerify
+	p.Network = c.Network
+	p.Path = c.Path
+	p.HostHeader = c.HostHeader
+	p.ALPN = c.ALPN
+	if c.Link != "" {
+		p.Link = c.Link
+	}
 	enabledChanged := p.Enabled != c.Enabled
 	p.Enabled = c.Enabled
 	p.Unlock()
@@ -360,6 +473,9 @@ func (p *ProxyNode) String() string {
 
 // ProtocolsLocked is Protocols for callers that already hold the lock.
 func (p *ProxyNode) ProtocolsLocked() string {
+	if IsTunnelScheme(p.Scheme) {
+		return SchemeLabel(p.Scheme)
+	}
 	switch {
 	case p.Http && p.Socks5:
 		return "HTTP+SOCKS5"
@@ -384,6 +500,8 @@ type ProxyNodeView struct {
 	Http            bool     `json:"Http"`
 	Socks5          bool     `json:"Socks5"`
 	Protocols       string   `json:"Protocols"`
+	Scheme          string   `json:"Scheme"`
+	Method          string   `json:"Method"`
 	Tags            []string `json:"Tags"`
 	Enabled         bool     `json:"Enabled"`
 	Status          string   `json:"Status"`
@@ -419,6 +537,8 @@ func (p *ProxyNode) View() ProxyNodeView {
 		Http:            p.Http,
 		Socks5:          p.Socks5,
 		Protocols:       p.ProtocolsLocked(),
+		Scheme:          p.Scheme,
+		Method:          p.Method,
 		Tags:            p.TagListLocked(),
 		Enabled:         p.Enabled,
 		Status:          status,
@@ -458,7 +578,11 @@ func (p *ProxyNode) TagListLocked() []string {
 func (p *ProxyNode) DuplicateKey(protocol string) string {
 	p.RLock()
 	defer p.RUnlock()
-	return duplicateKey(protocol, p.Host, p.Port, p.Username)
+	key := protocol
+	if IsTunnelScheme(p.Scheme) {
+		key = p.Scheme
+	}
+	return duplicateKey(key, p.Host, p.Port, p.Username)
 }
 
 func duplicateKey(protocol, host string, port int, username string) string {

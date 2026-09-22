@@ -161,6 +161,9 @@ func runProxyCheck(id int) {
 // HTTP is preferred when both are available, because CONNECT through an HTTP
 // proxy is the most widely supported form.
 func probeProtocolFor(node *file.ProxyNode) (egressProtocol, error) {
+	if node.IsTunnel() {
+		return protoHttp, nil
+	}
 	if node.SupportsHttp() {
 		return protoHttp, nil
 	}
