@@ -83,6 +83,18 @@
   - 导入标签未归一化；`parseStdURL` 死代码；Trojan 请求对非法目标静默回退 443
 - 版本：`0.34.7-test9`
 
+### v0.34.7-test11 (2026-09-22)
+- **修复手机端（≤768px）侧边栏点不开**
+  - 根因：移动端抽屉样式 6 条选择器写成 `body:not(.login-page) .mini-navbar ...`
+    （`.mini-navbar` 前多一个空格），被解析为「body 的后代元素带 mini-navbar」；
+    但 `mini-navbar` 实际加在 `<body>` 自身（inspinia.js 的 `$("body").toggleClass`、
+    layout.html 遮罩的 `document.body.classList.remove` 均如此），故规则永不匹配，
+    侧边栏恒停在 `transform: translateX(-110%)` 屏幕之外。
+  - 修复：改为复合选择器 `body:not(.login-page).mini-navbar ...`，共 6 处。
+  - 影响：侧边栏滑入、半透明遮罩、点遮罩关闭、汉堡按钮反复开合全部恢复；桌面端无回归。
+  - 新增 3 个回归测试锁定该选择器约束（经突变验证可捕获原缺陷）。
+- 版本：`0.34.7-test11`
+
 ### v0.34.7-test10 (2026-09-22)
 - **移除「全能代理」功能**：(SS / SSR / VMess / VLESS / Trojan / TUIC / Hysteria2 / NaiveProxy 隧道协议节点)
   - 删除页面与控制器 `omni_proxy`(列表 / 添加 / 批量导入 / Clash 订阅) 及菜单项、路由
