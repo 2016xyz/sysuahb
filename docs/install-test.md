@@ -113,9 +113,12 @@ tar xzf server.tar.gz
 预发布不发布 `latest` 标签，必须显式指定版本号：
 
 ```bash
-docker pull ghcr.io/2016xyz/sysuahb:0.34.7-test10
-docker pull ghcr.io/2016xyz/sysuahb:0.34.7-test10
+docker pull ghcr.io/2016xyz/sysuahb:0.34.7-test10   # 服务端镜像 (Dockerfile.nps)
+docker pull ghcr.io/2016xyz/sysficb:0.34.7-test10   # 客户端镜像 (Dockerfile.npc)
 ```
+
+> `sysficb` 不是拼写错误：CI 构建矩阵（`.github/workflows/docker.yml`）里客户端镜像就叫这个名字，
+> 与仓库名 `sysuahb` 不同。请勿"顺手改回"`sysuahb`，否则 `docker pull` 会因镜像不存在而失败。
 
 > Docker 标签用的是 **不带 `v`** 的 semver 形式（`0.34.7-test7`），而 GitHub 发布标签带 `v`（`v0.34.7-test7`），注意区分。
 > `ghcr.io/2016xyz/sysuahb:latest` 始终是稳定版（`0.34.7`）。
