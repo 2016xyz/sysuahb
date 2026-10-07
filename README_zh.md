@@ -22,11 +22,11 @@ NPS 是一款轻量高效的内网穿透代理服务器，支持多种协议（T
 - 服务名、二进制路径（`/usr/bin/<name>`）、配置目录（`/etc/<name>/`）、日志文件（`/var/log/<name>.log`）都跟随随机名；目录内的配置文件名保持固定（`sysuahb.conf` / `sysficb.conf`），数据永远好找
 - 重复运行安装脚本会自动清理旧的随机名安装（通过配置标记识别），并以新名字重新安装
 
-- 新增**客户端标签（Tags）**（仅测试版，稳定版 `v0.34.7` 无此功能）——每个客户端可打多个标签（如 `gz`、`telecom`、`jp`、`hk`），统一代理可按标签选择出口（详见[客户端标签](#客户端标签)）
+- **客户端标签（Tags）**——每个客户端可打多个标签（如 `gz`、`telecom`、`jp`、`hk`），统一代理可按标签选择出口（详见[客户端标签](#客户端标签)）
 
-- 新增**统一代理**功能——一个 HTTP/SOCKS5 代理端口按登录用户名将流量路由到不同客户端，连接密码必填（详见[统一代理](#统一代理)）；`auto` / 纯数字 / `xxx-auto[-ttl]` 在稳定版 `v0.34.7` 即可用，`gz.auto`、`abc.gz-auto-2h` 这类**标签路由**需要测试版
+- **统一代理**——一个 HTTP/SOCKS5 代理端口按登录用户名将流量路由到不同客户端，连接密码必填（详见[统一代理](#统一代理)）；支持 `auto`（随机）/ 纯数字（固定）/ `gz.auto`（标签随机）/ `abc.gz-auto-2h`（标签粘滞，TTL 1m~24h）
 
-- 新增**代理节点**（仅测试版）——外部 HTTP/SOCKS5 代理与 NPS Client 进入同一个出口池（详见[测试版安装指南](docs/install-test.md)）
+- **代理节点（统一出口池）**——外部 HTTP/SOCKS5 上游代理与 NPS Client 进入同一个出口池，支持标签、协议匹配、健康检测与全局设置（详见[统一代理](#统一代理)）
 
 - **文档（上游）：** https://d-jy.net/docs/nps/
 - **讨论交流：**  [Telegram 交流群](https://t.me/npsdev)
@@ -129,12 +129,12 @@ telecom
 
 安装脚本自动检测系统/架构，从 [Releases](https://github.com/2016xyz/sysuahb/releases) 下载对应压缩包，生成随机名（`sys` + 4 位字母）、注册系统服务并启动。需要 root 权限。
 
-> **版本说明**：不带版本号时默认 `latest`，即**稳定版 `v0.34.7`**。测试版（`v0.34.7-testN`）必须显式指定，不会被自动安装——详见[测试版安装指南](docs/install-test.md)。
+> **版本说明**：不带版本号时默认 `latest`，即**稳定版 `v0.34.8`**。测试版必须显式指定，不会被自动安装——详见[测试版安装指南](docs/install-test.md)。
 
 #### 服务端（nps）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps
 ```
 
 安装结束时输出的最后几行会显示生成的进程名和配置路径：
@@ -151,13 +151,13 @@ nps done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
 连接命令请从 NPS Web 管理端的客户端页面复制——`npc` 之后的参数会原样透传给客户端服务：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 也可以先不带参数安装，稍后再配置（编辑 `/etc/<name>/conf/sysficb.conf`，或带参数重跑安装脚本重新注册）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc
 ```
 
 > **提示：** 客户端支持同时连接多个服务器，示例：
@@ -167,7 +167,7 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh 
 #### 同一台机器同时装服务端和客户端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s all
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s all
 ```
 
 ### 查找和管理已安装的服务
@@ -197,7 +197,7 @@ sudo <name> update && sudo <name> restart
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `NPS_INSTALL_MODE` | `all` | `npc` / `nps` / `all` |
-| `NPS_INSTALL_VERSION` | `latest` | 固定版本号，如 `v0.34.7` |
+| `NPS_INSTALL_VERSION` | `latest` | 固定版本号，如 `v0.34.8` |
 | `NPS_INSTALL_DIR` | *(空)* | 便携模式：只解压文件，不注册服务 |
 | `NPC_BIN_NAME` / `NPS_BIN_NAME` | 随机 | 强制指定二进制/服务名，不用随机名 |
 | `NPS_START` | `1` | 设为 `0` 安装后不自动启动 |
@@ -211,20 +211,20 @@ sudo <name> update && sudo <name> restart
 强制固定客户端名字（如用于配置管理）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo env NPC_BIN_NAME=sysmycl sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env NPC_BIN_NAME=sysmycl sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 国内加速：脚本可先经 jsdelivr 下载，Release 压缩包通过 `NPS_GH_PROXY` 加速：
 
 ```bash
-curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.7/install.sh
+curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.8/install.sh
 sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh nps
 ```
 
 安装后不自动启动：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo env NPS_START=0 sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env NPS_START=0 sh -s nps
 ```
 
 ### 手动安装

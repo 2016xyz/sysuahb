@@ -5,6 +5,18 @@
 ### Main
 - 待定，优先修BUG，新功能随缘更新
 
+### v0.34.8 (2026-10-07)
+- **首个正式版（stable）**：此前仅在测试版提供的功能整体转正；`latest` 与 Docker `latest` 起指向本版
+  - **客户端标签（Client Tags）**：每个客户端可打多个标签，随配置持久化，Web 端以 Badge 展示；保存时 trim / 转小写 / 去重，仅允许 `[a-z0-9_-]+`
+  - **统一代理**：一个 HTTP/SOCKS5 端口按登录用户名路由到不同客户端，连接密码必填；支持 `auto`（随机）/ 纯数字（固定）/ `gz.auto`（标签随机）/ `abc.gz-auto-2h`（标签粘滞，TTL 1m~24h）
+  - **代理节点 + 统一出口池**：外部 HTTP/SOCKS5 上游代理与 NPS Client 进入同一出口池（`RouteParser → EgressSelector → EgressRef → Dial`），支持协议匹配、粘滞缓存 `EgressRef{Type,ID}`、真实经代理的健康检测（`gstatic/generate_204`）
+  - **设置页**：健康检测与 Sticky 全局参数持久化（`conf/unified.json`）；代理节点持久化（`conf/proxies.json`）
+- **安全修复**：代理节点控制台越权 —— `allow_user_login` 的普通客户端用户原可读写 / 删除 / 注入代理节点并篡改全局设置（可劫持他人流量），现由 `Prepare()` fail-closed 仅放行管理员；代理节点新增 / 编辑页密码框改为 `type=password`
+- **正确性修复**：代理节点列表接入 bootstrap-table 分页；`UpdateConfig` 规范化 Tags；设置页 `MinTTL` / `MaxTTL` 接入路由层（此前被读入但从未被消费）；健康检测 `LastSuccessTime` 仅在成功或状态翻转时持久化，避免死节点高频写盘
+- **依赖安全**：升级 `golang.org/x/text` v0.35→v0.39、`x/net` v0.52→v0.56、`quic-go` v0.59.0→v0.59.1（govulncheck 可达漏洞 6→3；余 3 个 beego v1 漏洞经逐一验证不可达）
+- 清理：删除死代码 `unifiedStickyStore.reset()`、`unifiedAutoSuffixRegexp`、`cleanUnifiedStickyCache`
+- 版本：`0.34.8`
+
 ### v0.34.7-test1 (2026-09-19)
 - 新增**客户端标签（Client Tags）**：每个客户端支持 0~多个标签，随客户端配置持久化（`clients.json`），Web 端可增删改并以 Badge 展示；保存时 trim / 转小写 / 去重，仅允许 `[a-z0-9_-]+`，不允许 `.`
 - **统一代理用户名路由重构**：新增标签维度与统一解析器，HTTP 与 SOCKS5 共用 `RouteParser → ClientSelector → StickyStore` 同一条链路

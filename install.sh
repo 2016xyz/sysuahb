@@ -15,9 +15,9 @@
 # Usage:
 #   ./install.sh [mode] [version] [npc args...]
 #     mode:    npc | nps | all (default: all)
-#     version: release tag, e.g. v0.34.7 (v prefix optional, default: latest)
+#     version: release tag, e.g. v0.34.8 (v prefix optional, default: latest)
 #     npc args: extra arguments forwarded to the client service, e.g.
-#       ./install.sh npc v0.34.7 -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+#       ./install.sh npc v0.34.8 -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 #
 # Environment variables:
 #   NPS_INSTALL_MODE=npc|nps|all   same as the positional mode argument

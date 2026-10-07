@@ -11,10 +11,10 @@
 
 ```bash
 # 服务端（nps）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps
 
 # 客户端（npc）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 ---

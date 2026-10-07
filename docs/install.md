@@ -10,25 +10,25 @@ NPS 提供多种安装方式，推荐使用 **一键脚本安装**（Linux），
 
 | 类型 | 版本号写法 | 说明 |
 | --- | --- | --- |
-| 稳定版（推荐） | `v0.34.7` | 不指定版本时默认 `latest`，即稳定版 **`v0.34.7`** |
-| 测试版 | `v0.34.7-test6`（当前推荐）；历史：`-test1` / `-test2` / `-test3` / `-test4`（`-test5` 已撤下） | 必须**显式指定**，可带 `v` 前缀或纯数字开头 |
+| 稳定版（推荐） | `v0.34.8` | 不指定版本时默认 `latest`，即稳定版 **`v0.34.8`** |
+| 测试版 | `v0.34.7-test11`（最新）；历史：`-test1` ~ `-test10`（`-test5` 已撤下） | 必须**显式指定**，可带 `v` 前缀或纯数字开头 |
 
-**`latest` 永远指向稳定版 `v0.34.7`**：预发布版本（版本号含 `-`）自动标记为 pre-release，不会占用 `releases/latest`，也不会覆盖 Docker 的 `latest` 镜像。
+**`latest` 永远指向稳定版 `v0.34.8`**：预发布版本（版本号含 `-`）自动标记为 pre-release，不会占用 `releases/latest`，也不会覆盖 Docker 的 `latest` 镜像。
 
 指定版本安装：
 
 ```bash
 # 稳定版（显式固定版本，等价于不写版本号）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps v0.34.7
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps v0.34.8
 
 # 测试版（必须显式指定版本号）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps v0.34.7-test6
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps v0.34.7-test11
 ```
 
-> ⚠️ 版本号写错（如不存在的 `0.34.8`）会**直接报错退出**，不会静默装成 `latest`。
+> ⚠️ 版本号写错（如不存在的 `0.34.9`）会**直接报错退出**，不会静默装成 `latest`。
 > 测试版的新功能、安装、回滚与风险说明见 [测试版安装指南](install-test.md)。
 >
-> 📌 **关于脚本版本**：上面的命令把 `install.sh` 固定在发布标签 `v0.34.7` 上，该标签里的脚本**不含** 2026-09-21 加入的版本号归一化修复（`0.34.7-testN` 不带 `v` 会被静默装成稳定版）。**安装测试版请使用 `v0.34.7-test7` 或更新标签里的脚本**（见[测试版安装指南](install-test.md)）。
+> 📌 **关于脚本版本**：`v0.34.8` 及更新的发布标签里 `install.sh` 已包含版本号归一化修复；旧标签（`v0.34.7` 及 `v0.34.7-test1` ~ `test6`）里的脚本不含该修复，用它们按版本号安装测试版会静默装成稳定版（见[测试版安装指南](install-test.md)）。
 
 ---
 
@@ -39,7 +39,7 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh 
 ### 1.1 服务端（nps）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps
 ```
 
 安装结束时会输出本次生成的随机进程名和配置路径：
@@ -65,7 +65,7 @@ sudo <name> update && sudo <name> restart
 连接命令请从 NPS Web 管理端客户端页面复制，`npc` 之后的参数会原样透传给客户端服务：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7/install.sh | sudo sh -s npc -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls -log=off
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls -log=off
 ```
 
 安装结束时会输出本次生成的随机进程名：
@@ -82,7 +82,7 @@ npc done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
 * **每次安装生成随机进程名**（`sys` + 4 位字母，每台机器不同）；重复运行脚本会自动清理旧的随机名安装，并以新名字重新安装
 * 支持参数：
   * **模式**：`nps` | `npc` | `all`（默认 `all`）
-  * **版本**：例如 `v0.34.7`，默认 `latest`
+  * **版本**：例如 `v0.34.8`，默认 `latest`
   * **客户端参数**：`npc` 模式下，`-` 开头的参数会透传给客户端服务
 * 环境变量：
   * `NPS_INSTALL_MODE` / `NPS_INSTALL_VERSION`：等同对应位置参数
@@ -94,7 +94,7 @@ npc done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
 * 国内加速示例（脚本可先经 jsdelivr 下载，压缩包通过 `NPS_GH_PROXY` 加速）：
 
 ```bash
-curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.7/install.sh
+curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.8/install.sh
 sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh nps
 ```
 
@@ -294,7 +294,7 @@ go build -o sysficb cmd/npc/client.go
 
 ## 7. 相关链接
 
-- **最新发布版本**：[GitHub Releases](https://github.com/2016xyz/sysuahb/releases/latest)（= 稳定版 `v0.34.7`）
+- **最新发布版本**：[GitHub Releases](https://github.com/2016xyz/sysuahb/releases/latest)（= 稳定版 `v0.34.8`）
 - **测试版**：[测试版安装指南](install-test.md) · [全部 Releases 列表](https://github.com/2016xyz/sysuahb/releases)
 - **Android**：[djylb/npsclient](https://github.com/djylb/npsclient)
 - **OpenWrt**：[djylb/nps-openwrt](https://github.com/djylb/nps-openwrt)
