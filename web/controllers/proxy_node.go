@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego"
+
 	"example.com/svcmgr/lib/file"
 	"example.com/svcmgr/server/proxy"
 )
@@ -16,6 +18,43 @@ import (
 // unified proxy can use as an egress together with NPS clients.
 type ProxyNodeController struct {
 	BaseController
+}
+
+// Prepare enforces the admin-only policy of this controller.
+//
+// BaseController.Prepare performs authentication and, for client scoped web
+// users, calls CheckUserAuth - which only guards the client/index controllers.
+// Proxy nodes are global egress configuration: they decide where the traffic of
+// every tag matching user exits. Without an explicit authorization check any
+// client user (allow_user_login) could therefore read, inject or delete egress
+// entries, and by injecting a node of its own silently route other users'
+// traffic through it.
+//
+// Overriding Prepare keeps the check fail-closed for every current and future
+// action of this controller, instead of repeating a per-method guard that a new
+// action could forget.
+func (s *ProxyNodeController) Prepare() {
+	s.BaseController.Prepare()
+
+	// Admin (or a request carrying a valid auth_key, which promotes the session
+	// to admin inside the base controller) is allowed through.
+	if isAdmin, ok := s.GetSession("isAdmin").(bool); ok && isAdmin {
+		return
+	}
+
+	// Unauthenticated: the base controller already emitted the login redirect,
+	// just make sure the action body never runs behind it.
+	if s.GetSession("auth") != true {
+		s.StopRun()
+	}
+
+	// Authenticated but not admin: deny. API callers get a JSON error, page
+	// navigations are sent back to the dashboard.
+	if s.Ctx.Request.Method == "POST" {
+		s.AjaxErr("no permission")
+	}
+	s.Redirect(beego.AppConfig.String("web_base_url")+"/index/index", 302)
+	s.StopRun()
 }
 
 // List renders the page (GET) or returns the filtered table rows (POST).
@@ -27,7 +66,25 @@ func (s *ProxyNodeController) List() {
 		return
 	}
 	rows := s.filteredProxyRows()
-	s.AjaxTable(rows, len(rows), len(rows), map[string]interface{}{})
+	total := len(rows)
+	// Honour the bootstrap-table server side pagination contract: only the
+	// requested window travels over the wire, while total always reports the
+	// full number of matches so the pager renders every page.
+	if start, length := s.GetAjaxParams(); length > 0 {
+		if start < 0 {
+			start = 0
+		}
+		if start >= total {
+			rows = []file.ProxyNodeView{}
+		} else {
+			end := start + length
+			if end > total {
+				end = total
+			}
+			rows = rows[start:end]
+		}
+	}
+	s.AjaxTable(rows, total, total, map[string]interface{}{})
 }
 
 // filteredProxyRows applies the list filters and returns view projections.

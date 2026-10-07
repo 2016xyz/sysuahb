@@ -148,13 +148,21 @@ func runProxyCheck(id int) {
 	}
 	latency, err := probeProxy(node, checkURL, protocol, time.Duration(settings.CheckTimeout)*time.Second)
 	now := time.Now()
+	previousStatus := node.StatusValue()
 	if err != nil {
 		node.MarkCheckFailure(truncateError(err.Error(), 200), now, settings.FailThreshold)
 		logs.Warn("proxy health: node %s check failed: %v", node.String(), err)
 	} else {
 		node.MarkCheckSuccess(latency, now, settings.RecoverSuccess)
 	}
-	file.GetDb().JsonDb.StoreProxyToJsonFile()
+	// MarkCheckSuccess writes LastSuccessTime, which is the one health field
+	// that must survive a restart (it backs the "not successful for X hours"
+	// filters). Persist on every successful probe, and on failures only when the
+	// verdict actually moved, so a permanently dead node does not rewrite the
+	// file on every retry.
+	if err == nil || previousStatus != node.StatusValue() {
+		file.GetDb().JsonDb.StoreProxyToJsonFile()
+	}
 }
 
 // probeProtocolFor picks which upstream protocol to use for the health probe:

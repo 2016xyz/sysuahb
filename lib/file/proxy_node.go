@@ -382,9 +382,12 @@ func (p *ProxyNode) UpdateConfig(c ProxyConfig) {
 	}
 	p.Http = c.Http
 	p.Socks5 = c.Socks5
-	p.Tags = c.Tags
-	// Tunnel fields are intentionally left untouched: this form only edits the
-	// plain HTTP/SOCKS5 view, so it must not clear a tunnel node's scheme.
+	// Tags arrive already normalized from the web form; normalizing again here
+	// keeps direct callers (and a hand edited proxies.json) honest, and keeps the
+	// stored form identical to the one ApplyTags / HasTag compare against.
+	if normalized, err := NormalizeTags(c.Tags); err == nil {
+		p.Tags = normalized
+	}
 	enabledChanged := p.Enabled != c.Enabled
 	p.Enabled = c.Enabled
 	p.Unlock()

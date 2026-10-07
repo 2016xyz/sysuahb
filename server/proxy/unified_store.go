@@ -103,13 +103,6 @@ func (s *memoryStickyStore) Cleanup() {
 	s.mu.Unlock()
 }
 
-// reset clears the store, it is only used by tests.
-func (s *memoryStickyStore) reset() {
-	s.mu.Lock()
-	s.entries = make(map[string]stickyEntry)
-	s.mu.Unlock()
-}
-
 // unifiedCacheCleanInterval is how often expired sticky entries are purged.
 const unifiedCacheCleanInterval = time.Minute
 
@@ -140,9 +133,4 @@ func startUnifiedCacheCleaner() {
 			}
 		}()
 	})
-}
-
-// cleanUnifiedStickyCache purges expired entries from the default store.
-func cleanUnifiedStickyCache() {
-	defaultUnifiedStickyStore().Cleanup()
 }

@@ -76,9 +76,6 @@ func isValidNameSegment(s string) bool {
 // unifiedStickySuffixRegexp matches "<stickyKey>.auto" or "<stickyKey>.auto-<ttl>".
 var unifiedStickySuffixRegexp = regexp.MustCompile(`^([a-z0-9_-]+)\.auto(?:-([0-9]+[mhd]))?$`)
 
-// unifiedAutoSuffixRegexp matches "auto" or "auto-<ttl>" (no sticky key, no tag).
-var unifiedAutoSuffixRegexp = regexp.MustCompile(`^auto(?:-([0-9]+[mhd]))?$`)
-
 // ParseRoute parses a unified proxy username into a RouteRequest.
 //
 // Supported grammar (V1, exactly one tag):
@@ -94,6 +91,23 @@ var unifiedAutoSuffixRegexp = regexp.MustCompile(`^auto(?:-([0-9]+[mhd]))?$`)
 // ttl = <number><unit>, unit in m (minute) / h (hour) / d (day), 1m .. 24h.
 // Anything else is rejected, never guessed and never silently degraded.
 func ParseRoute(username string) (RouteRequest, error) {
+	return ParseRouteWithBounds(username, unifiedMinTTL, unifiedMaxTTL)
+}
+
+// ParseRouteWithBounds is ParseRoute with the operator configured sticky TTL
+// bounds. The settings page exposes MinTTL / MaxTTL, so the parser must honour
+// them instead of always applying the compiled in 1m / 24h defaults; passing a
+// non positive bound falls back to the default for that side.
+func ParseRouteWithBounds(username string, minTTL, maxTTL time.Duration) (RouteRequest, error) {
+	if minTTL <= 0 {
+		minTTL = unifiedMinTTL
+	}
+	if maxTTL <= 0 {
+		maxTTL = unifiedMaxTTL
+	}
+	if maxTTL < minTTL {
+		maxTTL = minTTL
+	}
 	raw := username
 	username = strings.TrimSpace(username)
 	if username == "" {
@@ -144,21 +158,21 @@ func ParseRoute(username string) (RouteRequest, error) {
 	}
 
 	// 4) "<stickyKey>[-<tag>]-auto[-<ttl>]": sticky.
-	return parseStickyRoute(raw, username)
+	return parseStickyRoute(raw, username, minTTL, maxTTL)
 }
 
 // parseStickyRoute handles the sticky forms:
 //
 //	<stickyKey>-auto[-<ttl>]
 //	<stickyKey>.<tag>-auto[-<ttl>]
-func parseStickyRoute(raw, username string) (RouteRequest, error) {
+func parseStickyRoute(raw, username string, minTTL, maxTTL time.Duration) (RouteRequest, error) {
 	key, tag, ttlText, err := splitStickyUsername(username)
 	if err != nil {
 		return RouteRequest{}, err
 	}
 	ttl := unifiedDefaultTTL
 	if ttlText != "" {
-		if ttl, err = parseUnifiedTTL(ttlText); err != nil {
+		if ttl, err = parseUnifiedTTLWithBounds(ttlText, TTLBounds{Min: minTTL, Max: maxTTL}); err != nil {
 			return RouteRequest{}, err
 		}
 	}
@@ -223,8 +237,42 @@ func splitStickyUsername(username string) (key, tag, ttlText string, err error) 
 	return key, tag, ttlText, nil
 }
 
-// parseUnifiedTTL parses "<number><m|h|d>" into a duration, enforcing 1m..24h.
+// TTLBounds carries the operator configured sticky TTL window. The zero value
+// falls back to the built-in defaults so the parser stays usable without
+// settings (tests, and any caller that has no settings at hand).
+type TTLBounds struct {
+	Min time.Duration
+	Max time.Duration
+}
+
+// DefaultTTLBounds returns the built-in 1m..24h window.
+func DefaultTTLBounds() TTLBounds {
+	return TTLBounds{Min: unifiedMinTTL, Max: unifiedMaxTTL}
+}
+
+// normalized fills unset bounds with the built-in defaults and repairs an
+// inverted window, so a corrupt setting can never reject every sticky request.
+func (b TTLBounds) normalized() TTLBounds {
+	if b.Min <= 0 {
+		b.Min = unifiedMinTTL
+	}
+	if b.Max <= 0 {
+		b.Max = unifiedMaxTTL
+	}
+	if b.Max < b.Min {
+		b.Max = b.Min
+	}
+	return b
+}
+
+// parseUnifiedTTL parses "<number><m|h|d>" into a duration, enforcing the
+// configured window (1m..24h by default).
 func parseUnifiedTTL(text string) (time.Duration, error) {
+	return parseUnifiedTTLWithBounds(text, DefaultTTLBounds())
+}
+
+// parseUnifiedTTLWithBounds is parseUnifiedTTL with an explicit TTL window.
+func parseUnifiedTTLWithBounds(text string, bounds TTLBounds) (time.Duration, error) {
 	m := unifiedTTLRegexp.FindStringSubmatch(text)
 	if m == nil {
 		return 0, fmt.Errorf("unified proxy: invalid ttl %q, expected <number>[m|h|d]", text)
@@ -245,11 +293,12 @@ func parseUnifiedTTL(text string) (time.Duration, error) {
 		return 0, fmt.Errorf("unified proxy: invalid ttl unit %q", m[2])
 	}
 	ttl := time.Duration(n) * unit
-	if ttl < unifiedMinTTL {
-		return 0, fmt.Errorf("unified proxy: ttl %q is below the minimum of 1m", text)
+	b := bounds.normalized()
+	if ttl < b.Min {
+		return 0, fmt.Errorf("unified proxy: ttl %q is below the minimum of %s", text, b.Min)
 	}
-	if ttl > unifiedMaxTTL {
-		return 0, fmt.Errorf("unified proxy: ttl %q is above the maximum of 24h", text)
+	if ttl > b.Max {
+		return 0, fmt.Errorf("unified proxy: ttl %q is above the maximum of %s", text, b.Max)
 	}
 	return ttl, nil
 }

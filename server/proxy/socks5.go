@@ -790,7 +790,11 @@ func (s *TunnelModeServer) pickUnifiedEgressFrom(username string, protocol egres
 // this unified proxy task, so that two unified proxy instances never share
 // sticky entries.
 func (s *TunnelModeServer) resolveUnifiedRoute(username string) (RouteRequest, error) {
-	req, err := ParseRoute(username)
+	// Honour the operator configured sticky TTL window from the settings page.
+	// The settings snapshot is always valid: a nil/zero field falls back to the
+	// built-in 1m..24h defaults inside ParseRouteWithBounds.
+	cfg := settingsSnapshot()
+	req, err := ParseRouteWithBounds(username, cfg.MinTTLDuration(), cfg.MaxTTLDuration())
 	if err != nil {
 		return RouteRequest{}, err
 	}
@@ -808,10 +812,32 @@ func (s *TunnelModeServer) unifiedProxyID() int {
 // unifiedDefaultCacheTTL returns the task DefaultCacheTTL: the unified proxy
 // CacheTime expressed in minutes, 10 minutes when it is not configured.
 func (s *TunnelModeServer) unifiedDefaultCacheTTL() time.Duration {
+	cfg := settingsSnapshot()
 	if s == nil || s.BaseServer == nil || s.Task == nil || s.Task.CacheTime <= 0 {
-		return unifiedDefaultTTL
+		return clampTTL(unifiedDefaultTTL, cfg.MinTTLDuration(), cfg.MaxTTLDuration())
 	}
-	return time.Duration(s.Task.CacheTime) * time.Minute
+	return clampTTL(time.Duration(s.Task.CacheTime)*time.Minute, cfg.MinTTLDuration(), cfg.MaxTTLDuration())
+}
+
+// clampTTL clamps a TTL into [min, max], falling back to the built-in defaults
+// when the configured bounds are unset (zero).
+func clampTTL(ttl, min, max time.Duration) time.Duration {
+	if min <= 0 {
+		min = unifiedMinTTL
+	}
+	if max <= 0 {
+		max = unifiedMaxTTL
+	}
+	if max < min {
+		max = min
+	}
+	if ttl < min {
+		return min
+	}
+	if ttl > max {
+		return max
+	}
+	return ttl
 }
 
 // unifiedSelector returns the EgressSelector bound to this server sticky store.
