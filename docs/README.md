@@ -10,11 +10,11 @@
 **一键部署**（详见 [安装文档](install.md)）：
 
 ```bash
-# 服务端（nps）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps
+# 服务端
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server
 
-# 客户端（npc）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+# 客户端
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 ---

@@ -48,13 +48,13 @@
 ### 3.1 服务端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s nps 0.34.7-test10
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s server 0.34.7-test10
 ```
 
 ### 3.2 客户端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s npc 0.34.7-test10 -server=xxx:123 -vkey=xxx -type=tls
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/install.sh | sudo sh -s client 0.34.7-test10 -server=xxx:123 -vkey=xxx -type=tls
 ```
 
 ### 3.3 版本号写法（重要）
@@ -84,7 +84,7 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.7-test7/insta
 ### 3.5 便携模式（只解压，不注册服务）
 
 ```bash
-NPS_INSTALL_DIR=/opt/nps-test NPS_START=0 sh install.sh nps 0.34.7-test10
+NPS_INSTALL_DIR=/opt/nps-test NPS_START=0 sh install.sh server 0.34.7-test10
 ```
 
 ---

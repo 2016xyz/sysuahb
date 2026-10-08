@@ -19,10 +19,10 @@ NPS 提供多种安装方式，推荐使用 **一键脚本安装**（Linux），
 
 ```bash
 # 稳定版（显式固定版本，等价于不写版本号）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps v0.34.8
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server v0.34.8
 
 # 测试版（必须显式指定版本号）
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps v0.34.7-test11
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server v0.34.7-test11
 ```
 
 > ⚠️ 版本号写错（如不存在的 `0.34.9`）会**直接报错退出**，不会静默装成 `latest`。
@@ -36,17 +36,17 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh 
 
 > 此方式不支持 **Windows** 安装。
 
-### 1.1 服务端（nps）
+### 1.1 服务端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server
 ```
 
 安装结束时会输出本次生成的随机进程名和配置路径：
 
 ```
-Installing nps as: syskxqz
-nps done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
+Installing server as: syskxqz
+server done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
 ```
 
 首次安装后请先编辑 `/etc/<name>/conf/sysuahb.conf`，确认无误后执行 `sudo <name> restart`。
@@ -60,19 +60,19 @@ sudo <name> status|stop|restart|uninstall
 sudo <name> update && sudo <name> restart
 ```
 
-### 1.2 客户端（npc）
+### 1.2 客户端
 
-连接命令请从 NPS Web 管理端客户端页面复制，`npc` 之后的参数会原样透传给客户端服务：
+连接命令请从 NPS Web 管理端客户端页面复制，`client` 之后的参数会原样透传给客户端服务：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls -log=off
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client -server=xxx:123,yyy:456 -vkey=xxx,yyy -type=tls -log=off
 ```
 
 安装结束时会输出本次生成的随机进程名：
 
 ```
-Installing npc as: sysmtpw
-npc done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
+Installing client as: sysmtpw
+client done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
 ```
 
 也可以先不带参数安装，稍后编辑 `/etc/<name>/conf/sysficb.conf` 或带参数重跑脚本。
@@ -81,13 +81,13 @@ npc done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
 
 * **每次安装生成随机进程名**（`sys` + 4 位字母，每台机器不同）；重复运行脚本会自动清理旧的随机名安装，并以新名字重新安装
 * 支持参数：
-  * **模式**：`nps` | `npc` | `all`（默认 `all`）
+  * **模式**：`server` | `client` | `all`（默认 `all`）
   * **版本**：例如 `v0.34.8`，默认 `latest`
-  * **客户端参数**：`npc` 模式下，`-` 开头的参数会透传给客户端服务
+  * **客户端参数**：`client` 模式下，`-` 开头的参数会透传给客户端服务
 * 环境变量：
   * `NPS_INSTALL_MODE` / `NPS_INSTALL_VERSION`：等同对应位置参数
   * `NPS_INSTALL_DIR`：便携模式，仅解压到该目录，不注册服务
-  * `NPC_BIN_NAME` / `NPS_BIN_NAME`：强制指定进程名（不使用随机名）
+  * `CLIENT_BIN_NAME` / `SERVER_BIN_NAME`：强制指定进程名（不使用随机名）
   * `NPS_START=0`：安装后不自动启动
   * `NPS_GH_PROXY`：GitHub 下载加速前缀，如 `https://mirror.ghproxy.com/`
   * `NPS_INSECURE=1`：跳过 TLS 证书校验；`NPS_IPV4=1`：强制 IPv4 下载
@@ -95,7 +95,7 @@ npc done. name=sysmtpw config=/etc/sysmtpw/conf/sysficb.conf
 
 ```bash
 curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.8/install.sh
-sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh nps
+sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh server
 ```
 
 > 💡 **如何找回随机进程名**：随机名以安装输出为准。忘记时可执行 `ls -d /etc/sys????` 列出配置目录——目录内是 `conf/sysuahb.conf` 即服务端、`conf/sysficb.conf` 即客户端；对应的管理命令就是目录名，如 `sudo syskxqz status`。

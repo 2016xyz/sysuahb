@@ -1,5 +1,5 @@
 #!/bin/sh
-# install.sh — one-click installer for the nps server and npc client
+# install.sh — one-click installer for the server and client
 #
 # Every installation generates a RANDOM process/service name: "sys" + 4 random
 # lowercase letters (e.g. syskxqz). The service name, binary (/usr/bin/<name>),
@@ -13,14 +13,14 @@
 # (detected via their config marker) and installs fresh ones with new names.
 #
 # Usage:
-#   ./install.sh [mode] [version] [npc args...]
-#     mode:    npc | nps | all (default: all)
+#   ./install.sh [mode] [version] [client args...]
+#     mode:    client | server | all (default: all)
 #     version: release tag, e.g. v0.34.8 (v prefix optional, default: latest)
-#     npc args: extra arguments forwarded to the client service, e.g.
-#       ./install.sh npc v0.34.8 -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+#     client args: extra arguments forwarded to the client service, e.g.
+#       ./install.sh client v0.34.8 -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 #
 # Environment variables:
-#   NPS_INSTALL_MODE=npc|nps|all   same as the positional mode argument
+#   NPS_INSTALL_MODE=client|server|all   same as the positional mode argument
 #   NPS_INSTALL_VERSION=vX.Y.Z     same as the positional version argument
 #   NPS_INSTALL_DIR=/path          portable install: extract only, no service
 #   NPC_BIN_NAME=...               force client binary name (default: random)
@@ -112,12 +112,18 @@ trap cleanup 0 INT TERM
 MODE=""
 if [ $# -gt 0 ]; then
   case "$1" in
-    npc|nps|all) MODE="$1"; shift ;;
+    client|server|all|npc|nps) MODE="$1"; shift ;;
   esac
 fi
 [ -n "$MODE" ] || MODE="${NPS_INSTALL_MODE:-all}"
+# Legacy aliases: "npc" / "nps" are still accepted so existing commands and
+# older documentation keep working. New commands use "client" / "server".
 case "$MODE" in
-  npc|nps|all) ;;
+  npc) MODE="client" ;;
+  nps) MODE="server" ;;
+esac
+case "$MODE" in
+  client|server|all) ;;
   *)
     echo "Error: unsupported mode: $MODE" >&2
     exit 1
@@ -434,20 +440,21 @@ clean_old() {
 
 # ---- installation ------------------------------------------------------
 
-# Install NPC (client)
-install_npc() {
+# Install client
+install_client() {
   SRC=$(download client)
 
   if [ -n "$INSTALL_DIR" ]; then
-    echo "npc extracted to $INSTALL_DIR (portable mode, no service)"
+    echo "client extracted to $INSTALL_DIR (portable mode, no service)"
     return
   fi
 
   clean_old "sysficb.conf"
 
-  if [ -n "$NPC_BIN_NAME" ]; then
-    valid_name "$NPC_BIN_NAME" || { echo "Error: invalid NPC_BIN_NAME: $NPC_BIN_NAME" >&2; exit 1; }
-    NEW_NAME="$NPC_BIN_NAME"
+  CLIENT_BIN_NAME="${CLIENT_BIN_NAME:-$NPC_BIN_NAME}"
+  if [ -n "$CLIENT_BIN_NAME" ]; then
+    valid_name "$CLIENT_BIN_NAME" || { echo "Error: invalid CLIENT_BIN_NAME: $CLIENT_BIN_NAME" >&2; exit 1; }
+    NEW_NAME="$CLIENT_BIN_NAME"
   else
     NEW_NAME="$(gen_name)" || exit 1
   fi
@@ -456,7 +463,7 @@ install_npc() {
   cp -f "$SRC/sysficb" "$SRC/$NEW_NAME"
   chmod 755 "$SRC/$NEW_NAME"
 
-  echo "Installing npc as: $NEW_NAME"
+  echo "Installing client as: $NEW_NAME"
   if [ -n "$EXTRA_ARGS" ]; then
     "$SRC/$NEW_NAME" install $EXTRA_ARGS
   else
@@ -467,23 +474,24 @@ install_npc() {
     "$SRC/$NEW_NAME" start || echo "Warn: failed to start $NEW_NAME; try manually: $NEW_NAME start" >&2
   fi
 
-  echo "npc done. name=$NEW_NAME config=/etc/$NEW_NAME/conf/sysficb.conf"
+  echo "client done. name=$NEW_NAME config=/etc/$NEW_NAME/conf/sysficb.conf"
 }
 
-# Install NPS (server)
-install_nps() {
+# Install server
+install_server() {
   SRC=$(download server)
 
   if [ -n "$INSTALL_DIR" ]; then
-    echo "nps extracted to $INSTALL_DIR (portable mode, no service)"
+    echo "server extracted to $INSTALL_DIR (portable mode, no service)"
     return
   fi
 
   clean_old "sysuahb.conf"
 
-  if [ -n "$NPS_BIN_NAME" ]; then
-    valid_name "$NPS_BIN_NAME" || { echo "Error: invalid NPS_BIN_NAME: $NPS_BIN_NAME" >&2; exit 1; }
-    NEW_NAME="$NPS_BIN_NAME"
+  SERVER_BIN_NAME="${SERVER_BIN_NAME:-$NPS_BIN_NAME}"
+  if [ -n "$SERVER_BIN_NAME" ]; then
+    valid_name "$SERVER_BIN_NAME" || { echo "Error: invalid SERVER_BIN_NAME: $SERVER_BIN_NAME" >&2; exit 1; }
+    NEW_NAME="$SERVER_BIN_NAME"
   else
     NEW_NAME="$(gen_name)" || exit 1
   fi
@@ -492,21 +500,21 @@ install_nps() {
   cp -f "$SRC/sysuahb" "$SRC/$NEW_NAME"
   chmod 755 "$SRC/$NEW_NAME"
 
-  echo "Installing nps as: $NEW_NAME"
+  echo "Installing server as: $NEW_NAME"
   "$SRC/$NEW_NAME" install
 
   if [ "${NPS_START:-1}" = "1" ]; then
     "$SRC/$NEW_NAME" start || echo "Warn: failed to start $NEW_NAME; try manually: $NEW_NAME start" >&2
   fi
 
-  echo "nps done. name=$NEW_NAME config=/etc/$NEW_NAME/conf/sysuahb.conf"
+  echo "server done. name=$NEW_NAME config=/etc/$NEW_NAME/conf/sysuahb.conf"
 }
 
 # Run installation per mode
 case "$MODE" in
-  npc) install_npc ;;
-  nps) install_nps ;;
-  all) install_npc; install_nps ;;
+  client) install_client ;;
+  server) install_server ;;
+  all) install_client; install_server ;;
 esac
 
 echo "All done. Manage any installed service with:"

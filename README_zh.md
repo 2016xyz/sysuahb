@@ -131,33 +131,33 @@ telecom
 
 > **版本说明**：不带版本号时默认 `latest`，即**稳定版 `v0.34.8`**。测试版必须显式指定，不会被自动安装——详见[测试版安装指南](docs/install-test.md)。
 
-#### 服务端（nps）
+#### 服务端
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server
 ```
 
 安装结束时输出的最后几行会显示生成的进程名和配置路径：
 
 ```
-Installing nps as: syskxqz
-nps done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
+Installing server as: syskxqz
+server done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
 ```
 
 > **提示：** 首次安装后请先编辑 `/etc/<name>/conf/sysuahb.conf`（监听端口、Web 管理账号等），再执行 `sudo <name> restart`。
 
-#### 客户端（npc）
+#### 客户端
 
-连接命令请从 NPS Web 管理端的客户端页面复制——`npc` 之后的参数会原样透传给客户端服务：
+连接命令请从 NPS Web 管理端的客户端页面复制——`client` 之后的参数会原样透传给客户端服务：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 也可以先不带参数安装，稍后再配置（编辑 `/etc/<name>/conf/sysficb.conf`，或带参数重跑安装脚本重新注册）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s npc
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client
 ```
 
 > **提示：** 客户端支持同时连接多个服务器，示例：
@@ -196,10 +196,10 @@ sudo <name> update && sudo <name> restart
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `NPS_INSTALL_MODE` | `all` | `npc` / `nps` / `all` |
+| `NPS_INSTALL_MODE` | `all` | `client` / `server` / `all` |
 | `NPS_INSTALL_VERSION` | `latest` | 固定版本号，如 `v0.34.8` |
 | `NPS_INSTALL_DIR` | *(空)* | 便携模式：只解压文件，不注册服务 |
-| `NPC_BIN_NAME` / `NPS_BIN_NAME` | 随机 | 强制指定二进制/服务名，不用随机名 |
+| `CLIENT_BIN_NAME` / `SERVER_BIN_NAME` | 随机 | 强制指定二进制/服务名，不用随机名 |
 | `NPS_START` | `1` | 设为 `0` 安装后不自动启动 |
 | `NPS_GH_PROXY` | *(空)* | GitHub 下载加速前缀，如 `https://mirror.ghproxy.com/` |
 | `NPS_CONNECT_TIMEOUT` | `10` | 下载连接超时（秒） |
@@ -211,20 +211,20 @@ sudo <name> update && sudo <name> restart
 强制固定客户端名字（如用于配置管理）：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env NPC_BIN_NAME=sysmycl sh -s npc -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env CLIENT_BIN_NAME=sysmycl sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 国内加速：脚本可先经 jsdelivr 下载，Release 压缩包通过 `NPS_GH_PROXY` 加速：
 
 ```bash
 curl -fsSLo install.sh https://fastly.jsdelivr.net/gh/2016xyz/sysuahb@v0.34.8/install.sh
-sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh nps
+sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh server
 ```
 
 安装后不自动启动：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env NPS_START=0 sh -s nps
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env NPS_START=0 sh -s server
 ```
 
 ### 手动安装
