@@ -11,10 +11,10 @@
 
 ```bash
 # 服务端
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo sh -s server
 
 # 客户端
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 ---

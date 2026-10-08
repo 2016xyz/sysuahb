@@ -109,12 +109,12 @@ For detailed configuration options, refer to the upstream [Documentation](https:
 
 The installer auto-detects OS/ARCH, downloads the matching tarball from [Releases](https://github.com/2016xyz/sysuahb/releases), generates a random name (`sys` + 4 letters), registers the service, and starts it. Run it as root.
 
-> **Version note:** with no version argument the installer uses `latest`, which is the **stable `v0.34.8`**. Test builds must be requested explicitly and are never installed automatically — see [Test builds](docs/install-test.md).
+> **Version note:** with no version argument the installer uses `latest`, which is the **stable `v0.34.9`**. Test builds must be requested explicitly and are never installed automatically — see [Test builds](docs/install-test.md).
 
 #### Server
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s server
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo sh -s server
 ```
 
 The last lines of the output show the generated name and config path:
@@ -131,13 +131,13 @@ server done. name=syskxqz config=/etc/syskxqz/conf/sysuahb.conf
 Copy the connect command from the client page of the NPS Web UI — everything after `client` is forwarded to the client service:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 Or install without arguments first and configure later (edit `/etc/<name>/conf/sysficb.conf`, then re-run the installer with arguments to re-register):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s client
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo sh -s client
 ```
 
 > **Tip:** The client supports connecting to multiple servers simultaneously. Example:
@@ -147,7 +147,7 @@ curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh 
 #### Server and client on the same machine
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo sh -s all
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo sh -s all
 ```
 
 ### Find and Manage the Installed Service
@@ -177,7 +177,7 @@ Environment variables (pass with `sudo env VAR=... sh -s ...`):
 | Variable | Default | Description |
 | --- | --- | --- |
 | `NPS_INSTALL_MODE` | `all` | `client` / `server` / `all` |
-| `NPS_INSTALL_VERSION` | `latest` | Pin a release tag, e.g. `v0.34.8` |
+| `NPS_INSTALL_VERSION` | `latest` | Pin a release tag, e.g. `v0.34.9` |
 | `NPS_INSTALL_DIR` | *(empty)* | Portable mode: extract files only, do not register a service |
 | `CLIENT_BIN_NAME` / `SERVER_BIN_NAME` | random | Force a fixed binary/service name instead of a random one |
 | `NPS_START` | `1` | Set `0` to skip auto-start after install |
@@ -191,20 +191,20 @@ Environment variables (pass with `sudo env VAR=... sh -s ...`):
 Force a fixed client name (e.g. for configuration management):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env CLIENT_BIN_NAME=sysmycl sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo env CLIENT_BIN_NAME=sysmycl sh -s client -server=1.2.3.4:8024 -vkey=YOUR_VKEY
 ```
 
 Use a GitHub download proxy (mainland China). Download the script first, then run it with the proxy prefix for release downloads:
 
 ```bash
-curl -fsSLo install.sh https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh
+curl -fsSLo install.sh https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh
 sudo NPS_GH_PROXY="https://mirror.ghproxy.com/" sh install.sh server
 ```
 
 Install without starting the service:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.8/install.sh | sudo env NPS_START=0 sh -s server
+curl -fsSL https://raw.githubusercontent.com/2016xyz/sysuahb/v0.34.9/install.sh | sudo env NPS_START=0 sh -s server
 ```
 
 ### Manual Installation

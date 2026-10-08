@@ -5,6 +5,16 @@
 ### Main
 - 待定，优先修BUG，新功能随缘更新
 
+### v0.34.9 (2026-10-07)
+- **安装命令去除 `npc` 指纹**：Web 端生成的客户端安装/连接命令原本直接暴露 NPS 客户端标识
+  - `install.sh` 模式 `npc` / `nps` → `client` / `server`；旧名保留为**向后兼容别名**（`npc` → `client`，`nps` → `server`），老命令与老文档继续可用
+  - 环境变量 `CLIENT_BIN_NAME` / `SERVER_BIN_NAME` 优先，`NPC_BIN_NAME` / `NPS_BIN_NAME` 作为回退
+  - 安装回显 `Installing npc as:` → `Installing client as:`，`npc done.` → `client done.`
+  - Web：客户端页「快速安装（Linux）」命令 `) npc` → `) client`；首页与帮助页的连接命令 `./npc` → `./sysficb`（此前漏改的客户端二进制名）
+  - 文档：`sh -s npc` → `sh -s client`、`sh -s nps` → `sh -s server`，章节与模式说明同步
+- 保留：上游引用（`djylb/nps`、`duan2001/npc` 镜像、`cmd/npc` 构建路径）与历史测试版记录
+- 版本：`0.34.9`
+
 ### v0.34.8 (2026-10-07)
 - **首个正式版（stable）**：此前仅在测试版提供的功能整体转正；`latest` 与 Docker `latest` 起指向本版
   - **客户端标签（Client Tags）**：每个客户端可打多个标签，随配置持久化，Web 端以 Badge 展示；保存时 trim / 转小写 / 去重，仅允许 `[a-z0-9_-]+`
